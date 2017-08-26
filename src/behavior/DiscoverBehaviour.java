@@ -9,7 +9,6 @@ import jade.domain.FIPAAgentManagement.SearchConstraints;
 
 public class DiscoverBehaviour extends OneShotBehaviour {
 
-	private Agent owner;
 	private String toDiscover;
 	private AID discoverd;
 	
@@ -23,12 +22,12 @@ public class DiscoverBehaviour extends OneShotBehaviour {
 		try {
 			SearchConstraints c = new SearchConstraints();
 			c.setMaxResults(new Long(-1));
-			agents = AMSService.search(this.getOwner() , new AMSAgentDescription(), c);
+			agents = AMSService.search(this.getAgent() , new AMSAgentDescription(), c);
 		} catch (Exception e) {
 			System.out.println("Problem searching AMS: " + e);
 			e.printStackTrace();
 		}
-		AID myID = this.getOwner().getAID();
+		AID myID = this.getAgent().getAID();
 		for (int i = 0; i < agents.length; i++) {
 			AID agentID = agents[i].getName();
 			if(!agentID.equals(myID)){
@@ -40,14 +39,6 @@ public class DiscoverBehaviour extends OneShotBehaviour {
 		}
 	}
 
-	private Agent getOwner() {
-		return owner;
-	}
-
-	private void setOwner(Agent owner) {
-		this.owner = owner;
-	}
-
 	public AID getDiscoverd() {
 		return discoverd;
 	}
@@ -56,11 +47,11 @@ public class DiscoverBehaviour extends OneShotBehaviour {
 		this.discoverd = discoverd;
 	}
 
-	private String getToDiscover() {
+	public String getToDiscover() {
 		return toDiscover;
 	}
 
-	private void setToDiscover(String toDiscover) {
+	public void setToDiscover(String toDiscover) {
 		this.toDiscover = toDiscover;
 	}
 
