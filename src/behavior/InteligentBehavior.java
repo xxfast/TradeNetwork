@@ -10,22 +10,22 @@ public abstract class InteligentBehavior extends CyclicBehaviour {
 	public abstract void init();
 	
 	/*
-	 * determines whether the intelligent behavior should be preactive
+	 * determines whether the intelligent behavior should be reactive
 	 *	 @returns true - by default 
 	 */
-	public boolean shouldPreact(){
+	public boolean shouldReact(){
 		return true;
 	}
 	
 	/*
 	 * behavioral response to the change in agent's environment 
 	 */
-	public abstract void preact();
+	public abstract void react();
 
 	/*
-	 * actions needed to be taken after preactive phase, but before proactive phase
+	 * actions needed to be taken after reactive phase, but before proactive phase
 	 */
-	public abstract void afterPreact();
+	public abstract void afterReact();
 	
 	/*
 	 * determines whether the intelligent behavior should be proactive
@@ -64,15 +64,15 @@ public abstract class InteligentBehavior extends CyclicBehaviour {
 	
 	@Override
 	public void action() {
-		if (shouldPreact()){
-			preact();
-			afterPreact();
+		if (shouldReact()){
+			react();
+			afterReact();
 		}
-		if (shouldPreact()){
+		if (shouldProact()){
 			proact();
 			afterProact();
 		}
-		if (shouldPreact()){
+		if (shouldSocial()){
 			social();
 			afterSocial();
 		}
