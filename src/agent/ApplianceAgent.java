@@ -1,5 +1,6 @@
 package agent;
 
+import behavior.DiscoverBehaviour;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -8,7 +9,13 @@ import jade.lang.acl.ACLMessage;
 
 public class ApplianceAgent extends Agent { 
 
-	private Agent homeAgent;
+	private AID homeAgent;
+	
+	protected void setup() {
+		DiscoverBehaviour db = new DiscoverBehaviour();
+		db.setToDiscover(homeAgent.getName());
+		addBehaviour(db);
+	}
 	
 	private class NotifyingBehavior extends OneShotBehaviour{
 		
@@ -16,17 +23,17 @@ public class ApplianceAgent extends Agent {
 		public void action() {
 			ACLMessage notificationMessage = new ACLMessage( ACLMessage.INFORM );
 			notificationMessage.setContent("");
-			notificationMessage.addReceiver( new AID(homeAgent.getAID().getName(), AID.ISLOCALNAME ) );
+			notificationMessage.addReceiver( new AID(homeAgent.getName(), AID.ISLOCALNAME ) );
             send( notificationMessage );
 		}
 		
 	}
 
-	public Agent getHomeAgent() {
+	public AID getHomeAgent() {
 		return homeAgent;
 	}
 
-	public void setHomeAgent(Agent homeAgent) {
+	public void setHomeAgent(AID homeAgent) {
 		this.homeAgent = homeAgent;
 	}
 
