@@ -18,10 +18,26 @@ public class NotificationMessage extends ACLMessage {
 		this.setOn(on);
 	}
 	
+	public NotificationMessage(ACLMessage message){
+		super(ACLMessage.INFORM);
+		setContent(message.getContent());
+	}
+	
 	@Override
 	public String getContent(){
 		return getUnits() + ":" + getHours() + ":" + getOn().hour;
 		
+	}
+	
+	@Override
+	public void setContent(String content){
+		super.setContent(content);
+		String[] messageBits = content.split(":");
+		setUnits( Integer.valueOf(messageBits[0]));
+		setHours( Integer.valueOf(messageBits[1]));
+		DateTime toSet = new DateTime();
+		toSet.hour = Short.valueOf(messageBits[1]);
+		setOn(toSet);
 	}
 
 	private int getUnits() {
