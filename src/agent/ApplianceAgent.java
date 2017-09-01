@@ -2,6 +2,7 @@ package agent;
 
 import FIPA.DateTime;
 import behavior.DiscoverBehaviour;
+import interfaces.Object2ApplianceAgentInterface;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -9,7 +10,7 @@ import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
 import model.NotificationMessage;
 
-public class ApplianceAgent extends Agent { 
+public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentInterface { 
 
 	private AID homeAgent;
 	
@@ -38,5 +39,7 @@ public class ApplianceAgent extends Agent {
 	public void setHomeAgent(AID homeAgent) {
 		this.homeAgent = homeAgent;
 	}
+
+
 
 }
