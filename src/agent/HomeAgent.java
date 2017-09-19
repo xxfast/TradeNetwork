@@ -2,7 +2,6 @@ package agent;
 
 import java.util.ArrayList;
 
-import behavior.DiscoverBehaviour;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;

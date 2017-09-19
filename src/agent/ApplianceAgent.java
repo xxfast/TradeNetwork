@@ -1,13 +1,14 @@
 package agent;
 
 import FIPA.DateTime;
-import behavior.DiscoverBehaviour;
 import interfaces.Object2ApplianceAgentInterface;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.OneShotBehaviour;
-import jade.lang.acl.ACLMessage;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.domain.DFService;
+
 import model.NotificationMessage;
 
 public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentInterface { 
@@ -15,21 +16,35 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 	private AID homeAgent;
 	
 	protected void setup() {
-		DiscoverBehaviour db = new DiscoverBehaviour();
-		db.setToDiscover(homeAgent.getName());
-		addBehaviour(db);
-		addBehaviour(new NotifyingBehavior());
+		addBehaviour(new DiscoverServiceProviderBehavior());
 	}
 	
-	private class NotifyingBehavior extends OneShotBehaviour{
+	private class DiscoverServiceProviderBehavior extends OneShotBehaviour{
 		
 		@Override
 		public void action() {
-			ACLMessage notificationMessage = new NotificationMessage(1,1,new DateTime());
-			notificationMessage.addReceiver( new AID(homeAgent.getName(), AID.ISLOCALNAME ) );
-            send( notificationMessage );
+			DFAgentDescription[] serviceAgents = getService("SUPPLY");
+	    	for (DFAgentDescription serviceAgent : serviceAgents) {
+	    		homeAgent = serviceAgent.getName();
+	    		break;
+	    	}
 		}
 		
+		DFAgentDescription[] getService( String service )
+		{
+			DFAgentDescription dfd = new DFAgentDescription();
+	   		ServiceDescription sd = new ServiceDescription();
+	   		sd.setType( service );
+			dfd.addServices(sd);
+			try
+			{
+				DFAgentDescription[] result = DFService.search(ApplianceAgent.this, dfd);
+				return result;
+			}
+			catch (Exception fe) {}
+	      	return null;
+		}
+
 	}
 
 	public AID getHomeAgent() {
