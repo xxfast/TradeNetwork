@@ -25,13 +25,13 @@ public class HomeAgent extends TradeAgent {
 		ServiceDescription sd = new ServiceDescription();   
 		sd.setType("HomeAgent"); 
 		sd.setName(getName());
-		sd.setOwnership("TILAB");
+		sd.setOwnership("TradeNetwork");
 		dfd.setName(getAID());
 		dfd.addServices(sd);
 		try {
 			DFService.register(this,dfd);
-			NotificationRecievingBehavior PingBehaviour = new  NotificationRecievingBehavior(this);
-			addBehaviour(PingBehaviour);
+			NotificationRecievingBehavior notificationRecievingBehaviour = new  NotificationRecievingBehavior(this);
+			addBehaviour(notificationRecievingBehaviour);
 		} catch (FIPAException e) {
 			myLogger.log(Logger.SEVERE, "Agent "+getLocalName()+" - Cannot register with DF", e);
 			doDelete();
