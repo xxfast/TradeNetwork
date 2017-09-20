@@ -50,3 +50,8 @@ local.properties
 .cache-main
 .scala_dependencies
 .worksheet
+
+.classpath
+
+APDescription.txt
+MTPs-Main-Container.txt
