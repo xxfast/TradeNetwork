@@ -17,9 +17,14 @@ public class Schedule {
 		return time;
 	}
 	
-	public class Slot{
+	public static class Slot{
 		private AID agent; 
 		private int amount;
+		
+		public Slot(AID agent, int amount){
+			this.agent = agent;
+			this.amount = amount;
+		}
 		
 		public AID getAgent() {
 			return agent;
