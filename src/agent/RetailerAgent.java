@@ -72,6 +72,7 @@ public class RetailerAgent extends TradeAgent {
 				if (performAction()) {
 					System.out.println("Agent "+getLocalName()+ ": Energy delivered to " + accept.getSender().getName());
 					ACLMessage inform = accept.createReply();
+					inform.setContent("Thanks brah");
 					inform.setPerformative(ACLMessage.INFORM);
 					return inform;
 				}
@@ -90,8 +91,9 @@ public class RetailerAgent extends TradeAgent {
 	// Temporary method until the method of setting rate is determined
 	private void setAgentProperties() {
 		Object[] args = this.getArguments();
-
-		switch (args.length) {
+		
+	  	if (args != null && args.length > 0) {
+			switch (args.length) {
 			case 1:
 				// One argument, assumed to be rate
 				// Implies there will be no energy threshold
@@ -105,12 +107,19 @@ public class RetailerAgent extends TradeAgent {
 				energyThreshold = convObjToInt(args[1]);
 				break;
 			default:
-				// Too few (<1) argument or too many (>2) arguments
-				// Maybe throw an error
+				// Too many (>2) arguments
+				// Maybe make exception
+				
 				energyRate = (int) (Math.random() * 10);
 				energyThreshold = -1;
 				break;
-		}	
+			}
+		} else {
+			
+			// Too few (<1) argument
+			energyRate = (int) (Math.random() * 10);
+			energyThreshold = -1;
+		}
 	}
 	
 	private int convObjToInt (Object arg) {
