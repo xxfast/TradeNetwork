@@ -19,13 +19,13 @@ import jade.proto.ContractNetInitiator;
 import jade.util.Logger;
 import jade.util.leap.Iterator;
 import jade.util.leap.Map;
-import model.NotificationMessage;
+import model.Demand;
 
 public class HomeAgent extends TradeAgent {
 
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
 
-	private ArrayList<NotificationMessage> messages = new ArrayList<>();
+	private ArrayList<Demand> messages = new ArrayList<>();
 	private AID myscheduler;
 	private List<AID> retailers;
 	protected void setup() {
