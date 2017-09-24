@@ -55,7 +55,8 @@ public class HomeAgent extends TradeAgent {
 				// get scheduler agent from AMS
 //				System.out.println("Woke up and running");
 				myscheduler=getAgentFromAMS("sched");
-				retailers.add(getAgentFromAMS("ret1"));
+				retailers.add(getAgentFromAMS("cheapRet"));
+				retailers.add(getAgentFromAMS("expRet"));
 				if(myscheduler!=null)
 				{
 //					System.out.println("intiated behaviour");

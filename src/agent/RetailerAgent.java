@@ -39,7 +39,7 @@ public class RetailerAgent extends TradeAgent {
 		
 		// Template to filter messages as to only receive CFP messages
 		MessageTemplate template = MessageTemplate.and(
-				MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET),
+				MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_ITERATED_CONTRACT_NET),
 				MessageTemplate.MatchPerformative(ACLMessage.CFP) );
 				
 		// Adds the CNR behaviour to the agent
