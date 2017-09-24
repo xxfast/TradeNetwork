@@ -39,7 +39,7 @@ public class SimulationController {
 			Object2ApplianceAgentInterface o2a = ApplianceAgentCtrl.getO2AInterface(Object2ApplianceAgentInterface.class); 
 			AID ofHomeAgent = new AID();
 			ofHomeAgent.setName(homeAgentCtrl.getName());
-			o2a.setHomeAgent(ofHomeAgent);
+			o2a.setSchedulerAgen(ofHomeAgent);
 			
 			// Wait for some time
 			Thread.sleep(20000);
