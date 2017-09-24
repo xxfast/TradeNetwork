@@ -55,14 +55,24 @@ public class HomeAgent extends TradeAgent {
 				// get scheduler agent from AMS
 //				System.out.println("Woke up and running");
 				myscheduler=getAgentFromAMS("sched");
-				retailers.add(getAgentFromAMS("cheapRet"));
-				retailers.add(getAgentFromAMS("expRet"));
+				//get agents with retailer service
+				DFAgentDescription[] agents = getServiceAgents("RetailerAgent");
+				for(DFAgentDescription agent : agents)
+				{
+					retailers.add(agent.getName());
+				}
+				
+					
 				if(myscheduler!=null)
 				{
 //					System.out.println("intiated behaviour");
 					AchieveREInitiator req = new RequestDemand(myAgent, new ACLMessage(ACLMessage.REQUEST), myscheduler);
-					req.registerHandleInform(new RequestQuote(myAgent, null, retailers));
-					addBehaviour(req);
+					if(retailers.size()>0)
+					{
+						req.registerHandleInform(new RequestQuote(myAgent, null, retailers));
+						addBehaviour(req);
+					}
+						
 				}
 										
 					
@@ -79,6 +89,8 @@ public class HomeAgent extends TradeAgent {
 	        System.out.println(key +"="+mp.get(key));
 	    }
 	}
+	
+	
 	
 	public class RequestDemand extends AchieveREInitiator {
 		private AID mySchedulerAgent;
