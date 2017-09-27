@@ -18,8 +18,36 @@ import jade.domain.FIPAAgentManagement.FailureException;
 // Used to log exceptions
 import jade.util.Logger;
 
-public class RetailerAgent extends TradeAgent {
+//Used for the energy schedule
+import java.util.Vector;;
 
+public class RetailerAgent extends TradeAgent {
+	
+	private class EnergyUnit {
+		private int time;
+		private int units;
+		private int cost;
+		
+		public EnergyUnit(int energy, int time, int cost) {
+			this.time = time;
+			this.units = energy;
+			this.cost = cost;
+		}
+		
+		public int getTime() {
+			return time;
+		}
+		
+		public int getUnits() {
+			return units;
+		}
+		
+		public int getCost() {
+			return cost;
+		}
+	}	
+
+	private Vector<EnergyUnit> energyUnitSchedule = new Vector<EnergyUnit>();
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
 	private int energyRate;
 	private int energyThreshold;
@@ -44,24 +72,28 @@ public class RetailerAgent extends TradeAgent {
 				
 		// Adds the CNR behaviour to the agent
 		addBehaviour(new ContractNetResponder(this, template) {
+			private EnergyUnit currentUnitRequest = null;
+			
 			@Override
 			protected ACLMessage handleCfp(ACLMessage cfp) throws NotUnderstoodException, RefuseException {
-				System.out.println("Agent "+getLocalName()+": CFP received from "+cfp.getSender().getName()+". Energy required is "+cfp.getContent()+" units.");
-				int energyRequestAmount = convObjToInt(cfp.getContent());
 				
-				if (evaluateAction(energyRequestAmount)) {
-					// Calculate energy cost based on amount needed and energyRate property
-					int energyCost = calculateEnergyCost(cfp.getContent());
+				String[] strContent = cfp.getContent().split(":");
+				currentUnitRequest = new EnergyUnit(convStrToInt(strContent[0]), convStrToInt(strContent[1]), calculateEnergyCost(strContent[1]));
+				energyUnitSchedule.add(currentUnitRequest);
+				
+				System.out.println("Agent "+getLocalName()+": CFP received from "+cfp.getSender().getName()+". Energy required is "+currentUnitRequest.getUnits()+" units.");
+				
+				if (evaluateAction(currentUnitRequest.getUnits())) {		
+					System.out.println("Agent " + getLocalName() + ": Proposing. Cost: $" + currentUnitRequest.getCost() + ".00 delivering at time " + currentUnitRequest.getTime());
 					
-					System.out.println("Agent "+getLocalName()+": Proposing. Cost: $"+energyCost+ ".00");
 					ACLMessage propose = cfp.createReply();
 					propose.setPerformative(ACLMessage.PROPOSE);
-					propose.setContent(String.valueOf(energyCost));
+					propose.setContent(String.valueOf(currentUnitRequest.getCost()));
 					return propose;
 				}
 				else {
 					// We refuse to provide a proposal
-					System.out.println("Agent "+getLocalName()+": Refuse. Cannot provide " + energyRequestAmount + " units. Threshold is " + energyThreshold + " units.");
+					System.out.println("Agent "+getLocalName()+": Refuse. Cannot provide " + currentUnitRequest.getUnits() + " units. Threshold is " + energyThreshold + " units.");
 					throw new RefuseException("evaluation-failed");
 				}
 			}
@@ -72,7 +104,7 @@ public class RetailerAgent extends TradeAgent {
 				if (performAction()) {
 					System.out.println("Agent "+getLocalName()+ ": Energy delivered to " + accept.getSender().getName());
 					ACLMessage inform = accept.createReply();
-					inform.setContent("Thanks brah");
+					inform.setContent(currentUnitRequest.getCost() + ":" + currentUnitRequest.getTime());
 					inform.setPerformative(ACLMessage.INFORM);
 					return inform;
 				}
@@ -97,14 +129,14 @@ public class RetailerAgent extends TradeAgent {
 			case 1:
 				// One argument, assumed to be rate
 				// Implies there will be no energy threshold
-				energyRate = convObjToInt(args[0]);
+				energyRate = convStrToInt((String)args[0]);
 				energyThreshold = -1;
 				break;
 			case 2:
 				// Two arguments, assumed to be rate and threshold
 				// If threshold is less than zero it is ignored in calculations
-				energyRate = convObjToInt(args[0]);
-				energyThreshold = convObjToInt(args[1]);
+				energyRate = convStrToInt((String)args[0]);
+				energyThreshold = convStrToInt((String)args[1]);
 				break;
 			default:
 				// Too many (>2) arguments
@@ -122,13 +154,13 @@ public class RetailerAgent extends TradeAgent {
 		}
 	}
 	
-	private int convObjToInt (Object arg) {
+	private int convStrToInt (String str) {
 		int value = 0;
 		
 		try {
-			value = Integer.parseInt((String) arg);	
+			value = Integer.parseInt(str);	
 		} catch (NumberFormatException e) {
-			myLogger.log(Logger.SEVERE, "Agent "+getLocalName()+" - Cannot convert \"" + (String)arg  + "\" into an integer", e);
+			myLogger.log(Logger.SEVERE, "Agent "+getLocalName()+" - Cannot convert \"" + str  + "\" into an integer", e);
 			doDelete();
 		}
 		
@@ -147,7 +179,7 @@ public class RetailerAgent extends TradeAgent {
 	private int calculateEnergyCost(String cfpContent) {
 		// assume that the passed content is integer only
 		int energyRequestAmount = 0;
-		energyRequestAmount = convObjToInt(cfpContent);
+		energyRequestAmount = convStrToInt(cfpContent);
 		return energyRate * energyRequestAmount;
 	}
 
@@ -187,7 +219,4 @@ public class RetailerAgent extends TradeAgent {
     	   myLogger.log(Logger.SEVERE, "Agent "+getLocalName()+" - Cannot de-register with DF", e);
        }
 	}
-	
-	
-	
 }
