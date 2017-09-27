@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Vector;
 
+import FIPA.DateTime;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.WakerBehaviour;
@@ -105,14 +106,22 @@ public class HomeAgent extends TradeAgent {
 		protected Vector prepareRequests(ACLMessage request) {
 			// construct request to be sent to scheduler
 			System.out.println("Sending message");
-			request.setPerformative(ACLMessage.REQUEST);
-			request.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
-			request.setSender(myAgent.getAID());
-			request.addReceiver(mySchedulerAgent);
-			String content = "demand for (18:00,1)";
-			request.setContent(content);
+			DateTime time = new DateTime();
+			time.hour=18;
+			Demand demand= new Demand(time);
+			ACLMessage demReq=demand.createACLMessage(ACLMessage.REQUEST);
+			demReq.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+			demReq.addReceiver(mySchedulerAgent);
+			demReq.setSender(myAgent.getAID());
+//			request.setPerformative(ACLMessage.REQUEST);
+//			request.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+//			
+//			request.setSender(myAgent.getAID());
+//			request.addReceiver(mySchedulerAgent);
+//			String content = "demand for (18:00,1)";
+//			request.setContent(content);
 			// TODO Auto-generated method stub
-			return super.prepareRequests(request);
+			return super.prepareRequests(demReq);
 		}
 
 		
@@ -140,8 +149,9 @@ public class HomeAgent extends TradeAgent {
 			ACLMessage quoteRequest = null;
 			if(demandMsg!=null)
 			{
+				
 				//construct quote request to send to retailers
-				String demand =demandMsg.getContent();
+				String demand =new Demand(demandMsg).getContent();
 				quoteRequest= new ACLMessage(ACLMessage.CFP);
 				quoteRequest.setProtocol(FIPANames.InteractionProtocol.FIPA_ITERATED_CONTRACT_NET);
 				//simply attaching demand- TODO make a meaningful request
