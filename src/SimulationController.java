@@ -4,6 +4,7 @@ import jade.wrapper.StaleProxyException;
 import jade.core.Runtime;
 import agent.ApplianceAgent;
 import agent.HomeAgent;
+import agent.SchedulingAgent;
 import interfaces.Object2ApplianceAgentInterface;
 import jade.core.AID;
 import jade.core.Profile; 
@@ -20,32 +21,37 @@ public class SimulationController {
 		ContainerController mainCtrl = rt.createMainContainer(pMain); // Wait for some time
 		Thread.sleep(10000);
 		
+		// Create a agent of class SchedulingAgent 
+		System.out.println(SimulationController.class.getName() + ": Starting up a SchedulingAgent...");
+		AgentController schedulingAgentCtrl = mainCtrl.createNewAgent("SA", SchedulingAgent.class.getName(), new Object[0]);
+		schedulingAgentCtrl.start();
+		
 		// Create a agent of class HomeAgent 
 		System.out.println(SimulationController.class.getName() + ": Starting up a HomeAgent...");
-		AgentController homeAgentCtrl = mainCtrl.createNewAgent("HomeAgent", HomeAgent.class.getName(), new Object[0]);
+		AgentController homeAgentCtrl = mainCtrl.createNewAgent("HA", HomeAgent.class.getName(),new Object[] {schedulingAgentCtrl.getName()});
 		homeAgentCtrl.start();
 		
 		// Create a agent of class ApplianceAgent 
 		System.out.println(SimulationController.class.getName() + ": Starting up a ApplianceAgent...");
-		AgentController ApplianceAgentCtrl = mainCtrl.createNewAgent("ApplianceAgent", ApplianceAgent.class.getName(), new Object[0]);
+		AgentController ApplianceAgentCtrl = mainCtrl.createNewAgent("AA", ApplianceAgent.class.getName(),new Object[] {schedulingAgentCtrl.getName()});
 		ApplianceAgentCtrl.start();
 		
 		// Wait for some time
 		Thread.sleep(20000); 
 		
-		try {
-			// Retrieve Object2ApplianceAgentInterface exposed by the agent to make it set the homeAgent
-			System.out.println(SimulationController.class.getName() + ": Activating counter");
-			Object2ApplianceAgentInterface o2a = ApplianceAgentCtrl.getO2AInterface(Object2ApplianceAgentInterface.class); 
-			AID ofHomeAgent = new AID();
-			ofHomeAgent.setName(homeAgentCtrl.getName());
-			o2a.setSchedulerAgen(ofHomeAgent);
-			
-			// Wait for some time
-			Thread.sleep(20000);
-			
-			}catch (StaleProxyException e) {
-				e.printStackTrace();
-		}
+//		try {
+//			// Retrieve Object2ApplianceAgentInterface exposed by the agent to make it set the homeAgent
+//			System.out.println(SimulationController.class.getName() + ": Activating counter");
+//			Object2ApplianceAgentInterface o2a = ApplianceAgentCtrl.getO2AInterface(Object2ApplianceAgentInterface.class); 
+//			AID ofHomeAgent = new AID();
+//			ofHomeAgent.setName(homeAgentCtrl.getName());
+//			o2a.setSchedulerAgen(ofHomeAgent);
+//			
+//			// Wait for some time
+//			Thread.sleep(20000);
+//			
+//			}catch (StaleProxyException e) {
+//				e.printStackTrace();
+//		}
 	}
 }
