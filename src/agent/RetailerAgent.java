@@ -64,8 +64,7 @@ public class RetailerAgent extends TradeAgent {
 	// State names
 	private static final String STATE_A = "Setup";
 	private static final String STATE_B = "Listen";
-	private static final String STATE_C = "Update";
-	private static final String STATE_D = "TakeDown";
+	private static final String STATE_C = "TakeDown";
 
 	
 	// [install later] Amount of energy the retailer agent has, determines rate and threshold
@@ -78,6 +77,24 @@ public class RetailerAgent extends TradeAgent {
 	
 	private void EnableFSMBehaviour() {
 		
+		OneShotBehaviour RetailerSetupBehaviour = new OneShotBehaviour(this) {
+			@Override
+			public void action() {
+				setAgentProperties();				// Sets the agent's properties (energy rate & threshold) to passed or default values
+				setupServiceProviderComponent(); 	//Describes the agent as a retail agent
+				
+				System.out.println(getLocalName()+": EnergyRate = $" + energyRate + "/unit, EnergyThreshold = " + energyThreshold + " units.");
+			}
+		};
+		
+		OneShotBehaviour RetailerTakeDownBehaviour = new OneShotBehaviour(this) {
+			@Override
+			public void action() {
+				System.out.println(getName() + ": Shutting down agent");
+				takeDown();
+			}
+		};
+		
 		// Enable the agent's FSM behaviour
 		FSMBehaviour fsm = new FSMBehaviour(this);
 		
@@ -86,62 +103,15 @@ public class RetailerAgent extends TradeAgent {
 				MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_ITERATED_CONTRACT_NET),
 				MessageTemplate.MatchPerformative(ACLMessage.CFP) );
 		
-		
-		fsm.registerFirstState(new RetailerSetupBehaviour(this), STATE_A);
+		fsm.registerFirstState(RetailerSetupBehaviour, STATE_A);
 		fsm.registerState(new RetailerCNRBehaviour(this, template), STATE_B);
-		fsm.registerState(new RetailerUpdateBehaviour(this), STATE_C);
-		fsm.registerLastState(new RetailerTakeDownBehaviour(this), STATE_D);
+		fsm.registerState(RetailerTakeDownBehaviour, STATE_C);
 		
 		fsm.registerDefaultTransition(STATE_A, STATE_B);
 		fsm.registerTransition(STATE_B, STATE_B, 0);
 		fsm.registerTransition(STATE_B, STATE_C, 1);
-		// Make sure to add the graceful exit later
 		
 		this.addBehaviour(fsm);
-	}
-	
-	private class RetailerSetupBehaviour extends OneShotBehaviour {
-		
-		RetailerSetupBehaviour(Agent a) {
-			super(a);
-			System.out.println(getLocalName() + ": Initializing Agent" );
-		}
-		
-		@Override
-		public void action() {
-			// Sets the agent's properties (energy rate & threshold) to passed or default values
-			setAgentProperties();
-			
-			// Describes the agent as a retail agent
-			setupServiceProviderComponent();
-			
-			System.out.println(getLocalName()+": EnergyRate = $" + energyRate + "/unit, EnergyThreshold = " + energyThreshold + " units.");
-		}
-	}
-	
-	private class RetailerTakeDownBehaviour extends OneShotBehaviour {
-		
-		RetailerTakeDownBehaviour(Agent a) {
-			super(a);
-		}
-		
-		@Override
-		public void action() {
-			System.out.println(getName() + ": Shutting down agent");
-			takeDown();
-		}
-	}
-	
-	private class RetailerUpdateBehaviour extends OneShotBehaviour {
-		
-		RetailerUpdateBehaviour(Agent a) {
-			super(a);
-		}
-		
-		@Override
-		public void action() {
-			System.out.println(getName() + ": Doing something here ?? decreasing stock ??");
-		}
 	}
 	
 	private class RetailerCNRBehaviour extends ContractNetResponder {
