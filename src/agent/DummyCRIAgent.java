@@ -58,7 +58,7 @@ public class DummyCRIAgent extends Agent {
 		setResponderAgents(msg, service);
 		msg.setProtocol(FIPANames.InteractionProtocol.FIPA_ITERATED_CONTRACT_NET);
 		msg.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
-		msg.setContent("300");
+		msg.setContent("300:5");
 		
 		System.out.println(this.getName() + ": Creating request message of " + msg.getContent() + " units.");
 				
