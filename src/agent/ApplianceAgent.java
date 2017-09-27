@@ -27,6 +27,7 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 	protected void setup() {
 		Object[] args = getArguments();
 		schedulerAgent = new AID((String) args[0],AID.ISLOCALNAME);
+		say("My SchedulingAgent is =("+ schedulerAgent.getName()+")");
 		addBehaviour(new DemandingBehaviour(this));
 	}
 	

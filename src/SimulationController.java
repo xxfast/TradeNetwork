@@ -17,7 +17,8 @@ public class SimulationController {
 		Runtime rt = Runtime.instance();
 		// Launch the Main Container (with the administration GUI on top) listening on port 8888
 		System.out.println(SimulationController.class.getName() + ": Launching the platform Main Container...");
-		Profile pMain = new ProfileImpl(null, 8888, null); pMain.setParameter(Profile.GUI, "true");
+		Profile pMain = new ProfileImpl(null, 8888, null); 
+		pMain.setParameter(Profile.GUI, "true");
 		ContainerController mainCtrl = rt.createMainContainer(pMain); // Wait for some time
 		Thread.sleep(10000);
 		
@@ -25,6 +26,8 @@ public class SimulationController {
 		System.out.println(SimulationController.class.getName() + ": Starting up a SchedulingAgent...");
 		AgentController schedulingAgentCtrl = mainCtrl.createNewAgent("SA", SchedulingAgent.class.getName(), new Object[0]);
 		schedulingAgentCtrl.start();
+
+		Thread.sleep(2000); 
 		
 		// Create a agent of class HomeAgent 
 		System.out.println(SimulationController.class.getName() + ": Starting up a HomeAgent...");
