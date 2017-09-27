@@ -1,1 +1,1 @@
-http://Jerem:7778/acc
+http://10.1.40.50:7778/acc
