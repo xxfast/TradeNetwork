@@ -30,8 +30,6 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 		addBehaviour(new DemandingBehaviour(this));
 	}
 	
-	
-	
 	private class DemandingBehaviour extends TickerBehaviour{
 		
 		public DemandingBehaviour (Agent a) {
