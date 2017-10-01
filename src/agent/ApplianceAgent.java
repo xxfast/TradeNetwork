@@ -27,6 +27,7 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 	protected void setup() {
 		Object[] args = getArguments();
 		schedulerAgent = new AID((String) args[0],AID.ISLOCALNAME);
+		say("My SchedulingAgent is =("+ schedulerAgent.getName()+")");
 		addBehaviour(new DemandingBehaviour(this));
 	}
 	
@@ -39,7 +40,7 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 		@Override
 		protected void onTick() {
 			Demand myDemand = new Demand(1, new DateTime());
-			System.out.println(getLocalName() + ": Making a demand to the scheduler DEMAND=("+ myDemand.getContent()+")");
+			say("Making a demand to the scheduler DEMAND=("+ myDemand.getContent()+")");
 			ACLMessage msg = myDemand.createACLMessage(ACLMessage.INFORM);
 			msg.addReceiver(schedulerAgent);
 			msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);

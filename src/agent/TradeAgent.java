@@ -42,6 +42,7 @@ public class TradeAgent extends Agent {
 		}
 		return agent;
 	}
+
 	//get agents for service
 	public DFAgentDescription[] getServiceAgents( String service ) {
 		DFAgentDescription dfd = new DFAgentDescription();
@@ -55,5 +56,9 @@ public class TradeAgent extends Agent {
 		}
 		catch (Exception fe) {}
 		return null;
+
+	}
+	public void say(String message){
+	System.out.println(this.getLocalName() +": "+ message);
 	}
 }
