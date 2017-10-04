@@ -39,4 +39,8 @@ public class TradeAgent extends Agent {
 		}
 		return agent;
 	}
+	
+	public void say(String message){
+		System.out.println(this.getLocalName() +": "+ message);
+	}
 }
