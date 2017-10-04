@@ -11,11 +11,13 @@ import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.ContractNetResponder;
+import jade.proto.SSIteratedContractNetResponder;
+import jade.proto.SSResponderDispatcher;
 import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.NotUnderstoodException;
 import jade.domain.FIPAAgentManagement.RefuseException;
 import jade.domain.FIPAAgentManagement.FailureException;
-
+import jade.core.behaviours.Behaviour;
 // Used to implement the FSM Behaviour
 import jade.core.behaviours.FSMBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
@@ -24,7 +26,7 @@ import jade.core.behaviours.OneShotBehaviour;
 import jade.util.Logger;
 
 //Used for the energy schedule
-import java.util.Vector;;
+import java.util.Vector;
 
 public class RetailerAgent extends TradeAgent {
 	
@@ -61,65 +63,49 @@ public class RetailerAgent extends TradeAgent {
 	// Max units the agent can provide in one transaction
 	private int energyThreshold;
 	
-	// State names
-	private static final String STATE_A = "Setup";
-	private static final String STATE_B = "Listen";
-	private static final String STATE_C = "TakeDown";
-
-	
 	// [install later] Amount of energy the retailer agent has, determines rate and threshold
 	private int energyStored = 0;
 	
 	protected void setup() {
-		// Set up the agent's FSM
-		EnableFSMBehaviour();
-	}
-	
-	private void EnableFSMBehaviour() {
+		// Set up the agent
 		
-		OneShotBehaviour RetailerSetupBehaviour = new OneShotBehaviour(this) {
-			@Override
-			public void action() {
-				setAgentProperties();				// Sets the agent's properties (energy rate & threshold) to passed or default values
-				setupServiceProviderComponent(); 	//Describes the agent as a retail agent
-				
-				System.out.println(getLocalName()+": EnergyRate = $" + energyRate + "/unit, EnergyThreshold = " + energyThreshold + " units.");
-			}
-		};
+		// Sets the agent's properties (energy rate & threshold) to passed or default values
+		setAgentProperties();
 		
-		OneShotBehaviour RetailerTakeDownBehaviour = new OneShotBehaviour(this) {
-			@Override
-			public void action() {
-				System.out.println(getName() + ": Shutting down agent");
-				takeDown();
-			}
-		};
+		//Describes the agent as a retail agent
+		setupServiceProviderComponent();
 		
-		// Enable the agent's FSM behaviour
-		FSMBehaviour fsm = new FSMBehaviour(this);
+		System.out.println(getLocalName()+": EnergyRate = $" + energyRate + "/unit, EnergyThreshold = " + energyThreshold + " units.");
 		
 		// Template to filter messages as to only receive CFP messages for the CNR Behaviour
 		MessageTemplate template = MessageTemplate.and(
 				MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_ITERATED_CONTRACT_NET),
 				MessageTemplate.MatchPerformative(ACLMessage.CFP) );
 		
-		fsm.registerFirstState(RetailerSetupBehaviour, STATE_A);
-		fsm.registerState(new RetailerCNRBehaviour(this, template), STATE_B);
-		fsm.registerState(RetailerTakeDownBehaviour, STATE_C);
 		
-		fsm.registerDefaultTransition(STATE_A, STATE_B);
-		fsm.registerTransition(STATE_B, STATE_B, 0);
-		fsm.registerTransition(STATE_B, STATE_C, 1);
-		
-		this.addBehaviour(fsm);
+		this.addBehaviour(new SSResponderDispatcher(this,template) {
+			@Override
+			protected Behaviour createResponder(ACLMessage initiationMsg) {
+				// TODO Auto-generated method stub
+				return new RetailerCNRBehaviour(myAgent, initiationMsg);
+			}
+		});
 	}
 	
-	private class RetailerCNRBehaviour extends ContractNetResponder {
+	private int calculateEnergyCost(String cfpContent) {
+		// assume that the passed content is integer only
+		int energyRequestAmount = 0;
+		energyRequestAmount = convStrToInt(cfpContent);
+		return energyRate * energyRequestAmount;
+	}
+
+	
+	private class RetailerCNRBehaviour extends SSIteratedContractNetResponder{
 		private int exitValue = 0; // 0 = doesn't need update, 1 = needs update
 		private EnergyUnit currentUnitRequest = null;
 		
-		RetailerCNRBehaviour(Agent a, MessageTemplate template) {
-			super(a, template);
+		RetailerCNRBehaviour(Agent a, ACLMessage initialMessage) {
+			super(a, initialMessage);
 			System.out.println(a.getLocalName() + ": Creating CNR behaviour");
 		}
 		
@@ -176,6 +162,20 @@ public class RetailerAgent extends TradeAgent {
 		}
 	}
 	
+	private boolean performAction() {
+		// For later, actually reduce energy stores for this agent and base price off that
+		return true;
+	}
+	
+	private boolean evaluateAction(int energyRequestAmount) {
+		// If the amount required is too much deny the request
+		if ( (energyRequestAmount > energyThreshold) && (energyThreshold >= 0) ) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
 	// Temporary method until the method of setting rate is determined
 	private void setAgentProperties() {
 		Object[] args = this.getArguments();
@@ -209,41 +209,7 @@ public class RetailerAgent extends TradeAgent {
 			energyThreshold = -1;
 		}
 	}
-	
-	private int convStrToInt (String str) {
-		int value = 0;
 		
-		try {
-			value = Integer.parseInt(str);	
-		} catch (NumberFormatException e) {
-			myLogger.log(Logger.SEVERE, "Agent "+getLocalName()+" - Cannot convert \"" + str  + "\" into an integer", e);
-			doDelete();
-		}
-		
-		return value;
-	}
-
-	private boolean evaluateAction(int energyRequestAmount) {
-		// If the amount required is too much deny the request
-		if ( (energyRequestAmount > energyThreshold) && (energyThreshold >= 0) ) {
-			return false;
-		} else {
-			return true;
-		}
-	}
-	
-	private int calculateEnergyCost(String cfpContent) {
-		// assume that the passed content is integer only
-		int energyRequestAmount = 0;
-		energyRequestAmount = convStrToInt(cfpContent);
-		return energyRate * energyRequestAmount;
-	}
-
-	private boolean performAction() {
-		// For later, actually reduce energy stores for this agent and base price off that
-		return true;
-	}
-	
 	private void setupServiceProviderComponent () {
 		DFAgentDescription dfd = new DFAgentDescription();
 		ServiceDescription sd = new ServiceDescription(); 
@@ -268,11 +234,17 @@ public class RetailerAgent extends TradeAgent {
 		}
 	}
 	
-	protected void takeDown(){
-       try {
-    	   DFService.deregister(this); 
-       } catch (Exception e) {
-    	   myLogger.log(Logger.SEVERE, "Agent "+getLocalName()+" - Cannot de-register with DF", e);
-       }
+	
+	private int convStrToInt (String str) {
+		int value = 0;
+		
+		try {
+			value = Integer.parseInt(str);	
+		} catch (NumberFormatException e) {
+			myLogger.log(Logger.SEVERE, "Agent "+getLocalName()+" - Cannot convert \"" + str  + "\" into an integer", e);
+			doDelete();
+		}
+		
+		return value;
 	}
 }
