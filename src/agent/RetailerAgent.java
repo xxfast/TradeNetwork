@@ -18,6 +18,7 @@ import jade.domain.FIPAAgentManagement.NotUnderstoodException;
 import jade.domain.FIPAAgentManagement.RefuseException;
 import jade.domain.FIPAAgentManagement.FailureException;
 import jade.core.behaviours.Behaviour;
+
 // Used to implement the FSM Behaviour
 import jade.core.behaviours.FSMBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
@@ -35,10 +36,10 @@ public class RetailerAgent extends TradeAgent {
 		private int units;
 		private int cost;
 		
-		public EnergyUnit(int energy, int time, int cost) {
+		public EnergyUnit(int units, int time) {
 			this.time = time;
-			this.units = energy;
-			this.cost = cost;
+			this.units = units;
+			this.cost = 0;
 		}
 		
 		public int getTime() {
@@ -51,6 +52,10 @@ public class RetailerAgent extends TradeAgent {
 		
 		public int getCost() {
 			return cost;
+		}
+		
+		public void determineCost(int rate) {
+			cost = rate*units;
 		}
 	}	
 
@@ -75,7 +80,7 @@ public class RetailerAgent extends TradeAgent {
 		//Describes the agent as a retail agent
 		setupServiceProviderComponent();
 		
-		System.out.println(getLocalName()+": EnergyRate = $" + energyRate + "/unit, EnergyThreshold = " + energyThreshold + " units.");
+		say("EnergyRate = $" + energyRate + "/unit, EnergyThreshold = " + energyThreshold + " units.");
 		
 		// Template to filter messages as to only receive CFP messages for the CNR Behaviour
 		MessageTemplate template = MessageTemplate.and(
@@ -92,34 +97,26 @@ public class RetailerAgent extends TradeAgent {
 		});
 	}
 	
-	private int calculateEnergyCost(String cfpContent) {
-		// assume that the passed content is integer only
-		int energyRequestAmount = 0;
-		energyRequestAmount = convStrToInt(cfpContent);
-		return energyRate * energyRequestAmount;
-	}
-
-	
 	private class RetailerCNRBehaviour extends SSIteratedContractNetResponder{
-		private int exitValue = 0; // 0 = doesn't need update, 1 = needs update
 		private EnergyUnit currentUnitRequest = null;
 		
 		RetailerCNRBehaviour(Agent a, ACLMessage initialMessage) {
 			super(a, initialMessage);
-			System.out.println(a.getLocalName() + ": Creating CNR behaviour");
+			say("Creating new SSICNR behaviour");
 		}
 		
 		@Override
 		protected ACLMessage handleCfp(ACLMessage cfp) throws NotUnderstoodException, RefuseException {
 			
 			String[] strContent = cfp.getContent().split(":");
-			currentUnitRequest = new EnergyUnit(convStrToInt(strContent[0]), convStrToInt(strContent[1]), calculateEnergyCost(strContent[1]));
-			energyUnitSchedule.add(currentUnitRequest);
+			currentUnitRequest = new EnergyUnit(convStrToInt(strContent[0]), convStrToInt(strContent[1]));
 			
-			System.out.println("Agent "+getLocalName()+": CFP received from "+cfp.getSender().getName()+". Energy required is "+currentUnitRequest.getUnits()+" units.");
+			say(String.format("CFP received from %s. Units required: %d units", cfp.getSender().getLocalName(), currentUnitRequest.getUnits()));
 			
-			if (evaluateAction(currentUnitRequest.getUnits())) {		
-				System.out.println("Agent " + getLocalName() + ": Proposing. Cost: $" + currentUnitRequest.getCost() + ".00 delivering at time " + currentUnitRequest.getTime());
+			
+			if (evaluateAction(currentUnitRequest.getUnits())) {
+				currentUnitRequest.determineCost(energyRate);
+				say(String.format("Proposing. Cost: $%d.00. Delivering at time %d.", currentUnitRequest.getCost(), currentUnitRequest.getTime()));
 				
 				ACLMessage propose = cfp.createReply();
 				propose.setPerformative(ACLMessage.PROPOSE);
@@ -128,37 +125,31 @@ public class RetailerAgent extends TradeAgent {
 			}
 			else {
 				// We refuse to provide a proposal
-				System.out.println("Agent "+getLocalName()+": Refuse. Cannot provide " + currentUnitRequest.getUnits() + " units. Threshold is " + energyThreshold + " units.");
+				say(String.format("Refuse. Cannot provide %d units. Threshold is %d units.", currentUnitRequest.getUnits(), currentUnitRequest.getUnits()));
 				throw new RefuseException("evaluation-failed");	
 			}
 		}
 		
 		@Override
 		protected ACLMessage handleAcceptProposal(ACLMessage cfp, ACLMessage propose, ACLMessage accept) throws FailureException {
-			System.out.println("Agent "+getLocalName()+": Proposal accepted by " + accept.getSender().getName());
+			say(String.format("Proposal accepted by %s", accept.getSender().getLocalName()));
+			
 			if (performAction()) {
-				System.out.println("Agent "+getLocalName()+ ": Energy delivered to " + accept.getSender().getName());
+				say(String.format("%d units delivered to %s", currentUnitRequest.getUnits(), accept.getSender().getLocalName()));
 				ACLMessage inform = accept.createReply();
 				inform.setContent(currentUnitRequest.getCost() + ":" + currentUnitRequest.getTime());
 				inform.setPerformative(ACLMessage.INFORM);
 				
-				// Informs the FSM behaviour that it needs to update stocks
-				exitValue = 1;
-				System.out.println(getLocalName()+": Exit Value = " + exitValue);
 				return inform;
 			}
 			else {
-				System.out.println("Agent "+getLocalName()+": Action execution failed");
+				say("Action execution failed");
 				throw new FailureException("unexpected-error");
 			}
 		}
 
 		protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
-			System.out.println("Agent "+getLocalName()+": Proposal rejected");
-		}
-		
-		public int onEnd() {
-			return exitValue;
+			say("Proposal rejected");
 		}
 	}
 	
