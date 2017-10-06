@@ -72,11 +72,11 @@ public class SchedulingAgent extends Agent {
 			
 			protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException{
 				recievedRequest = new Demand(request);
-					System.out.println(getLocalName() + ": REQUEST received request from " + request.getSender().getName() + ". For the time slot of " + recievedRequest.getTime().hour + "h");
-					System.out.println(getLocalName() + ": OK ");
-					ACLMessage agree = request.createReply();
-					agree.setPerformative(ACLMessage.AGREE);
-					return agree;
+				System.out.println(getLocalName() + ": REQUEST received request from " + request.getSender().getName() + ". For the time slot of " + recievedRequest.getTime().hour + "h");
+				System.out.println(getLocalName() + ": OK ");
+				ACLMessage agree = request.createReply();
+				agree.setPerformative(ACLMessage.AGREE);
+				return agree;
 			}
 
 			protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException{

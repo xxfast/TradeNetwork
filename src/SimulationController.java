@@ -4,6 +4,7 @@ import jade.wrapper.StaleProxyException;
 import jade.core.Runtime;
 import agent.ApplianceAgent;
 import agent.HomeAgent;
+import agent.RetailerAgent;
 import agent.SchedulingAgent;
 import interfaces.Object2ApplianceAgentInterface;
 import jade.core.AID;
@@ -20,24 +21,32 @@ public class SimulationController {
 		Profile pMain = new ProfileImpl(null, 8888, null); 
 		pMain.setParameter(Profile.GUI, "true");
 		ContainerController mainCtrl = rt.createMainContainer(pMain); // Wait for some time
-		Thread.sleep(10000);
+		Thread.sleep(200);
 		
 		// Create a agent of class SchedulingAgent 
 		System.out.println(SimulationController.class.getName() + ": Starting up a SchedulingAgent...");
 		AgentController schedulingAgentCtrl = mainCtrl.createNewAgent("SA", SchedulingAgent.class.getName(), new Object[0]);
 		schedulingAgentCtrl.start();
 
-		Thread.sleep(2000); 
+		Thread.sleep(100); 
 		
+		String schedulerName = schedulingAgentCtrl.getName().split("@")[0];
+		
+		System.out.println(schedulerName);
 		// Create a agent of class HomeAgent 
 		System.out.println(SimulationController.class.getName() + ": Starting up a HomeAgent...");
-		AgentController homeAgentCtrl = mainCtrl.createNewAgent("HA", HomeAgent.class.getName(),new Object[] {schedulingAgentCtrl.getName()});
+		AgentController homeAgentCtrl = mainCtrl.createNewAgent("HA", HomeAgent.class.getName(),new Object[] {schedulerName});
 		homeAgentCtrl.start();
 		
 		// Create a agent of class ApplianceAgent 
 		System.out.println(SimulationController.class.getName() + ": Starting up a ApplianceAgent...");
-		AgentController ApplianceAgentCtrl = mainCtrl.createNewAgent("AA", ApplianceAgent.class.getName(),new Object[] {schedulingAgentCtrl.getName()});
+		AgentController ApplianceAgentCtrl = mainCtrl.createNewAgent("AA", ApplianceAgent.class.getName(),new Object[] {schedulerName});
 		ApplianceAgentCtrl.start();
+		
+		// Create a agent of class RetailerAgent 
+		System.out.println(SimulationController.class.getName() + ": Starting up a ApplianceAgent...");
+		AgentController RetailerAgentCtrl = mainCtrl.createNewAgent("RA", RetailerAgent.class.getName(),new Object[0]);
+		RetailerAgentCtrl.start();
 		
 		// Wait for some time
 		Thread.sleep(20000); 
