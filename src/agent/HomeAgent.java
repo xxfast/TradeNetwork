@@ -1,13 +1,15 @@
 package agent;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.Vector;
 
+import FIPA.DateTime;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.WakerBehaviour;
+import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
@@ -18,18 +20,21 @@ import jade.proto.AchieveREInitiator;
 import jade.proto.ContractNetInitiator;
 import jade.util.Logger;
 import jade.util.leap.Iterator;
-import jade.util.leap.Map;
+
+import java.util.Map;
 import model.Demand;
 
 public class HomeAgent extends TradeAgent {
 
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
+	private Random rand;
 
 	private ArrayList<Demand> messages = new ArrayList<>();
 	private AID myscheduler;
 	private List<AID> retailers;
 	protected void setup() {
 		// Registration with the DF
+		
 		DFAgentDescription dfd = new DFAgentDescription();
 		ServiceDescription sd = new ServiceDescription();
 		sd.setType("HomeAgent");
@@ -37,7 +42,16 @@ public class HomeAgent extends TradeAgent {
 		sd.setOwnership("TradeNetwork");
 		dfd.setName(getAID());
 		dfd.addServices(sd);
-		myscheduler=null;
+		rand = new Random();
+		Object[] args = getArguments();
+		if(args.length!=1)
+		{
+			say("Need to specify schedule agent in arguments");
+			doDelete();
+		}
+		myscheduler = new AID((String) args[0],AID.ISLOCALNAME);
+		
+
 		try {
 			DFService.register(this, dfd);
 		} catch (FIPAException e) {
@@ -47,21 +61,31 @@ public class HomeAgent extends TradeAgent {
 		retailers= new ArrayList<>();
 		
 		
-		addBehaviour(new WakerBehaviour(this,10000) {
+		addBehaviour(new TickerBehaviour(this,5000) {
 			
 			@Override
-			public void onWake() {
+			public void onTick() {
 				// TODO Auto-generated method stub
 				// get scheduler agent from AMS
-//				System.out.println("Woke up and running");
-				myscheduler=getAgentFromAMS("sched");
-				retailers.add(getAgentFromAMS("ret1"));
+
+				//get agents with retailer service
+				DFAgentDescription[] agents = getServiceAgents("RetailerAgent");
+				for(DFAgentDescription agent : agents)
+				{
+					retailers.add(agent.getName());
+				}
+				
+					
 				if(myscheduler!=null)
 				{
 //					System.out.println("intiated behaviour");
 					AchieveREInitiator req = new RequestDemand(myAgent, new ACLMessage(ACLMessage.REQUEST), myscheduler);
-					req.registerHandleInform(new RequestQuote(myAgent, null, retailers));
-					addBehaviour(req);
+					if(retailers.size()>0)
+					{
+						req.registerHandleInform(new RequestQuote(myAgent, null, retailers));
+						addBehaviour(req);
+					}
+						
 				}
 										
 					
@@ -72,12 +96,15 @@ public class HomeAgent extends TradeAgent {
 		
 	}
 	public static void printMap(Map mp) {
-	    Iterator it = mp.keySet().iterator();
-	    while (it.hasNext()) {	        
-	        Object key = it.next();
-	        System.out.println(key +"="+mp.get(key));
-	    }
+	   
 	}
+	
+	public Random getRandomizer()
+	{
+		return rand;
+	}
+	
+	
 	
 	public class RequestDemand extends AchieveREInitiator {
 		private AID mySchedulerAgent;
@@ -92,14 +119,22 @@ public class HomeAgent extends TradeAgent {
 		protected Vector prepareRequests(ACLMessage request) {
 			// construct request to be sent to scheduler
 			System.out.println("Sending message");
-			request.setPerformative(ACLMessage.REQUEST);
-			request.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
-			request.setSender(myAgent.getAID());
-			request.addReceiver(mySchedulerAgent);
-			String content = "demand for (18:00,1)";
-			request.setContent(content);
+			DateTime time = new DateTime();
+			time.hour=0;
+			Demand demand= new Demand(time);
+			ACLMessage demReq=demand.createACLMessage(ACLMessage.REQUEST);
+			demReq.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+			demReq.addReceiver(mySchedulerAgent);
+			demReq.setSender(myAgent.getAID());
+//			request.setPerformative(ACLMessage.REQUEST);
+//			request.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+//			
+//			request.setSender(myAgent.getAID());
+//			request.addReceiver(mySchedulerAgent);
+//			String content = "demand for (18:00,1)";
+//			request.setContent(content);
 			// TODO Auto-generated method stub
-			return super.prepareRequests(request);
+			return super.prepareRequests(demReq);
 		}
 
 		
@@ -111,6 +146,8 @@ public class HomeAgent extends TradeAgent {
 	public class RequestQuote extends ContractNetInitiator
 	{
 		private List<AID> retailAgents;
+		private int myPrice;
+		private Demand schedDemand=null;
 		public RequestQuote(Agent a, ACLMessage msg, List<AID> retailers) {
 			super(a, msg);
 			retailAgents=retailers;
@@ -127,12 +164,13 @@ public class HomeAgent extends TradeAgent {
 			ACLMessage quoteRequest = null;
 			if(demandMsg!=null)
 			{
+				
 				//construct quote request to send to retailers
-				String demand =demandMsg.getContent();
+				schedDemand =new Demand(demandMsg);
 				quoteRequest= new ACLMessage(ACLMessage.CFP);
 				quoteRequest.setProtocol(FIPANames.InteractionProtocol.FIPA_ITERATED_CONTRACT_NET);
 				//simply attaching demand- TODO make a meaningful request
-				quoteRequest.setContent(demand);
+				quoteRequest.setContent(schedDemand.getContent());
 				for(AID agent : retailAgents)
 				{
 					quoteRequest.addReceiver(agent);
@@ -165,6 +203,28 @@ public class HomeAgent extends TradeAgent {
 				//Negotiation here
 				//TODO function to go through all proposals and make new CFP
 				// call for better proposals happens here
+				//evaluate proposals and find which we can negotiate
+				say("Negotiating");
+				Map<ACLMessage,Boolean> evalProposals=evaluateProposals(proposals);
+				
+				Vector<ACLMessage> nextMessages= new Vector<>();
+				for(Map.Entry<ACLMessage,Boolean> entry:evalProposals.entrySet())
+				{
+					ACLMessage nextMsg=entry.getKey().createReply();;
+					if(entry.getValue())
+					{
+						//negotiate with the retailer of proposal
+						nextMsg.setPerformative(ACLMessage.CFP);
+						nextMsg.setContent(schedDemand.getContent());
+					}
+					else
+					{
+						nextMsg.setPerformative(ACLMessage.REJECT_PROPOSAL);
+					}
+					nextMessages.addElement(nextMsg);					
+				}
+				newIteration(nextMessages);
+				
 			}
 			else
 			{
@@ -204,16 +264,30 @@ public class HomeAgent extends TradeAgent {
 		}
 		 protected boolean shouldNegotiate()
 		 {
-			 return false;
+			 return true;
 		 }
 		 
 		 protected ACLMessage getBestProposal(List<ACLMessage> proposals)
 		 {
 			 //randomly select and approve a proposal
-			 Random rand = new Random();
+			 Random rand = getRandomizer();
 			 int choice=rand.nextInt(proposals.size());
 			 return proposals.get(choice);
 		 }
+		 
+		 protected HashMap<ACLMessage,Boolean> evaluateProposals(ArrayList<ACLMessage> proposals)
+		 {
+			 HashMap<ACLMessage, Boolean> eval= new HashMap<>();
+			 for(ACLMessage msg : proposals)
+			 {
+				 //randomly accept/reject
+				 boolean choice = rand.nextBoolean();
+				 eval.put(msg, choice);
+			 }
+			 
+			 return eval;
+		 }
+		
 	}
 	
 
