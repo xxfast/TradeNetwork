@@ -1,4 +1,4 @@
-
+.classpath
 .metadata
 bin/
 tmp/
@@ -48,3 +48,12 @@ local.properties
 .cache-main
 .scala_dependencies
 .worksheet
+
+.classpath
+
+APDescription.txt
+MTPs-Main-Container.txt
+
+APDescription.txt
+
+MTPs-Main-Container.txt
