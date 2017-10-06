@@ -50,7 +50,6 @@ public class HomeAgent extends TradeAgent {
 			doDelete();
 		}
 		myscheduler = new AID((String) args[0],AID.ISLOCALNAME);
-		
 
 		try {
 			DFService.register(this, dfd);
