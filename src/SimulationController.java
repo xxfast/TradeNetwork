@@ -1,7 +1,11 @@
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
+import ui.MainProgram;
 import jade.core.Runtime;
+
+import java.awt.EventQueue;
+
 import agent.ApplianceAgent;
 import agent.HomeAgent;
 import agent.RetailerAgent;
@@ -47,23 +51,18 @@ public class SimulationController {
 		System.out.println(SimulationController.class.getName() + ": Starting up a ApplianceAgent...");
 		AgentController RetailerAgentCtrl = mainCtrl.createNewAgent("RA", RetailerAgent.class.getName(),new Object[0]);
 		RetailerAgentCtrl.start();
+
 		
-		// Wait for some time
-		Thread.sleep(20000); 
-		
-//		try {
-//			// Retrieve Object2ApplianceAgentInterface exposed by the agent to make it set the homeAgent
-//			System.out.println(SimulationController.class.getName() + ": Activating counter");
-//			Object2ApplianceAgentInterface o2a = ApplianceAgentCtrl.getO2AInterface(Object2ApplianceAgentInterface.class); 
-//			AID ofHomeAgent = new AID();
-//			ofHomeAgent.setName(homeAgentCtrl.getName());
-//			o2a.setSchedulerAgen(ofHomeAgent);
-//			
-//			// Wait for some time
-//			Thread.sleep(20000);
-//			
-//			}catch (StaleProxyException e) {
-//				e.printStackTrace();
-//		}
+		// Start the main UI
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					MainProgram window = new MainProgram();
+					window.getFrame().setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
 	}
 }
