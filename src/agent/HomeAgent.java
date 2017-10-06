@@ -61,7 +61,7 @@ public class HomeAgent extends TradeAgent {
 		retailers= new ArrayList<>();
 		
 		
-		addBehaviour(new TickerBehaviour(this,10000) {
+		addBehaviour(new TickerBehaviour(this,5000) {
 			
 			@Override
 			public void onTick() {
