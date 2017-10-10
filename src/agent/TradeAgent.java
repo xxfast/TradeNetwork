@@ -1,5 +1,6 @@
 package agent;
 
+import annotations.Creatable;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.AMSService;
@@ -10,6 +11,7 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 
+@Creatable
 public class TradeAgent extends Agent {
 
 	protected void setup() {
@@ -43,7 +45,6 @@ public class TradeAgent extends Agent {
 		return agent;
 	}
 
-	//get agents for service
 	public DFAgentDescription[] getServiceAgents( String service ) {
 		DFAgentDescription dfd = new DFAgentDescription();
 		ServiceDescription sd = new ServiceDescription();
@@ -61,4 +62,5 @@ public class TradeAgent extends Agent {
 	public void say(String message){
 		System.out.println(this.getLocalName() +": "+ message);
 	}
+
 }

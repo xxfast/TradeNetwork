@@ -3,15 +3,18 @@ package model;
 import java.util.Date;
 
 import FIPA.DateTime;
+import annotations.Creatable;
+import annotations.Customizable;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
+@Creatable
 public class Demand {
 	
-	private int units;
-	private DateTime time;
-	private int duration; 
+	@Customizable(label="Required number of units") private int units;
+	@Customizable(label="When is it required?")  private DateTime time;
+	@Customizable(label="For how long is it required")  private int duration; 
 	
 	public ACLMessage createACLMessage(int performative){
 		ACLMessage toReturn = new ACLMessage(performative);

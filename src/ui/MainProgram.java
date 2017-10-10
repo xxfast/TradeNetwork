@@ -1,43 +1,33 @@
 package ui;
-import java.awt.EventQueue;
-
-import javax.swing.JFrame;
-import javax.swing.JInternalFrame;
 import java.awt.BorderLayout;
-import javax.swing.JPanel;
-import java.awt.FlowLayout;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.BevelBorder;
-import java.awt.Color;
-import java.awt.Component;
-import javax.swing.Box;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JMenu;
-import javax.swing.JRadioButtonMenuItem;
-import java.awt.Panel;
-import javax.swing.BoxLayout;
-import java.awt.ScrollPane;
-import javax.swing.JTabbedPane;
-import java.awt.Cursor;
-import javax.swing.JSeparator;
-import javax.swing.SwingConstants;
-import java.awt.Dimension;
-import javax.swing.border.TitledBorder;
-import javax.swing.JTextPane;
-import javax.swing.JLabel;
-import javax.swing.JFormattedTextField;
-import javax.swing.JTextField;
-import java.awt.Canvas;
-import javax.swing.JTree;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.DefaultMutableTreeNode;
+
+
 import java.awt.Button;
-import java.awt.Rectangle;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Panel;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
+
+import javax.swing.BoxLayout;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JTextPane;
+import javax.swing.JTree;
+import javax.swing.border.TitledBorder;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+
+import agent.ApplianceAgent;
+import simulation.SimulationController;
+
 
 public class MainProgram {
 
@@ -45,6 +35,7 @@ public class MainProgram {
 
 	/**
 	 * Create the application.
+	 * @param simulationController 
 	 */
 	public MainProgram() {
 		initialize();
@@ -82,16 +73,26 @@ public class MainProgram {
 		JMenu mnEdit = new JMenu("Edit");
 		menuBar.add(mnEdit);
 		
-		JMenuItem mntmCreate = new JMenuItem("Create");
-		mntmCreate.addActionListener(new ActionListener() {
+		JMenu mnCreate = new JMenu("Create");
+		mnEdit.add(mnCreate);
+		
+		JMenuItem mntmApplianceAgent = new JMenuItem("Appliance Agent");
+		mntmApplianceAgent.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent e) {
-				CreateAgent();
+				JDialog dialog = new TradeAgentCreator(ApplianceAgent.class);
+				dialog.setVisible(true);
 			}
 		});
-	
-		mnEdit.add(mntmCreate);
+		mnCreate.add(mntmApplianceAgent);
 		
-		JMenuItem mntmRemove = new JMenuItem("Remove");
+		JMenuItem mntmHomeAgent = new JMenuItem("Home Agent");
+		mnCreate.add(mntmHomeAgent);
+		
+		JMenuItem mntmRetailerAgent = new JMenuItem("Retailer Agent");
+		mnCreate.add(mntmRetailerAgent);
+		
+		JMenuItem mntmRemove = new JMenuItem("Remove Selected");
 		mnEdit.add(mntmRemove);
 		
 		JMenu mnControl = new JMenu("Control");
@@ -158,11 +159,6 @@ public class MainProgram {
 		
 	}
 	
-	public void CreateAgent() {
-		TradeAgentCreator creator = new TradeAgentCreator();
-		creator.setVisible(true);
-	}
-
 	public JFrame getFrame() {
 		return frame;
 	}

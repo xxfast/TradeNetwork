@@ -30,7 +30,8 @@ import jade.util.Logger;
 import java.util.Vector;
 
 public class RetailerAgent extends TradeAgent {
-	
+
+
 	private class EnergyUnit {
 		private int time;
 		private int units;
