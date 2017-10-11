@@ -1,44 +1,22 @@
 package ui;
 
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-
-import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
 
-public class TradeAgentInspector extends JDialog {
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import javax.swing.JLabel;
 
-	private final JPanel contentPanel = new JPanel();
+public class TradeAgentInspector extends JPanel {
 
-
-	/**
-	 * Create the dialog.
-	 */
 	public TradeAgentInspector() {
-		setBounds(100, 100, 450, 300);
-		this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-		getContentPane().setLayout(new BorderLayout());
-		contentPanel.setLayout(new FlowLayout());
-		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-		getContentPane().add(contentPanel, BorderLayout.CENTER);
-		{
-			JPanel buttonPane = new JPanel();
-			buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
-			getContentPane().add(buttonPane, BorderLayout.SOUTH);
-			{
-				JButton okButton = new JButton("OK");
-				okButton.setActionCommand("OK");
-				buttonPane.add(okButton);
-				getRootPane().setDefaultButton(okButton);
-			}
-			{
-				JButton cancelButton = new JButton("Cancel");
-				cancelButton.setActionCommand("Cancel");
-				buttonPane.add(cancelButton);
-			}
-		}
+		setBorder(new TitledBorder(null, "Agent Inspector", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+		setPreferredSize(new Dimension(250, 100));
+		JLabel lblEditorconsole = new JLabel("Please select an agent to edit it's properties");
+		lblEditorconsole.setPreferredSize(new Dimension(250, 100));
+		add(lblEditorconsole);
+
 	}
 
 }

@@ -29,8 +29,8 @@ import jade.util.Logger;
 //Used for the energy schedule
 import java.util.Vector;
 
-public class RetailerAgent extends TradeAgent {
 
+public class RetailerAgent extends TradeAgent {
 
 	private class EnergyUnit {
 		private int time;
@@ -238,5 +238,13 @@ public class RetailerAgent extends TradeAgent {
 		}
 		
 		return value;
+	}
+
+	public int getEnergyStored() {
+		return energyStored;
+	}
+
+	public void setEnergyStored(int energyStored) {
+		this.energyStored = energyStored;
 	}
 }

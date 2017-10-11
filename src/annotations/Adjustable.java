@@ -8,6 +8,6 @@ import java.lang.annotation.Target;
 
 @Retention(RUNTIME)
 @Target(FIELD)
-public @interface Customizable {
+public @interface Adjustable {
 	public String label();
 }

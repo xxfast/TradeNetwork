@@ -5,6 +5,7 @@ import java.awt.BorderLayout;
 import java.awt.Button;
 import java.awt.Color;
 import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.Panel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -26,10 +27,10 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
 import agent.ApplianceAgent;
-import simulation.SimulationController;
+import simulation.SimulationAdapter;
 
 
-public class MainProgram {
+public class SimulationInspecter {
 
 	private JFrame frame;
 
@@ -37,7 +38,7 @@ public class MainProgram {
 	 * Create the application.
 	 * @param simulationController 
 	 */
-	public MainProgram() {
+	public SimulationInspecter() {
 		initialize();
 	}
 
@@ -46,7 +47,7 @@ public class MainProgram {
 	 */
 	private void initialize() {
 		setFrame(new JFrame());
-		getFrame().setBounds(100, 100, 400, 350);
+		getFrame().setBounds(100, 100, 500, 350);
 		getFrame().setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		JMenuBar menuBar = new JMenuBar();
@@ -111,16 +112,16 @@ public class MainProgram {
 		menuBar.add(mntmHelp);
 		getFrame().getContentPane().setLayout(new BoxLayout(getFrame().getContentPane(), BoxLayout.X_AXIS));
 		
-		JPanel panel = new JPanel();
-		getFrame().getContentPane().add(panel);
-		panel.setLayout(new BorderLayout(0, 0));
+		JPanel view = new JPanel();
+		getFrame().getContentPane().add(view);
+		view.setLayout(new BorderLayout(0, 0));
 		
 		JTextPane console = new JTextPane();
 		console.setEditable(false);
 		console.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
 		console.setBackground(Color.LIGHT_GRAY);
 		console.setText("Console");
-		panel.add(console, BorderLayout.SOUTH);
+		view.add(console, BorderLayout.SOUTH);
 		
 		JTree tree = new JTree();
 		tree.setModel(new DefaultTreeModel(
@@ -136,26 +137,15 @@ public class MainProgram {
 				}
 			}
 		));
-		panel.add(tree, BorderLayout.CENTER);
+		view.add(tree, BorderLayout.CENTER);
 		
-		Panel options = new Panel();
-		panel.add(options, BorderLayout.EAST);
+		Panel sidebar = new Panel();
+		sidebar.setPreferredSize(new Dimension(250, 0));
+		view.add(sidebar, BorderLayout.EAST);
 		
-		JPanel controls = new JPanel();
-		controls.setBorder(new TitledBorder(null, "Controls", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		options.add(controls);
+		sidebar.add(new SimulationController());
+		sidebar.add(new TradeAgentInspector());
 		
-		Button playBtn = new Button("Play");
-		playBtn.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				console.setText("Hello");
-			}
-		});
-		controls.add(playBtn);
-		
-		Button button = new Button("Stop");
-		controls.add(button);
 		
 	}
 	

@@ -11,19 +11,10 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
 import agent.ApplianceAgent;
-import agent.RetailerAgent;
-import agent.TradeAgent;
-import annotations.Creatable;
-import annotations.Customizable;
+import annotations.Adjustable;
 
 import javax.swing.JTextField;
 import javax.swing.JLabel;
-import javax.swing.JComboBox;
-import javax.swing.DefaultComboBoxModel;
-import model.AgentType;
-import java.awt.Dialog.ModalExclusionType;
-import java.awt.Dialog.ModalityType;
-import javax.swing.BoxLayout;
 import java.awt.Rectangle;
 
 public class TradeAgentCreator extends JDialog {
@@ -39,21 +30,20 @@ public class TradeAgentCreator extends JDialog {
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
-		contentPanel.setLayout(new GridLayout(3,1));
+		
+		contentPanel.setLayout(new GridLayout(5,1));
 		
 		type = ApplianceAgent.class;
 		
 		/* Fields will be instantiated only for customizable agents */
-		if(type.isAnnotationPresent(Creatable.class)) {
-			for(Field f : type.getDeclaredFields()) {
-				if(f.getAnnotationsByType(Customizable.class)!=null) {
-					Customizable c = f.getAnnotation(Customizable.class);
-					JLabel label = new JLabel(c.label());
-					contentPanel.add(label);
-					JTextField input= new JTextField();
-					contentPanel.add(input);
-					input.setColumns(10);
-				}
+		for(Field f : type.getDeclaredFields()) {
+			if(f.getAnnotationsByType(Adjustable.class)!=null) {
+				Adjustable c = f.getAnnotation(Adjustable.class);
+				JLabel label = new JLabel(c.label());
+				contentPanel.add(label);
+				JTextField input= new JTextField();
+				contentPanel.add(input);
+				input.setColumns(10);
 			}
 		}
 		{

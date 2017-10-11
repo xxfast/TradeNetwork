@@ -1,6 +1,6 @@
 package agent;
 
-import annotations.Creatable;
+import descriptors.TradeAgentDescriptor;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.AMSService;
@@ -11,11 +11,11 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 
-@Creatable
 public class TradeAgent extends Agent {
-
+	
+	private TradeAgentDescriptor descriptor;
+	
 	protected void setup() {
-		System.out.println(getDescription() + ": " + "initialising");
 	}
 	
 	public String getDescription(){
@@ -59,8 +59,17 @@ public class TradeAgent extends Agent {
 		return null;
 
 	}
+	
 	public void say(String message){
 		System.out.println(this.getLocalName() +": "+ message);
+	}
+
+	public TradeAgentDescriptor getDescriptor() {
+		return descriptor;
+	}
+
+	public void setDescriptor(TradeAgentDescriptor descriptor) {
+		this.descriptor = descriptor;
 	}
 
 }
