@@ -9,6 +9,7 @@ import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
 import model.Demand;
+import simulation.Simulation;
 import jade.domain.FIPANames;
 
 /**
@@ -45,7 +46,7 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 	private class DemandingBehaviour extends TickerBehaviour{
 		
 		public DemandingBehaviour (Agent a) {
-			super(a, 1000);
+			super(a, Simulation.Time);
 		}
 		
 		@Override
