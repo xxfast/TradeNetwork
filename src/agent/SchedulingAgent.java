@@ -40,8 +40,8 @@ public class SchedulingAgent extends Agent {
 			
 			protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException{
 					recievedDemand = new Demand(request);
-					System.out.println(getLocalName() + ": DEMAND received demand from " + request.getSender().getName() + ". Demand is " + recievedDemand.getUnits() + " unit(s) from " + recievedDemand.getTime().hour + "h for " + recievedDemand.getDuration() + " Hrs");
-					System.out.println(getLocalName() + ": OK ");
+//					System.out.println(getLocalName() + ": DEMAND received demand from " + request.getSender().getName() + ". Demand is " + recievedDemand.getUnits() + " unit(s) from " + recievedDemand.getTime().hour + "h for " + recievedDemand.getDuration() + " Hrs");
+//					System.out.println(getLocalName() + ": OK ");
 					ACLMessage agree = request.createReply();
 					agree.setPerformative(ACLMessage.AGREE);
 					return agree;
@@ -49,12 +49,12 @@ public class SchedulingAgent extends Agent {
 
 			protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException{
 				if(SchedulingAgent.this.schedule(recievedDemand.getUnits(),recievedDemand.getTime(),recievedDemand.getDuration())){	
-					System.out.println(getLocalName() + ": YES Scehduled the demand succesfully");
+//					System.out.println(getLocalName() + ": YES Scehduled the demand succesfully");
 					ACLMessage inform = request.createReply();
 					inform.setPerformative(ACLMessage.INFORM);
 					return inform;
 				}else{
-					System.out.println(getLocalName() + ": Action failed, informing initiator");
+//					System.out.println(getLocalName() + ": Action failed, informing initiator");
 					throw new FailureException("unexpected-error");
 				}
 			}

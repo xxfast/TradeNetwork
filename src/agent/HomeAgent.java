@@ -3,6 +3,7 @@ package agent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Vector;
 
@@ -19,22 +20,32 @@ import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
 import jade.proto.ContractNetInitiator;
 import jade.util.Logger;
-import jade.util.leap.Iterator;
-
-import java.util.Map;
 import model.Demand;
+import model.Offer;
+import negotiation.Issue;
+import negotiation.Strategy;
+import negotiation.Strategy.Item;
+import negotiation.negotiator.AgentNegotiator.OfferStatus;
+import negotiation.negotiator.HomeAgentNegotiator;
+import negotiation.tactic.Tactic;
+import negotiation.tactic.TimeDependentTactic;
+import negotiation.tactic.TimeWeightedFunction;
+import negotiation.tactic.TimeWeightedPolynomial;
 
 public class HomeAgent extends TradeAgent {
-
+	private final boolean INC=false;//customer mentality
+	private double maxNegotiationTime=10;
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
 	private Random rand;
+	
+	private HomeAgentNegotiator negotiator;
 
 	private ArrayList<Demand> messages = new ArrayList<>();
 	private AID myscheduler;
 	private List<AID> retailers;
+	
 	protected void setup() {
-		// Registration with the DF
-		
+		// Registration with the DF		
 		DFAgentDescription dfd = new DFAgentDescription();
 		ServiceDescription sd = new ServiceDescription();
 		sd.setType("HomeAgent");
@@ -42,7 +53,16 @@ public class HomeAgent extends TradeAgent {
 		sd.setOwnership("TradeNetwork");
 		dfd.setName(getAID());
 		dfd.addServices(sd);
+		try {
+			DFService.register(this, dfd);
+		} catch (FIPAException e) {
+			myLogger.log(Logger.SEVERE, "Agent " + getLocalName() + " - Cannot register with DF", e);
+			doDelete();
+		}
+		
+		
 		rand = new Random();
+		//retrieve scheduler form arguments
 		Object[] args = getArguments();
 		if(args.length!=1)
 		{
@@ -50,15 +70,14 @@ public class HomeAgent extends TradeAgent {
 			doDelete();
 		}
 		myscheduler = new AID((String) args[0],AID.ISLOCALNAME);
-
-		try {
-			DFService.register(this, dfd);
-		} catch (FIPAException e) {
-			myLogger.log(Logger.SEVERE, "Agent " + getLocalName() + " - Cannot register with DF", e);
-			doDelete();
-		}
-		retailers= new ArrayList<>();
 		
+		retailers= new ArrayList<>();	
+		//get agents with retailer service
+		DFAgentDescription[] agents = getServiceAgents("RetailerAgent");
+		for(DFAgentDescription agent : agents)
+		{
+			retailers.add(agent.getName());
+		}
 		
 		addBehaviour(new TickerBehaviour(this,5000) {
 			
@@ -67,14 +86,7 @@ public class HomeAgent extends TradeAgent {
 				// TODO Auto-generated method stub
 				// get scheduler agent from AMS
 
-				//get agents with retailer service
-				DFAgentDescription[] agents = getServiceAgents("RetailerAgent");
-				for(DFAgentDescription agent : agents)
-				{
-					retailers.add(agent.getName());
-				}
 				
-					
 				if(myscheduler!=null)
 				{
 //					System.out.println("intiated behaviour");
@@ -94,16 +106,63 @@ public class HomeAgent extends TradeAgent {
 		});
 		
 	}
-	public static void printMap(Map mp) {
-	   
-	}
+		
 	
-	public Random getRandomizer()
+	protected Random getRandomizer()
 	{
 		return rand;
 	}
 	
 	
+	protected void setupHomeNegotiator()
+	{
+		say("Setting up negotiator");
+		//setup strategies
+		//obtain from source params
+		//simply intializing params
+		double WFParamK=0.3;
+		double WFParamBeta=0.5;  //Beta <1 competitive Beta >1 passive		
+		
+		//create TWfunction
+		TimeWeightedFunction poly = new TimeWeightedPolynomial(WFParamK, WFParamBeta, this.maxNegotiationTime);
+		
+		//create tactics
+		TimeDependentTactic tactic1= new TimeDependentTactic(poly, this.INC);
+		
+		//create strategy and add tactics with weights
+		Strategy priceStrat= new Strategy(Strategy.Item.PRICE);
+		double timeTWeight=1;//changes as new tactics added
+		
+		Map<Tactic,Double> tactics = new HashMap<Tactic,Double>();
+		tactics.put(tactic1, new Double(timeTWeight));
+		try {
+			priceStrat.setTactics(tactics);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			say("ERROR "+e.getMessage());
+			
+		}
+		
+		//add Strategy to negotiator's strategies
+		ArrayList<Strategy> strats=new ArrayList<>();
+		strats.add(priceStrat);
+		
+		//create score weights for negotiating items
+		//ATM only price is considered so given full weight
+		Map<Strategy.Item,Double>scoreWeights= new HashMap<>();
+		//add only price item
+		scoreWeights.put(Item.PRICE, new Double(1));
+		
+		//create price range for each offer item-obtain from source
+		Map<Strategy.Item,Issue> itemissue = new HashMap<>();
+		//only add price issue since we are only focusing on price
+		itemissue.put(Strategy.Item.PRICE, new Issue(40, 20));
+		
+		//create negotiator with params
+		this.negotiator= new HomeAgentNegotiator( this.maxNegotiationTime, itemissue, strats, scoreWeights);
+		
+		
+	}
 	
 	public class RequestDemand extends AchieveREInitiator {
 		private AID mySchedulerAgent;
@@ -125,13 +184,7 @@ public class HomeAgent extends TradeAgent {
 			demReq.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 			demReq.addReceiver(mySchedulerAgent);
 			demReq.setSender(myAgent.getAID());
-//			request.setPerformative(ACLMessage.REQUEST);
-//			request.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
-//			
-//			request.setSender(myAgent.getAID());
-//			request.addReceiver(mySchedulerAgent);
-//			String content = "demand for (18:00,1)";
-//			request.setContent(content);
+
 			// TODO Auto-generated method stub
 			return super.prepareRequests(demReq);
 		}
@@ -150,12 +203,14 @@ public class HomeAgent extends TradeAgent {
 		public RequestQuote(Agent a, ACLMessage msg, List<AID> retailers) {
 			super(a, msg);
 			retailAgents=retailers;
+			//setup home negotiator
+			setupHomeNegotiator();
 			// TODO Auto-generated constructor stub
 		}
 		@Override
 		protected Vector prepareCfps(ACLMessage msg)
 		{
-			System.out.println("Gonna make call for proposal");
+			say("Gonna make call for proposal");
 			//retrieve demand msg from datastore
 			String demandMsgKey = (String) ((AchieveREInitiator) getParent()).REPLY_KEY;
 			ACLMessage demandMsg=(ACLMessage) getDataStore().get(demandMsgKey);		
@@ -166,10 +221,14 @@ public class HomeAgent extends TradeAgent {
 				
 				//construct quote request to send to retailers
 				schedDemand =new Demand(demandMsg);
-				quoteRequest= new ACLMessage(ACLMessage.CFP);
+				//TODO- based on demand determine a min and max price
+				//create initial offer from Negotiator
+				Offer offer=negotiator.generateOffer();
+				
+				quoteRequest= offer.createACLMessage(ACLMessage.CFP);
 				quoteRequest.setProtocol(FIPANames.InteractionProtocol.FIPA_ITERATED_CONTRACT_NET);
-				//simply attaching demand- TODO make a meaningful request
-				quoteRequest.setContent(schedDemand.getContent());
+				
+				say("intial offer sent "+offer.getContent());	
 				for(AID agent : retailAgents)
 				{
 					quoteRequest.addReceiver(agent);
@@ -179,6 +238,9 @@ public class HomeAgent extends TradeAgent {
 			else
 				myLogger.log(Logger.SEVERE,"NULL Message sent for Quote");
 			
+			//set negotiator to next iteration
+			negotiator.nextIteration();
+			
 			return super.prepareCfps(quoteRequest);
 		}
 		/*get all PROPOSE msgs and compare proposals
@@ -187,7 +249,7 @@ public class HomeAgent extends TradeAgent {
 		protected void handleAllResponses(Vector responses, Vector acceptances) {
 			// TODO Auto-generated method stub
 			//get all proposals
-			System.out.println("Proposals Recieved");
+//			say("Proposals Recieved");
 			ArrayList<ACLMessage> proposals = new ArrayList<>();
 			for(Object o : responses)
 			{
@@ -197,58 +259,60 @@ public class HomeAgent extends TradeAgent {
 					proposals.add(msg);
 				}
 			}
-			if(shouldNegotiate())
+			//convert all proposals to a list of offer objects
+			Map<ACLMessage,Offer> msgtooffer = new HashMap<>();
+			List<Offer> offers = new ArrayList<>();
+			for (Object obj: responses)
 			{
-				//Negotiation here
-				//TODO function to go through all proposals and make new CFP
-				// call for better proposals happens here
-				//evaluate proposals and find which we can negotiate
-				say("Negotiating");
-				Map<ACLMessage,Boolean> evalProposals=evaluateProposals(proposals);
-				
-				Vector<ACLMessage> nextMessages= new Vector<>();
-				for(Map.Entry<ACLMessage,Boolean> entry:evalProposals.entrySet())
+				ACLMessage msg=(ACLMessage)obj;
+				Offer off = new Offer(msg);
+				offers.add(off);
+				msgtooffer.put(msg, off);
+			}
+			//ask negotiator to interpret proposals
+			Map<Offer,HomeAgentNegotiator.OfferStatus> offerstatus=negotiator.interpretOffers(offers);
+			//handle response based on offer status
+			//vector for counter offers
+			Vector<ACLMessage> nextMessages= new Vector<>();
+			//go prepare every acl message reply based on offer status
+//			say("messages in recieved for prop "+responses.size());
+			for(Map.Entry<ACLMessage, Offer> entry:msgtooffer.entrySet())
+			{
+				OfferStatus status=offerstatus.get(entry.getValue());
+				//handle REJECT
+				if(status.equals(OfferStatus.REJECT))
 				{
-					ACLMessage nextMsg=entry.getKey().createReply();;
-					if(entry.getValue())
-					{
-						//negotiate with the retailer of proposal
-						nextMsg.setPerformative(ACLMessage.CFP);
-						nextMsg.setContent(schedDemand.getContent());
-					}
-					else
-					{
-						nextMsg.setPerformative(ACLMessage.REJECT_PROPOSAL);
-					}
-					nextMessages.addElement(nextMsg);					
+//					say("Reject "+entry.getKey().getSender().getLocalName());
+					acceptances.addElement(createReply(ACLMessage.REJECT_PROPOSAL, entry.getKey()));
 				}
-				newIteration(nextMessages);
+					
+				
+				//handle ACCEPT
+				if(status.equals(OfferStatus.ACCEPT))
+				{
+//					say("Accept "+entry.getKey().getSender().getLocalName());
+					acceptances.addElement(createReply(ACLMessage.ACCEPT_PROPOSAL, entry.getKey()));
+				}
+				
+				//handle COUNTER
+				if(status.equals(OfferStatus.COUNTER))
+				{
+
+					//construct reply with counter offer
+					Offer counter=negotiator.getLastOffer();
+					say("made counter offers "+counter.getContent());
+					nextMessages.addElement(createReply(ACLMessage.CFP, entry.getKey(), counter.getContent()));
+				}
 				
 			}
-			else
+			
+			//send next set of offers if negotiating
+			if(nextMessages.size()>0)
 			{
-				System.out.println("Selecting best proposal");
-				//select best proposal and accept; reject others
-				//send replies
-				ACLMessage bestProposal = getBestProposal(proposals);
-				for(ACLMessage prop : proposals)
-				{
-					ACLMessage reply=prop.createReply();
-					if(prop.getSender().equals(bestProposal.getSender()))
-					{
-						System.out.println("Sending acceptence for "+prop.getSender());
-						reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
-						reply.setContent("All good bois");
-					}
-					else
-					{
-						System.out.println("Sending Rejection for "+prop.getSender());
-						reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
-						reply.setContent("Too much man");
-					}
-					acceptances.addElement(reply);
-				}
-			}		
+				newIteration(nextMessages);
+			}
+			
+			
 		
 		}
 		@Override
@@ -257,13 +321,23 @@ public class HomeAgent extends TradeAgent {
 			for(Object notification: resultNotifications)
 			{
 				ACLMessage msg =(ACLMessage) notification;
-				System.out.println("Quote recieved from "+msg.getSender().getLocalName());
-				System.out.println("Quote is "+msg.getContent());
+				System.out.println("Inform recieved from "+msg.getSender().getLocalName());
+				System.out.println("Msg is "+msg.getContent());
 			}
 		}
-		 protected boolean shouldNegotiate()
+		 protected ACLMessage createReply(int perfomative,ACLMessage msg,String content)
 		 {
-			 return true;
+			ACLMessage reply=msg.createReply();
+			reply.setPerformative(perfomative);
+			
+			reply.setContent(content);
+			return reply;
+		 }
+		 protected ACLMessage createReply(int perfomative,ACLMessage msg)
+		 {
+			ACLMessage reply=msg.createReply();
+			reply.setPerformative(perfomative);		
+			return reply;
 		 }
 		 
 		 protected ACLMessage getBestProposal(List<ACLMessage> proposals)

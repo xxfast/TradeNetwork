@@ -51,18 +51,19 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 		
 		@Override
 		protected void onTick() {
-			say("Making a demand to the scheduler DEMAND=("+ startDemand.getContent()+")");
-			ACLMessage msg = startDemand.createACLMessage(ACLMessage.INFORM);
-			msg.addReceiver(scheduler);
+			Demand myDemand = new Demand(1, new DateTime());
+//			say("Making a demand to the scheduler DEMAND=("+ myDemand.getContent()+")");
+			ACLMessage msg = myDemand.createACLMessage(ACLMessage.INFORM);
+			msg.addReceiver(schedulerAgent);
 			msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 			msg.setReplyByDate(new Date(System.currentTimeMillis() + 500));
 			myAgent.addBehaviour( new AchieveREInitiator(myAgent,msg){
 				protected void handleAgree(ACLMessage agree) {
-					System.out.println(getLocalName() + ": " + agree.getSender().getName() + " has agreed to the request");
+//					System.out.println(getLocalName() + ": " + agree.getSender().getName() + " has agreed to the request");
 				}
 				
 				protected void handleInform(ACLMessage inform) {
-					System.out.println(getLocalName() + ": " + inform.getSender().getName() + " successfully scheduled my Demand");
+//					System.out.println(getLocalName() + ": " + inform.getSender().getName() + " successfully scheduled my Demand");
 				}
 			});
 		}
