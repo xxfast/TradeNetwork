@@ -19,7 +19,7 @@ import jade.domain.FIPANames;
 
 public class SchedulingAgent extends Agent {
 	
-	private Schedule schedule = new Schedule(7); 
+	private Schedule schedule = new Schedule(); 
 	
 	protected void setup() {
 		ServiceDescription sd = new ServiceDescription();
@@ -32,7 +32,7 @@ public class SchedulingAgent extends Agent {
 				MessageTemplate.MatchPerformative(ACLMessage.INFORM));
 		
 	
-		//To respond to Appliance Agent
+		//To respond to Each Appliance Agent
 		
 		addBehaviour(new AchieveREResponder(this, demandTemplate) {
 			
@@ -64,19 +64,18 @@ public class SchedulingAgent extends Agent {
 				MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
 				MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
 		
-		//To respond to Home Agent
-		
+		//To respond to the Home Agent
 		addBehaviour(new AchieveREResponder(this, requestTemplate) {
 			
 			private Demand recievedRequest; 
 			
 			protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException{
 				recievedRequest = new Demand(request);
-					System.out.println(getLocalName() + ": REQUEST received request from " + request.getSender().getName() + ". For the time slot of " + recievedRequest.getTime().hour + "h");
-					System.out.println(getLocalName() + ": OK ");
-					ACLMessage agree = request.createReply();
-					agree.setPerformative(ACLMessage.AGREE);
-					return agree;
+				System.out.println(getLocalName() + ": REQUEST received request from " + request.getSender().getName() + ". For the time slot of " + recievedRequest.getTime().hour + "h");
+				System.out.println(getLocalName() + ": OK ");
+				ACLMessage agree = request.createReply();
+				agree.setPerformative(ACLMessage.AGREE);
+				return agree;
 			}
 
 			protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException{

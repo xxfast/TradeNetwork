@@ -71,9 +71,6 @@ public class HomeAgent extends TradeAgent {
 		}
 		myscheduler = new AID((String) args[0],AID.ISLOCALNAME);
 		
-		
-		
-		
 		retailers= new ArrayList<>();	
 		//get agents with retailer service
 		DFAgentDescription[] agents = getServiceAgents("RetailerAgent");

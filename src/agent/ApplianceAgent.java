@@ -1,40 +1,52 @@
 package agent;
 
-
-
 import java.util.Date;
 
-import FIPA.DateTime;
 import interfaces.Object2ApplianceAgentInterface;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
-import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
 import model.Demand;
-import jade.domain.DFService;
+import simulation.Simulation;
 import jade.domain.FIPANames;
-import jade.lang.acl.ACLMessage;
-import jade.proto.AchieveREInitiator;
 
-
+/**
+ * @author Isuru
+ * Represents a single Appliance inside a single home
+ */
 public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentInterface { 
-
-	private AID schedulerAgent;
 	
+	private AID scheduler;
+	private Demand startDemand; 
+	
+	/**
+	 *  Sets up the Appliance Agent
+	 *  Arguments provided, are assumed to follow the same order as defined in the ApplianceAgentDescriptor 
+	 */
 	protected void setup() {
 		Object[] args = getArguments();
-		schedulerAgent = new AID((String) args[0],AID.ISLOCALNAME);
-		say("My SchedulingAgent is =("+ schedulerAgent.getName()+")");
+		setScheduler(new AID((String) args[0],AID.ISLOCALNAME));
+		setStartDemand((Demand) args[1]);
+		if( getScheduler() != null) StartDemanding();
+	}
+	
+	/**
+	 * Start the demanding behavior of the appliance based off the starting demand
+	 */
+	public void StartDemanding() {
 		addBehaviour(new DemandingBehaviour(this));
 	}
 	
+	/**
+	 * Represents the Demanding behavior, where the agent periodically made a demand request to the scheduling agent
+	 *
+	 */
 	private class DemandingBehaviour extends TickerBehaviour{
 		
 		public DemandingBehaviour (Agent a) {
-			super(a, 1000);
+			super(a, Simulation.Time);
 		}
 		
 		@Override
@@ -57,17 +69,22 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 		}
 	}
 
-	@Override
-	public AID getSchedulerAgent() {
+	public AID getScheduler() {
 		// TODO Auto-generated method stub
-		return schedulerAgent;
+		return scheduler;
+	}
+	
+	public void setScheduler(AID scheduler) {
+		this.scheduler = scheduler;
+		
 	}
 
+	public Demand getStartDemand() {
+		return startDemand;
+	}
 
-	@Override
-	public void setSchedulerAgen(AID schedulerAgent) {
-		this.schedulerAgent = schedulerAgent;
-		
+	public void setStartDemand(Demand startDemand) {
+		this.startDemand = startDemand;
 	}
 
 

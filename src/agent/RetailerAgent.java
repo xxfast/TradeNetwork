@@ -42,8 +42,9 @@ import java.util.Map;
 //Used for the energy schedule
 import java.util.Vector;
 
+
 public class RetailerAgent extends TradeAgent {
-	
+    
 	private double maxNegotiationTime=10;
 	private final boolean INC=true;// supplier mentality
 	private RetailerAgentNegotiator negotiator;
@@ -279,5 +280,13 @@ public class RetailerAgent extends TradeAgent {
 		}
 		
 		return value;
+	}
+
+	public int getEnergyStored() {
+		return energyStored;
+	}
+
+	public void setEnergyStored(int energyStored) {
+		this.energyStored = energyStored;
 	}
 }
