@@ -2,9 +2,11 @@ package descriptors;
 
 import java.io.Serializable;
 
+import annotations.Adjustable;
+
 public abstract class TradeAgentDescriptor implements Serializable {
 	
-	private String name;
+	@Adjustable(label = "Name of the Agent")  private String name;
 	
 	public String getName() {
 		return name;

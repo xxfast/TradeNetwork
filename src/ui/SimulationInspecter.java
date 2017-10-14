@@ -27,6 +27,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
 import agent.ApplianceAgent;
+import descriptors.ApplianceAgentDescriptor;
 import simulation.SimulationAdapter;
 
 
@@ -81,7 +82,14 @@ public class SimulationInspecter {
 		mntmApplianceAgent.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JDialog dialog = new TradeAgentCreator(ApplianceAgent.class);
+				JDialog dialog = null;
+				try {
+					dialog = new TradeAgentCreator(ApplianceAgentDescriptor.class);
+				} catch (InstantiationException e1) {
+					e1.printStackTrace();
+				} catch (IllegalAccessException e1) {
+					e1.printStackTrace();
+				}
 				dialog.setVisible(true);
 			}
 		});

@@ -21,7 +21,9 @@ public class TradeAgentCreator extends JDialog {
 
 	private final JPanel contentPanel = new JPanel();
 	
-	public TradeAgentCreator(Class<?> type) {
+	private Object instance;
+	
+	public TradeAgentCreator(Class<?> type) throws InstantiationException, IllegalAccessException {
 		setBounds(new Rectangle(37, 23, 300, 400));
 		this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		setTitle("Create a "+ type.getSimpleName());
@@ -33,10 +35,12 @@ public class TradeAgentCreator extends JDialog {
 		
 		contentPanel.setLayout(new GridLayout(5,1));
 		
-		type = ApplianceAgent.class;
+		/* Create the instance */
+		instance = type.newInstance();
 		
-		/* Fields will be instantiated only for customizable agents */
 		for(Field f : type.getDeclaredFields()) {
+
+			/* only get the adjustable fields */
 			if(f.getAnnotationsByType(Adjustable.class)!=null) {
 				Adjustable c = f.getAnnotation(Adjustable.class);
 				JLabel label = new JLabel(c.label());
