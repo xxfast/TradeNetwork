@@ -25,38 +25,35 @@ import jade.core.behaviours.OneShotBehaviour;
 
 // Used to log exceptions
 import jade.util.Logger;
+import model.Offer;
+import negotiation.Issue;
+import negotiation.Strategy;
+import negotiation.Strategy.Item;
+import negotiation.negotiator.RetailerAgentNegotiator;
+import negotiation.negotiator.AgentNegotiator.OfferStatus;
+import negotiation.tactic.Tactic;
+import negotiation.tactic.TimeDependentTactic;
+import negotiation.tactic.TimeWeightedFunction;
+import negotiation.tactic.TimeWeightedPolynomial;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 //Used for the energy schedule
 import java.util.Vector;
 
 public class RetailerAgent extends TradeAgent {
 	
+	private double maxNegotiationTime=10;
+	private final boolean INC=true;// supplier mentality
+	private RetailerAgentNegotiator negotiator;
+
 	private class EnergyUnit {
 		private int time;
 		private int units;
 		private int cost;
 		
-		public EnergyUnit(int units, int time) {
-			this.time = time;
-			this.units = units;
-			this.cost = 0;
-		}
-		
-		public int getTime() {
-			return time;
-		}
-		
-		public int getUnits() {
-			return units;
-		}
-		
-		public int getCost() {
-			return cost;
-		}
-		
-		public void determineCost(int rate) {
-			cost = rate*units;
-		}
+	
 	}	
 
 	private Vector<EnergyUnit> energyUnitSchedule = new Vector<EnergyUnit>();
@@ -96,55 +93,108 @@ public class RetailerAgent extends TradeAgent {
 		});
 	}
 	
+	public void setupNegotiator()
+	{
+		double WFParamK=0.3;
+		double WFParamBeta=0.5;  //Beta <1 competitive Beta >1 passive		
+		
+		//create TWfunction
+		TimeWeightedFunction poly = new TimeWeightedPolynomial(WFParamK, WFParamBeta, this.maxNegotiationTime);
+		
+		//create tactics
+		TimeDependentTactic tactic1= new TimeDependentTactic(poly, this.INC);
+		
+		//create strategy and add tactics with weights
+		Strategy priceStrat= new Strategy(Strategy.Item.PRICE);
+		double timeTacticWeight=1;//changes as new tactics added
+		
+		Map<Tactic,Double> tactics = new HashMap<Tactic,Double>();
+		tactics.put(tactic1, new Double(timeTacticWeight));
+		try {
+			priceStrat.setTactics(tactics);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			System.out.println("ERROR "+e.getMessage());
+			
+		}
+		
+		//add Strategy to negotiator's strategies
+		ArrayList<Strategy> strats=new ArrayList<>();
+		strats.add(priceStrat);
+		
+		//create score weights for negotiating items
+		//ATM only price is considered so given full weight
+		Map<Strategy.Item,Double>scoreWeights= new HashMap<>();
+		//add only price item
+		scoreWeights.put(Item.PRICE, new Double(1));
+		
+		//create price range for each offer item-obtain from source
+		Map<Strategy.Item,Issue> itemissue = new HashMap<>();
+		//only add price issue since we are only focusing on price
+		itemissue.put(Strategy.Item.PRICE, new Issue(40, 20));
+		
+		//create negotiator with params
+		this.negotiator= new RetailerAgentNegotiator( this.maxNegotiationTime, itemissue, strats, scoreWeights);
+	}
+	
+
+	
 	private class RetailerCNRBehaviour extends SSIteratedContractNetResponder{
 		private EnergyUnit currentUnitRequest = null;
 		
+		private Map<Item,Double> myvals;
+		private Offer offer;
+		int offset=2;
+		
+		
 		RetailerCNRBehaviour(Agent a, ACLMessage initialMessage) {
 			super(a, initialMessage);
+			
+			setupNegotiator();
 			say("Creating new SSICNR behaviour");
 		}
 		
 		@Override
 		protected ACLMessage handleCfp(ACLMessage cfp) throws NotUnderstoodException, RefuseException {
 			
-			String[] strContent = cfp.getContent().split(":");
-			currentUnitRequest = new EnergyUnit(convStrToInt(strContent[0]), convStrToInt(strContent[1]));
 			
-			say(String.format("CFP received from %s. Units required: %d units", cfp.getSender().getLocalName(), currentUnitRequest.getUnits()));
+			//get offer received
+			Offer offer= new Offer(cfp);
+			//interprete offer
+			OfferStatus stat=negotiator.interpretOffer(offer);
+			if(stat.equals(OfferStatus.REJECT))
+			{
+				//reject proposal by throwing a refuse
+				throw new RefuseException("Times up ");
+			}
+			ACLMessage reply = cfp.createReply();
+			reply.setPerformative(ACLMessage.PROPOSE);
+			if(stat.equals(OfferStatus.ACCEPT))
+			{
+				//responder cant accept cfps so sending same offer received from cfp as proposal									
+			}
 			
-			
-			if (evaluateAction(currentUnitRequest.getUnits())) {
-				currentUnitRequest.determineCost(energyRate);
-				say(String.format("Proposing. Cost: $%d.00. Delivering at time %d.", currentUnitRequest.getCost(), currentUnitRequest.getTime()));
+			if(stat.equals(OfferStatus.COUNTER))
+			{
 				
-				ACLMessage propose = cfp.createReply();
-				propose.setPerformative(ACLMessage.PROPOSE);
-				propose.setContent(String.valueOf(currentUnitRequest.getCost()));
-				return propose;
-			}
-			else {
-				// We refuse to provide a proposal
-				say(String.format("Refuse. Cannot provide %d units. Threshold is %d units.", currentUnitRequest.getUnits(), currentUnitRequest.getUnits()));
-				throw new RefuseException("evaluation-failed");	
-			}
+				//send reply with counter offer						
+				reply.setContent(negotiator.getLastOffer().getContent());
+				say("counter offer "+reply.getContent());
+			}				
+			return reply;
+			
 		}
 		
 		@Override
 		protected ACLMessage handleAcceptProposal(ACLMessage cfp, ACLMessage propose, ACLMessage accept) throws FailureException {
-			say(String.format("Proposal accepted by %s", accept.getSender().getLocalName()));
+			say("yay my offer accepted");
+			ACLMessage resp=accept.createReply();
+			say("Accepted"+propose.getContent());
+			resp.setContent("Accepted"+propose.getContent());
+			resp.setPerformative(ACLMessage.INFORM);
+			return resp;
 			
-			if (performAction()) {
-				say(String.format("%d units delivered to %s", currentUnitRequest.getUnits(), accept.getSender().getLocalName()));
-				ACLMessage inform = accept.createReply();
-				inform.setContent(currentUnitRequest.getCost() + ":" + currentUnitRequest.getTime());
-				inform.setPerformative(ACLMessage.INFORM);
-				
-				return inform;
-			}
-			else {
-				say("Action execution failed");
-				throw new FailureException("unexpected-error");
-			}
+			
 		}
 
 		protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
@@ -157,14 +207,6 @@ public class RetailerAgent extends TradeAgent {
 		return true;
 	}
 	
-	private boolean evaluateAction(int energyRequestAmount) {
-		// If the amount required is too much deny the request
-		if ( (energyRequestAmount > energyThreshold) && (energyThreshold >= 0) ) {
-			return false;
-		} else {
-			return true;
-		}
-	}
 	
 	// Temporary method until the method of setting rate is determined
 	private void setAgentProperties() {

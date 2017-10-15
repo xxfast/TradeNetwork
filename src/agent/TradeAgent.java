@@ -3,9 +3,12 @@ package agent;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.AMSService;
+import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.AMSAgentDescription;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.SearchConstraints;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
 
 public class TradeAgent extends Agent {
 
@@ -39,8 +42,23 @@ public class TradeAgent extends Agent {
 		}
 		return agent;
 	}
-	
+
+	//get agents for service
+	public DFAgentDescription[] getServiceAgents( String service ) {
+		DFAgentDescription dfd = new DFAgentDescription();
+		ServiceDescription sd = new ServiceDescription();
+		sd.setType( service );
+		dfd.addServices(sd);
+		try
+		{
+			DFAgentDescription[] result = DFService.search(this, dfd);
+			return result;
+		}
+		catch (Exception fe) {}
+		return null;
+
+	}
 	public void say(String message){
-		System.out.println(this.getLocalName() +": "+ message);
+	System.out.println(this.getLocalName() +": "+ message);
 	}
 }
