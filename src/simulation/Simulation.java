@@ -4,6 +4,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JTree;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeModel;
+
 import agent.SchedulingAgent;
 import controllers.ApplianceAgentController;
 import controllers.HomeAgentController;
@@ -24,9 +29,13 @@ public class Simulation implements Serializable {
 	private String description;
 	private State state;
 	
-	private List<TradeAgentController> agents = new ArrayList<TradeAgentController>();
+	private TreeModel agents;
 	
 	private transient ContainerController container;
+	
+	public Simulation() {
+		agents = new DefaultTreeModel(new DefaultMutableTreeNode("Simulation"));
+	}
 	
 	public TradeAgentController CreateTradeAgent(TradeAgentDescriptor descriptor) throws StaleProxyException {
 		TradeAgentController tradeAgent = null;
@@ -41,27 +50,37 @@ public class Simulation implements Serializable {
 		tradeAgent.setDescriptor(descriptor);
 		createdAgent = container.createNewAgent(descriptor.getName(), SchedulingAgent.class.getName(), descriptor.toArray());
 		tradeAgent.setInnerController(createdAgent);
-		agents.add(tradeAgent);
+		((DefaultMutableTreeNode)agents.getRoot()).add(new TradeAgentNode(tradeAgent));
 		return tradeAgent;
 	}
 	
 	public void Start() throws StaleProxyException{
-		for(TradeAgentController ctrl : agents) {
-			ctrl.start();
+		StartNode((TradeAgentNode) agents.getRoot());
+	}
+	
+	private void StartNode(TradeAgentNode toStart) throws StaleProxyException {
+		toStart.agent.start();
+		for(int i=0;i<toStart.getChildCount();i++) {
+			StartNode((TradeAgentNode) toStart.getChildAt(i));
 		}
 	}
 	
-	public void KillAll() throws StaleProxyException {
-		for(TradeAgentController ctrl : agents) {
-			ctrl.kill();
+	public void Stop() throws StaleProxyException {
+		KillNode((TradeAgentNode) agents.getRoot());
+	}
+	
+	private void KillNode(TradeAgentNode toStart) throws StaleProxyException {
+		toStart.agent.kill();
+		for(int i=0;i<toStart.getChildCount();i++) {
+			KillNode((TradeAgentNode) toStart.getChildAt(i));
 		}
 	}
 	
-	public List<TradeAgentController> getAgents() {
+	public TreeModel getAgents() {
 		return agents;
 	}
 
-	public void setAgents(List<TradeAgentController> agents) {
+	public void setAgents(TreeModel agents) {
 		this.agents = agents;
 	}
 
@@ -90,4 +109,22 @@ public class Simulation implements Serializable {
 	}
 	
 	public enum State{ Running, Paused, Stopped }
+	
+
+	public class TradeAgentNode extends DefaultMutableTreeNode{
+		private TradeAgentController agent;
+
+		public TradeAgentNode(TradeAgentController agent) {
+			super(agent.getDescriptor().getName());
+			setAgent(agent);
+		}
+		
+		public TradeAgentController getAgent() {
+			return agent;
+		}
+
+		public void setAgent(TradeAgentController agent) {
+			this.agent = agent;
+		}
+	}
 }

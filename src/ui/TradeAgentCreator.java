@@ -51,8 +51,11 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 
 	public int adjustableFields = 0;
 	
-	public TradeAgentCreator(Class<?> type) throws InstantiationException, IllegalAccessException{
+	public TradeAgentCreator(Class<?> type) {
 		this.type = type;
+	}
+	
+	public void Build() throws InstantiationException, IllegalAccessException{
 		this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		setTitle("Create a "+ type.getSimpleName());
 		setModalityType(ModalityType.DOCUMENT_MODAL);
@@ -65,7 +68,7 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 		/* Create the instance */
 		instance = type.newInstance();
 		JPanel form = new JPanel();
-		/* Traverse through the hierachy to check for any inheriting members */
+		/* Traverse through the hierarchy to check for any inheriting members */
 		Stack<Class<?>> parents = new Stack<Class<?>>();
 		do {
 			parents.push(type);
@@ -221,6 +224,7 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 		System.out.println(instance.toString());
 		try {
 			simulation.CreateTradeAgent((TradeAgentDescriptor) instance);
+			dispose(); 
 		} catch (StaleProxyException e1) {
 			e1.printStackTrace();
 		}

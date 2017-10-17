@@ -8,6 +8,9 @@ import java.awt.Dimension;
 import java.awt.Panel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
 import javax.swing.BoxLayout;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -81,9 +84,17 @@ public class SimulationInspecter {
 		mntmApplianceAgent.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JDialog dialog = null;
+				TradeAgentCreator dialog = null;
 				try {
 					dialog = new TradeAgentCreator(ApplianceAgentDescriptor.class);
+					dialog.setSimulation(toInspect);
+					dialog.Build();
+					dialog.addWindowListener(new WindowAdapter() {
+					    @Override
+					    public void windowClosed(WindowEvent e) {
+					    		UpdateModel();
+					    }
+					});
 				} catch (InstantiationException e1) {
 					e1.printStackTrace();
 				} catch (IllegalAccessException e1) {
@@ -102,6 +113,13 @@ public class SimulationInspecter {
 				try {
 					dialog = new TradeAgentCreator(HomeAgentDescriptor.class);
 					dialog.setSimulation(toInspect);
+					dialog.Build();
+					dialog.addWindowListener(new WindowAdapter() {
+					    @Override
+					    public void windowClosed(WindowEvent e) {
+					    		UpdateModel();
+					    }
+					});
 				} catch (InstantiationException e1) {
 					e1.printStackTrace();
 				} catch (IllegalAccessException e1) {
@@ -146,7 +164,6 @@ public class SimulationInspecter {
 		view.add(console, BorderLayout.SOUTH);
 		
 		tree = new JTree();
-		UpdateModel();
 		view.add(tree, BorderLayout.CENTER);
 		
 		Panel sidebar = new Panel();
@@ -160,32 +177,21 @@ public class SimulationInspecter {
 	}
 	
 	public void UpdateModel() {
-		tree.setModel(new DefaultTreeModel(
-			new DefaultMutableTreeNode("Simulation") {
-				{
-					DefaultMutableTreeNode node_1;
-					node_1 = new DefaultMutableTreeNode("Agents");
-						node_1.add(new DefaultMutableTreeNode("blue"));
-						node_1.add(new DefaultMutableTreeNode("violet"));
-						node_1.add(new DefaultMutableTreeNode("red"));
-						node_1.add(new DefaultMutableTreeNode("yellow"));
-					add(node_1);
-				}
-			}
-		));
+		tree.setModel(getToInspect().getAgents());
+//		new DefaultTreeModel(
+//				new DefaultMutableTreeNode("Simulation") {
+//					{
+//						DefaultMutableTreeNode node_1 = new DefaultMutableTreeNode("Agents");
+//							node_1.add(new DefaultMutableTreeNode("blue"));
+//							node_1.add(new DefaultMutableTreeNode("violet"));
+//							node_1.add(new DefaultMutableTreeNode("red"));
+//							node_1.add(new DefaultMutableTreeNode("yellow"));
+//						add(node_1);
+//					}
+//				}
+//			)
 	}
 	
-	public class TradeAgentHolder extends DefaultMutableTreeNode{
-		private TradeAgentController agent;
-
-		public TradeAgentController getAgent() {
-			return agent;
-		}
-
-		public void setAgent(TradeAgentController agent) {
-			this.agent = agent;
-		}
-	}
 	
 	public JFrame getFrame() {
 		return frame;
