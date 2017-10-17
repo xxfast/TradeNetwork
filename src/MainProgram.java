@@ -50,6 +50,7 @@ public class MainProgram {
 			public void run() {
 				try {
 					SimulationInspecter window = new SimulationInspecter();
+					window.setToInspect(SimulationAdapter.getToAdapt());
 					window.getFrame().setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();

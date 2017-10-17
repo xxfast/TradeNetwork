@@ -71,7 +71,7 @@ public class SchedulingAgent extends Agent {
 			
 			protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException{
 				recievedRequest = new Demand(request);
-				System.out.println(getLocalName() + ": REQUEST received request from " + request.getSender().getName() + ". For the time slot of " + recievedRequest.getTime().hour + "h");
+				System.out.println(getLocalName() + ": REQUEST received request from " + request.getSender().getName() + ". For the time slot of " + recievedRequest.getTime() + "h");
 				System.out.println(getLocalName() + ": OK ");
 				ACLMessage agree = request.createReply();
 				agree.setPerformative(ACLMessage.AGREE);
@@ -81,13 +81,13 @@ public class SchedulingAgent extends Agent {
 			protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException{
 				
 				Demand inform = new Demand(recievedRequest.getTime());
-				List<Integer> demands = SchedulingAgent.this.getSchedule().getTime().get(recievedRequest.getTime().hour);
+				List<Integer> demands = SchedulingAgent.this.getSchedule().getTime().get(recievedRequest.getTime());
 				int total = 0;
 				for(Integer demand : demands){
 					total+= demand;
 				}
 				inform.setUnits(total);
-				System.out.println(getLocalName() + ": YES Send the total demand for "+ recievedRequest.getTime().hour+"h which was " +total + " unit, successfully");
+				System.out.println(getLocalName() + ": YES Send the total demand for "+ recievedRequest.getTime()+"h which was " +total + " unit, successfully");
 				return inform.createACLMessage(ACLMessage.INFORM);
 			}
 		});
@@ -110,8 +110,8 @@ public class SchedulingAgent extends Agent {
 		return schedule;
 	}
 	
-	public boolean schedule(int amount, DateTime time, int duration){
-		schedule.getTime().get(time.hour).add(amount);
+	public boolean schedule(int amount, Short time, int duration){
+		schedule.getTime().get(time).add(amount);
 		return true;
 	}
 

@@ -23,6 +23,7 @@ public class Simulation implements Serializable {
 	private String name;
 	private String description;
 	private State state;
+	
 	private List<TradeAgentController> agents = new ArrayList<TradeAgentController>();
 	
 	private transient ContainerController container;

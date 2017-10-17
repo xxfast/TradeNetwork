@@ -2,16 +2,12 @@ package ui;
 import java.awt.BorderLayout;
 
 
-import java.awt.Button;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Panel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-
 import javax.swing.BoxLayout;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -22,18 +18,21 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JTextPane;
 import javax.swing.JTree;
-import javax.swing.border.TitledBorder;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
-import agent.ApplianceAgent;
+import controllers.TradeAgentController;
 import descriptors.ApplianceAgentDescriptor;
-import simulation.SimulationAdapter;
+import descriptors.HomeAgentDescriptor;
+import simulation.Simulation;
 
 
 public class SimulationInspecter {
 
+	private Simulation toInspect; 
+	
 	private JFrame frame;
+	private JTree tree;
 
 	/**
 	 * Create the application.
@@ -96,6 +95,21 @@ public class SimulationInspecter {
 		mnCreate.add(mntmApplianceAgent);
 		
 		JMenuItem mntmHomeAgent = new JMenuItem("Home Agent");
+		mntmHomeAgent.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				TradeAgentCreator dialog = null;
+				try {
+					dialog = new TradeAgentCreator(HomeAgentDescriptor.class);
+					dialog.setSimulation(toInspect);
+				} catch (InstantiationException e1) {
+					e1.printStackTrace();
+				} catch (IllegalAccessException e1) {
+					e1.printStackTrace();
+				}
+				dialog.setVisible(true);
+			}
+		});
 		mnCreate.add(mntmHomeAgent);
 		
 		JMenuItem mntmRetailerAgent = new JMenuItem("Retailer Agent");
@@ -131,7 +145,21 @@ public class SimulationInspecter {
 		console.setText("Console");
 		view.add(console, BorderLayout.SOUTH);
 		
-		JTree tree = new JTree();
+		tree = new JTree();
+		UpdateModel();
+		view.add(tree, BorderLayout.CENTER);
+		
+		Panel sidebar = new Panel();
+		sidebar.setPreferredSize(new Dimension(250, 0));
+		view.add(sidebar, BorderLayout.EAST);
+		
+		sidebar.add(new SimulationController());
+		sidebar.add(new TradeAgentInspector());
+		
+		
+	}
+	
+	public void UpdateModel() {
 		tree.setModel(new DefaultTreeModel(
 			new DefaultMutableTreeNode("Simulation") {
 				{
@@ -145,16 +173,18 @@ public class SimulationInspecter {
 				}
 			}
 		));
-		view.add(tree, BorderLayout.CENTER);
-		
-		Panel sidebar = new Panel();
-		sidebar.setPreferredSize(new Dimension(250, 0));
-		view.add(sidebar, BorderLayout.EAST);
-		
-		sidebar.add(new SimulationController());
-		sidebar.add(new TradeAgentInspector());
-		
-		
+	}
+	
+	public class TradeAgentHolder extends DefaultMutableTreeNode{
+		private TradeAgentController agent;
+
+		public TradeAgentController getAgent() {
+			return agent;
+		}
+
+		public void setAgent(TradeAgentController agent) {
+			this.agent = agent;
+		}
 	}
 	
 	public JFrame getFrame() {
@@ -163,6 +193,14 @@ public class SimulationInspecter {
 
 	public void setFrame(JFrame frame) {
 		this.frame = frame;
+	}
+
+	public Simulation getToInspect() {
+		return toInspect;
+	}
+
+	public void setToInspect(Simulation toInspect) {
+		this.toInspect = toInspect;
 	}
 
 }

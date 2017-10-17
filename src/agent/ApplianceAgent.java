@@ -52,7 +52,7 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 		
 		@Override
 		protected void onTick() {
-			Demand myDemand = new Demand(1, new DateTime());
+			Demand myDemand = new Demand(1);
 //			say("Making a demand to the scheduler DEMAND=("+ myDemand.getContent()+")");
 			ACLMessage msg = myDemand.createACLMessage(ACLMessage.INFORM);
 			msg.addReceiver(scheduler);

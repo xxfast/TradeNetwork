@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import annotations.Adjustable;
 
+@Adjustable(label = "An agent representing a genric trade agent")
 public abstract class TradeAgentDescriptor implements Serializable {
 	
 	@Adjustable(label = "Name of the Agent")  private String name;
