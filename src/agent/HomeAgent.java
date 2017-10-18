@@ -40,13 +40,18 @@ import negotiation.tactic.timeFunction.ResourceAgentsFunction;
 import negotiation.tactic.timeFunction.ResourceTimeFunction;
 import negotiation.tactic.timeFunction.TimeWeightedFunction;
 import negotiation.tactic.timeFunction.TimeWeightedPolynomial;
+import negotiation.baserate.BoundCalc;
+import negotiation.baserate.HomeBound;
 import simulation.Simulation;
+import model.History;
 
 public class HomeAgent extends TradeAgent {
 	private final boolean INC=false;//customer mentality
 	
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
 	private Random rand;
+	private History history = new History();
+	private BoundCalc boundCalculator = new HomeBound();
 	
 	private Map<AID,HomeAgentNegotiator> negotiators;
 
