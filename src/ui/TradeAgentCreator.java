@@ -21,6 +21,8 @@ import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
+import org.eclipse.jdt.annotation.Nullable;
+
 import agent.ApplianceAgent;
 import annotations.Adjustable;
 import descriptors.TradeAgentDescriptor;
@@ -51,13 +53,15 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 
 	public int adjustableFields = 0;
 	
+	private List<JTextField> gFields = new ArrayList<JTextField>();
+
 	public TradeAgentCreator(Class<?> type) {
 		this.type = type;
 	}
 	
 	public void Build() throws InstantiationException, IllegalAccessException{
 		this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-		setTitle("Create a "+ type.getSimpleName());
+		setTitle("Create a "+ UIUtilities.ProcessVariableName(type.getSimpleName()));
 		setModalityType(ModalityType.DOCUMENT_MODAL);
 		setModal(true);
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -84,7 +88,7 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 		contentPanel.add(form, BorderLayout.CENTER);
 		
 		/* Create Layouts for labels and fields  */
-		setBounds(0, 0, 400, 50 + (adjustableFields * 50));
+		setBounds(0, 0, 350, 50 + (adjustableFields * 50));
 		
 		JPanel buttonPane = new JPanel();
 		buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
@@ -92,12 +96,20 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 		okButton = new JButton("CREATE");
 		okButton.setActionCommand("Create");
 		okButton.addActionListener(this);
-		AllowSave(true);
+
+		/* Disabled by default because not all fields are filled in  */
+		AllowSave(false);
 		
 		buttonPane.add(okButton);
 		getRootPane().setDefaultButton(okButton);
 		JButton cancelButton = new JButton("Cancel");
 		cancelButton.setActionCommand("Cancel");
+		cancelButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				dispose();
+			}
+		});
 		buttonPane.add(cancelButton);
 	}
 	
@@ -105,8 +117,8 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 		
 		/* Create holders for later*/ 
 		List<JLabel> labels = new ArrayList<JLabel>();
-		List<JTextField> inputs = new ArrayList<JTextField>();
 		List<String> inspectorLabel = new ArrayList<String>();
+		List<JTextField> inputs = new ArrayList<JTextField>();
 		List<JPanel> inpectors = new ArrayList<JPanel>();
 		
 		for(Field f : type.getDeclaredFields()) {
@@ -120,59 +132,46 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 				if(innerType.isAnnotationPresent(Adjustable.class)) {
 					JPanel newPanel = new JPanel(new BorderLayout());
 					Object innerInstance = innerType.newInstance();
-					inspectorLabel.add(ProcessVariableName(f.getName()));
-					inpectors.add(CreateInspector(innerType,innerInstance, newPanel));
+					inspectorLabel.add(UIUtilities.ProcessVariableName(f.getName()));
+					JPanel inspector = CreateInspector(innerType,innerInstance, newPanel);
+					inpectors.add(inspector);
 					try {
 						PropertyDescriptor pd = new PropertyDescriptor(f.getName(), type);
 						Method setter = pd.getWriteMethod();
 						Object fd = setter.invoke(instance,innerInstance);
-					}catch (InvocationTargetException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					} catch (IntrospectionException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					} catch (IllegalAccessException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
+					}catch (InvocationTargetException |  IntrospectionException | IllegalAccessException e) {
+						inspector.setBackground(Color.ORANGE);
 					} 
 				}else {
-
 					/* if type of adjustable is not adjustable, then it assumed to be primitive*/
 					Adjustable c = f.getAnnotation(Adjustable.class);
-					JLabel label = new JLabel(c.label(), JLabel.RIGHT);
+					String labelText = ((c.label().equals("")) ? UIUtilities.ProcessVariableName(f.getName()) : c.label());
+					JLabel label = new JLabel(labelText, JLabel.RIGHT);
 					labels.add(label);
 					JTextField input= new JTextField();
-					
+					if(!f.isAnnotationPresent(Nullable.class)) {
+						try {
+							PropertyDescriptor pd = new PropertyDescriptor(f.getName(), type);
+							Method getter = pd.getReadMethod();
+							Object fd = getter.invoke(instance);
+							if(fd!=null) input.setText(fd.toString());
+						}catch (InvocationTargetException |  IntrospectionException | IllegalAccessException e) {
+							input.setBackground(Color.ORANGE);
+						} 
+					}
+					if(!gFields.contains(input)) gFields.add(input);
+					/* add a focus listener to validate on focus lost */
 					input.addFocusListener(new FocusListener() {
 						@Override
-						public void focusGained(FocusEvent e) {}
-
+						public void focusGained(FocusEvent e) { }
 						@Override
 						public void focusLost(FocusEvent e) {
-							try {
-								Class<?> desiredType = f.getType();
-								PropertyDescriptor pd = new PropertyDescriptor(f.getName(), type);
-								Method setter = pd.getWriteMethod();
-								Object fd = setter.invoke(instance, (desiredType!=String.class)?valueOf(desiredType, input.getText()):input.getText());
-								input.setBackground(Color.GREEN);
-							}catch (InvocationTargetException e1) {
-								// TODO Auto-generated catch block
-								e1.printStackTrace();
-							} catch (IntrospectionException e1) {
-								// TODO Auto-generated catch block
-								e1.printStackTrace();
-							} catch (IllegalAccessException e1) {
-								// TODO Auto-generated catch block
-								e1.printStackTrace();
-							} catch (IllegalArgumentException e1) {
-								input.setBackground(Color.RED);
-								e1.printStackTrace();
-							} 
+							Validate(instance, type, f, input);
+							AllowSave(AllValid(gFields));
 						}
-
-						
 					});
+
+					/*  all inputs will have the same length for now */
 					input.setColumns(10);
 					inputs.add(input);
 				}
@@ -180,7 +179,7 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 		}
 		
 		/* Create the UI Elements */
-		container.setLayout(new FlowLayout());
+		container.setLayout(new FlowLayout(FlowLayout.LEFT));
 		
 		JPanel labelPanel = new JPanel(new GridLayout(labels.size(), 1));
 	    JPanel fieldPanel = new JPanel(new GridLayout(inputs.size(), 1));
@@ -199,25 +198,16 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 	    return container;
 	}
 	
-	public boolean AllValid() {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean AllValid(List<JTextField> inputs) {
+		boolean isValid = true;
+		for(JTextField field : inputs) {
+			if(!field.getBackground().equals(Color.GREEN)){
+				isValid = false;
+			}
+		}
+		return isValid;
 	}
 	
-	private String ProcessVariableName(String name) {
-		String newName = ""; 
-		for(int i=0; i<name.length(); i++) {
-	        if(Character.isUpperCase(name.charAt(i)) && i!=0) {
-		        newName+=' ';
-	        }
-	        newName+=(i==0)?Character.toUpperCase(name.charAt(i)):name.charAt(i);
-	    }
-		return newName;
-	}
-
-	/**
-	 *  On Completion of the form
-	 */
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{
@@ -230,7 +220,25 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 		}
 	}
 	
-	public void AllowSave(boolean should) {
+	private void Validate(Object instance, Class<?> whatToValidate, Field toValidate, JTextField toShow) {
+		try {
+			Class<?> desiredType = toValidate.getType();
+			PropertyDescriptor pd = new PropertyDescriptor(toValidate.getName(), whatToValidate);
+			Method setter = pd.getWriteMethod();
+			String content = toShow.getText();
+			if(content.equals("") && !toValidate.isAnnotationPresent(Nullable.class)) {
+				throw new NullPointerException(toValidate.getName() + " is not nullable");
+			}
+			Object fd = setter.invoke(instance, (desiredType!=String.class)?valueOf(desiredType, content ) : content);
+			toShow.setBackground(Color.GREEN);
+		}catch (InvocationTargetException |  IntrospectionException | IllegalAccessException e) {
+			toShow.setBackground(Color.ORANGE);
+		} catch (IllegalArgumentException | NullPointerException e) {
+			toShow.setBackground(Color.RED);
+		} 
+	}
+	
+	private void AllowSave(boolean should) {
 		okButton.setEnabled(should);
 	}
 	

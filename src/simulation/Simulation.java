@@ -25,6 +25,7 @@ import jade.wrapper.StaleProxyException;
 public class Simulation implements Serializable {
 	
 	public static int Time = 1000;
+	
 	private String name;
 	private String description;
 	private State state;

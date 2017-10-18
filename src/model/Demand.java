@@ -11,9 +11,9 @@ import jade.lang.acl.MessageTemplate;
 @Adjustable(label="Demand Unit")
 public class Demand implements Serializable{
 	
-	@Adjustable(label="Required number of units") private Integer units;
-	@Adjustable(label="When is it required?")  private Short time;
-	@Adjustable(label="For how long is it required")  private Integer duration; 
+	@Adjustable(label="Required number of units") private Integer units = 0;
+	@Adjustable(label="When is it required?")  private Short time = 0 ;
+	@Adjustable(label="For how long is it required")  private Integer duration = 1; 
 	
 	public ACLMessage createACLMessage(int performative){
 		ACLMessage toReturn = new ACLMessage(performative);
@@ -26,7 +26,6 @@ public class Demand implements Serializable{
 			MessageTemplate.MatchPerformative(ACLMessage.INFORM));
 	
 	public Demand(){
-		init(0, (short) 0, 1);
 	}
 	
 	public Demand(Short time){

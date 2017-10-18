@@ -10,5 +10,5 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 @Target({ TYPE, FIELD })
 public @interface Adjustable {
-	public String label();
+	public String label() default "";
 }
