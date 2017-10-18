@@ -1,6 +1,7 @@
 package negotiation.baserate;
 
 import jade.core.AID;
+import model.History;
 
 public class HomeBound extends BoundCalc {
 	public HomeBound(String baseRateDir) {
@@ -12,13 +13,13 @@ public class HomeBound extends BoundCalc {
 	}
 
 	@Override
-	public double[] calcBounds(AID id, int units, int time) {
+	public double[] calcBounds(AID id, int units, int time, History hist) {
 		double lowerBound = getStdRate()[time];
 		double upperBound = getStdRate()[time];
 		
-		int pastUnitTransactions = this.getHistory().getTotalUnitsTradedForClient(id);
-		double pastMoneyTransactions = this.getHistory().getTotalMoneyTradedForClient(id);
-		int pastTransactions = this.getHistory().getTotalTransactionsForClient(id);
+		int pastUnitTransactions = hist.getTotalUnitsTradedForClient(id);
+		double pastMoneyTransactions = hist.getTotalMoneyTradedForClient(id);
+		int pastTransactions = hist.getTotalTransactionsForClient(id);
 		
 		// To make the home initially ask less than the standard.
 		// TODO Think of appropriate value here

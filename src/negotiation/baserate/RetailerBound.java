@@ -1,5 +1,6 @@
 package negotiation.baserate;
 
+import model.History;
 import jade.core.AID;
 
 public class RetailerBound extends BoundCalc {
@@ -13,13 +14,13 @@ public class RetailerBound extends BoundCalc {
 	
 	// Assuming retailer
 	@Override
-	public double[] calcBounds (AID id, int units, int time){
+	public double[] calcBounds (AID id, int units, int time, History hist){
 		double lowerBound = getStdRate()[time];
 		double upperBound = getStdRate()[time];
-				
-		int pastUnitTransactions = this.getHistory().getTotalUnitsTradedForClient(id);
-		double pastMoneyTransactions = this.getHistory().getTotalMoneyTradedForClient(id);
-		int pastTransactions = this.getHistory().getTotalTransactionsForClient(id);
+		
+		int pastUnitTransactions = hist.getTotalUnitsTradedForClient(id);
+		double pastMoneyTransactions = hist.getTotalMoneyTradedForClient(id);
+		int pastTransactions = hist.getTotalTransactionsForClient(id);
 		
 		// To make the retailer initially asks for more than the standard.
 		// TODO Think of appropriate value here
