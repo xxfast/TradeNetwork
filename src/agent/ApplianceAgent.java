@@ -2,15 +2,16 @@ package agent;
 
 import java.util.Date;
 
+import FIPA.DateTime;
 import interfaces.Object2ApplianceAgentInterface;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
+import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
 import model.Demand;
 import simulation.Simulation;
-import jade.domain.FIPANames;
 
 /**
  * @author Isuru
@@ -28,7 +29,8 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 	protected void setup() {
 		Object[] args = getArguments();
 		setScheduler(new AID((String) args[0],AID.ISLOCALNAME));
-		setStartDemand((Demand) args[1]);
+//		setStartDemand((Demand) args[1]);
+		startDemand= new Demand(2,new DateTime());
 		if( getScheduler() != null) StartDemanding();
 	}
 	
@@ -54,7 +56,7 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 			Demand myDemand = new Demand(1, new DateTime());
 //			say("Making a demand to the scheduler DEMAND=("+ myDemand.getContent()+")");
 			ACLMessage msg = myDemand.createACLMessage(ACLMessage.INFORM);
-			msg.addReceiver(schedulerAgent);
+			msg.addReceiver(scheduler);
 			msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 			msg.setReplyByDate(new Date(System.currentTimeMillis() + 500));
 			myAgent.addBehaviour( new AchieveREInitiator(myAgent,msg){

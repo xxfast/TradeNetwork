@@ -5,61 +5,25 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 import negotiation.Issue;
+import negotiation.tactic.ResourceDependentTactic;
 import negotiation.tactic.TimeDependentTactic;
+import negotiation.tactic.timeFunction.ResourceAgentsFunction;
+import negotiation.tactic.timeFunction.ResourceTimeFunction;
 import negotiation.tactic.timeFunction.TimeWeightedExponential;
 import negotiation.tactic.timeFunction.TimeWeightedPolynomial;
 
-public class TestTimeDependentTactics {
+public class TestResourceDependentTactics {
 	public final double Delta=0.001;
 
 	@Test
-	public void TestPolynomial() {
+	public void TestTacticResourceAgents() {
 		double k=0.3;
-		double beta=0.5;
-		double maxTime=10;
-		TimeWeightedPolynomial poly = new TimeWeightedPolynomial(k, beta, maxTime);
-		double time=3;
-		double ans=0.363;	
-		
-		assertEquals(ans, poly.getValue(time), Delta);
-		
-		time=0;
-		
-		assertEquals("Time 0 should give K->"+k,k, poly.getValue(time),Delta);
-		
-		time=10;
-		
-		assertEquals("Time 10 should give 1",1, poly.getValue(time),Delta);
-	}
-	
-	@Test
-	public void TestExponential() {
-		double k=0.3;
-		double beta=0.5;
-		double maxTime=10;
-		TimeWeightedExponential poly = new TimeWeightedExponential(k, beta, maxTime);
-		double time=3;
-		double ans=0.365;	
-		
-		assertEquals(ans, poly.getValue(time), Delta);
-		time=0;
-		
-		assertEquals("Time 0 should give K->"+k,k, poly.getValue(time),Delta);
-		
-		time=10;
-		
-		assertEquals("Time 10 should give 1",1, poly.getValue(time),Delta);
-	}
-	
-	@Test
-	public void TestTacticExponentialWeight() {
-		double k=0.3;
-		double beta=0.5;
+		int activeAgents=6;
 		double maxTime=5;
-		TimeWeightedExponential poly = new TimeWeightedExponential(k, beta, maxTime);
+		ResourceAgentsFunction resrc = new ResourceAgentsFunction(k,activeAgents);
 		
 		//testing supplier version
-		TimeDependentTactic supplier = new TimeDependentTactic(poly, true);
+		ResourceDependentTactic supplier = new ResourceDependentTactic(resrc, true);
 		
 		Issue issue= new Issue(0, 30, 18);
 		double oldVal=0;
@@ -70,27 +34,32 @@ public class TestTimeDependentTactics {
 			newVal=supplier.nextValue(issue);
 			assertTrue("all values betwwen 18 and 30",newVal<=30 && newVal>=18);
 			assertTrue("newVal always lower than oldVal",newVal<=oldVal);
-			
+		
+			resrc.setActiveAgents(--activeAgents);
 			issue.incIteration();
 		}
+		newVal=supplier.nextValue(issue);
 		assertEquals("Final Supplier val is 18",18,newVal,Delta);
 		
 		//testing customer version
-		TimeDependentTactic customer = new TimeDependentTactic(poly, false);
+		ResourceDependentTactic customer = new ResourceDependentTactic(resrc, false);
 		
+		 activeAgents=6;
+		 resrc.setActiveAgents(activeAgents);
 		 issue= new Issue(0, 30, 18);
 		 oldVal=0;
 		 newVal=18;
+		 
 		for(int i=0;i<=maxTime;i++)
 		{
 			oldVal=newVal;
 			newVal=customer.nextValue(issue);
 			assertTrue("all values betwwen 18 and 30",newVal<=30 && newVal>=18);
-			
 			assertTrue("newVal always higher than oldVal",newVal>=oldVal);
-			
+			resrc.setActiveAgents(--activeAgents);
 			issue.incIteration();
 		}
+		newVal=customer.nextValue(issue);
 		assertEquals("Final Customer val is 30",30,newVal,Delta);
 		
 		
@@ -98,14 +67,14 @@ public class TestTimeDependentTactics {
 	}
 	
 	@Test
-	public void TestTacticPolynomialWeight() {
+	public void TestTacticResourceTime() {
 		double k=0.3;
-		double beta=0.5;
+	
 		double maxTime=5;
-		TimeWeightedPolynomial poly = new TimeWeightedPolynomial(k, beta, maxTime);
+		ResourceTimeFunction time = new ResourceTimeFunction(k, maxTime);
 		
 		//testing supplier version
-		TimeDependentTactic supplier = new TimeDependentTactic(poly, true);
+		ResourceDependentTactic supplier = new ResourceDependentTactic(time, true);
 		
 		Issue issue= new Issue(0, 30, 18);
 		double oldVal=0;
@@ -122,7 +91,7 @@ public class TestTimeDependentTactics {
 		assertEquals("Final Supplier val is 18",18,newVal,Delta);
 		
 		//testing customer version
-		TimeDependentTactic customer = new TimeDependentTactic(poly, false);
+		ResourceDependentTactic customer = new ResourceDependentTactic(time, false);
 		
 		 issue= new Issue(0, 30, 18);
 		 oldVal=0;

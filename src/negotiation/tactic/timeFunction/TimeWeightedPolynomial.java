@@ -1,4 +1,4 @@
-package negotiation.tactic;
+package negotiation.tactic.timeFunction;
 
 public class TimeWeightedPolynomial extends TimeWeightedFunction {
 
