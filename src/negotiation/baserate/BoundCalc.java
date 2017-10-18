@@ -7,30 +7,25 @@ import java.io.IOException;
 import jade.core.AID;
 import java.util.*;
 
-import negotiation.Transaction;
-
-public abstract class BaseRate {
+public abstract class BoundCalc {
 		
-	// How for the object is willing to look back in the transaction history
-	private int lookBackLength;
-	private double[] baseRate = new double[24]; 
-	private Queue<Transaction> transactionHistory = new LinkedList<Transaction>();
+	private double[] stdRate = new double[24]; 
+	private History history = new History();
 	
 	// Constructor
-	public BaseRate(String baseRateDir, int lookBackLength) {
-		loadBaseRate(baseRateDir);	
-		this.lookBackLength = lookBackLength;
+	public BoundCalc(String baseRateDir) {
+		loadBaseRate(baseRateDir);
 	}
 	
 	// Default constructor
-	public BaseRate() {
-		this("baserate.txt", 30);
+	public BoundCalc() {
+		this("src\\negotiation\\baserate\\baserate.txt");
 	}
 	
 	// Prints the base rate array in easily readable config
-	public void printBaseRate () {
+	public void printStdRate () {
 		for (int i = 0; i < 24; i++) {
-			System.out.println(String.format("Rate at %d:00 = $%f", i, baseRate[i]));
+			System.out.println(String.format("Rate at %d:00 = $%f", i, stdRate[i]));
 		}
 	}
 	
@@ -46,7 +41,7 @@ public abstract class BaseRate {
                         
             while((line = bufferedReader.readLine()) != null) {
             	try {
-            		baseRate[i] = Double.parseDouble(line);
+            		stdRate[i] = Double.parseDouble(line);
             	}
             	catch(NumberFormatException ex) {
                     System.out.println(String.format("Unable to convert value \"%s\"", line));                
@@ -64,20 +59,24 @@ public abstract class BaseRate {
         }
 	}
 	
-	public int getLookBackLength() {
-		return this.lookBackLength;
+	public void saveHistory(String dir) {
+		history.saveTransactionHistory(dir);
 	}
 	
-	public double[] getBaseRate() {
-		return this.baseRate;
+	public void updateRate(double rate) {
+		history.updateFinalRate(rate);
+	}
+			
+	public double[] getStdRate() {
+		return this.stdRate;
 	}
 	
-	public Queue<Transaction> getTransactionHistory() {
-		return this.transactionHistory;
+	public History getHistory() {
+		return this.history;
 	}
 	
 	// Calculate inital rate for the initiator/responder to use
-	public abstract double calc (AID id, int units, int time);
+	public abstract double[] calcBounds (AID id, int units, int time);
 	
 	// Discount based on amount of transactions in history
 	public abstract double getAIDHistoryDiscount (int transactions);
