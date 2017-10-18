@@ -1,54 +1,46 @@
 package negotiation.baserate;
 
 import jade.core.AID;
-import negotiation.Transaction;
 
-public class RetailerBaseRate extends BaseRate {
-	public RetailerBaseRate(String baseRateDir, int lookBackLength) {
-		super(baseRateDir, lookBackLength);
+public class RetailerBound extends BoundCalc {
+	public RetailerBound(String baseRateDir) {
+		super(baseRateDir);
 	}
 	
-	public RetailerBaseRate() {
+	public RetailerBound() {
 		super();
 	}
 	
 	// Assuming retailer
 	@Override
-	public double calc (AID id, int units, int time) {
-		double initial = getBaseRate()[time];
-		int pastUnitTransactions = 0;
-		int pastTransactions = 0;
+	public double[] calcBounds (AID id, int units, int time){
+		double lowerBound = getStdRate()[time];
+		double upperBound = getStdRate()[time];
+				
+		int pastUnitTransactions = this.getHistory().getTotalUnitsTradedForClient(id);
+		double pastMoneyTransactions = this.getHistory().getTotalMoneyTradedForClient(id);
+		int pastTransactions = this.getHistory().getTotalTransactionsForClient(id);
 		
-		// Search history for previous transactions with Agent
-		for(Transaction t: getTransactionHistory()) {
-			if (t.getClient().getName() == id.getName()) {
-				pastTransactions += 1;
-				pastUnitTransactions += t.getUnits();
-			}
-		}
-		
-		// To make the retailer initially ask for more than the standard.
+		// To make the retailer initially asks for more than the standard.
 		// TODO Think of appropriate value here
-		initial *= 1.1;			
+		upperBound *= 1.4;			
 		
 		// Retailer reduces the initial asking price based on the amount of units
-		initial *= (1-getUnitAmountDiscount(units));
+		upperBound *= (1-getUnitAmountDiscount(units));
 		
 		// Retailer reduces the initial asking price based on amount of units traded in history
-		initial *= (1-getUnitHistoryDiscount(pastUnitTransactions));
+		upperBound *= (1-getUnitHistoryDiscount(pastUnitTransactions));
 		
 		// Retailer reduces the initial asking price based on amount of transactions with agent in history
-		//initial *= (1-getAIDHistoryDiscount(pastTransactions));
+		//upperBound *= (1-getAIDHistoryDiscount(pastTransactions));
 			
-		// Remove the last most transaction from memory
-		if (getTransactionHistory().size() > getLookBackLength()) {
-			getTransactionHistory().poll();
-		}
+		// Reduces the lowerbound to 80% to get the minimum the retailer is willing to receive
+		// TODO Think of appropriate value here
+		lowerBound *= 0.9;
 		
 		// Add the transaction to memory
-		getTransactionHistory().add(new Transaction(id, units));
-		
-		return initial;
+
+		return new double[] {lowerBound, upperBound};
 	}
 	
 	// Discount based on  amount of units traded in this trade

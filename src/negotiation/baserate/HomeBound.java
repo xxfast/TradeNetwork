@@ -1,34 +1,28 @@
 package negotiation.baserate;
 
 import jade.core.AID;
-import negotiation.Transaction;
 
-public class HomeBaseRate extends BaseRate {
-	public HomeBaseRate(String baseRateDir, int lookBackLength) {
-		super(baseRateDir, lookBackLength);
+public class HomeBound extends BoundCalc {
+	public HomeBound(String baseRateDir) {
+		super(baseRateDir);
 	}
 	
-	public HomeBaseRate() {
+	public HomeBound() {
 		super();
 	}
 
 	@Override
-	public double calc(AID id, int units, int time) {
-		double initial = super.getBaseRate()[time];
-		int pastUnitTransactions = 0;
-		int pastTransactions = 0;
+	public double[] calcBounds(AID id, int units, int time) {
+		double lowerBound = getStdRate()[time];
+		double upperBound = getStdRate()[time];
 		
-		// Search history for previous transactions with Agent
-		for(Transaction t: getTransactionHistory()) {
-			if (t.getClient().getName() == id.getName()) {
-				pastTransactions += 1;
-				pastUnitTransactions += t.getUnits();
-			}
-		}
+		int pastUnitTransactions = this.getHistory().getTotalUnitsTradedForClient(id);
+		double pastMoneyTransactions = this.getHistory().getTotalMoneyTradedForClient(id);
+		int pastTransactions = this.getHistory().getTotalTransactionsForClient(id);
 		
 		// To make the home initially ask less than the standard.
 		// TODO Think of appropriate value here
-		initial *= 0.9;			
+		lowerBound *= 0.6;
 		
 		// Home reduces the initial asking price based on the amount of units
 		// Home probably wouldn't calculate this
@@ -39,17 +33,16 @@ public class HomeBaseRate extends BaseRate {
 		//initial *= (1-getUnitHistoryDiscount(pastUnitTransactions));
 		
 		// Home reduces the initial asking price based on amount of transactions with agent in history
-		initial *= (1-getAIDHistoryDiscount(pastTransactions));
+		lowerBound *= (1-getAIDHistoryDiscount(pastTransactions));
 		
-		// Remove the last most transaction from memory
-		if (getTransactionHistory().size() > getLookBackLength()) {
-			getTransactionHistory().poll();
-		}
+		
+		// Increases the upper bound to 110% to get the the max the home is willing to pay
+		// TODO Think of appropriate value here
+		upperBound *= 1.1;
 		
 		// Add the transaction to memory
-		getTransactionHistory().add(new Transaction(id, units));
 		
-		return initial;
+		return new double[] {lowerBound, upperBound};
 	}
 
 	// Discount based on  amount of units traded in this trade
