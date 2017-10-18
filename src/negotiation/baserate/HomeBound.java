@@ -41,7 +41,6 @@ public class HomeBound extends BoundCalc {
 		upperBound *= 1.1;
 		
 		// Add the transaction to memory
-		this.getHistory().newTransaction(id, units);	
 		
 		return new double[] {lowerBound, upperBound};
 	}

@@ -1,4 +1,4 @@
-package negotiation.baserate;
+package model;
 
 import jade.core.AID;
 import java.util.Map;
@@ -17,26 +17,21 @@ import negotiation.baserate.TransactionList;
 public class History {
 	
 	private Map<AID,TransactionList> transactionHistory = new HashMap<AID,TransactionList>();
-	private Transaction currentTransaction = new Transaction();
-	private AID currentClient;
-	private boolean finalRateAdded = true;
 	
 	public History() {
 		
 	}
 	
-	public void newTransaction (AID client, int units) {
+	public void addTransaction (AID client, int units, double rate) {
 		
-		if (!finalRateAdded){
-			System.out.println("The previous transaction hasn't been updated with the final rate decided in the negotiation. Call updateRate() to add the rate");
+		if (transactionHistory.containsKey(client)) {
+			transactionHistory.get(client).getTransactions().add(new Transaction(units, rate));
+		} else {
+			TransactionList TL = new TransactionList();
+			TL.getTransactions().add(new Transaction(units, rate));
+			transactionHistory.put(client, TL);
 		}
-
-		finalRateAdded = false;
 		
-		this.currentTransaction = new Transaction();
-		this.currentClient = client;
-		
-		currentTransaction.setUnits(units);
 	}
 	
 	public void saveTransactionHistory (String dir) {
@@ -62,24 +57,6 @@ public class History {
         catch(IOException ex) {
             System.out.println(String.format("Error writing to file \"%s\"", dir));                
         }
-	}
-	
-	public void updateFinalRate (double rate) {		
-		
-		if (!finalRateAdded) {
-			currentTransaction.setRate(rate);
-			finalRateAdded = true;
-
-			if (transactionHistory.containsKey(currentClient)) {
-				transactionHistory.get(currentClient).getTransactions().add(currentTransaction);
-			} else {
-				TransactionList TL = new TransactionList();
-				TL.getTransactions().add(currentTransaction);
-				transactionHistory.put(this.currentClient, TL);
-			}
-		}
-		
-		
 	}
 	
 	public double getTotalMoneyTradedForClient(AID id) {

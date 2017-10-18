@@ -9,6 +9,9 @@ public class Transaction {
 	public Transaction() {
 	}
 	
+	public Transaction(int units, double rate) {
+	}
+	
 	public void setUnits(int units) {
 		this.units = units;
 	}

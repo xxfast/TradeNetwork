@@ -39,7 +39,6 @@ public class RetailerBound extends BoundCalc {
 		lowerBound *= 0.9;
 		
 		// Add the transaction to memory
-		this.getHistory().newTransaction(id, units);
 
 		return new double[] {lowerBound, upperBound};
 	}

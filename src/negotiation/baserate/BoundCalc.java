@@ -5,16 +5,19 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import jade.core.AID;
+import model.History;
+
 import java.util.*;
 
 public abstract class BoundCalc {
 		
 	private double[] stdRate = new double[24]; 
-	private History history = new History();
+	private History history;
 	
 	// Constructor
-	public BoundCalc(String baseRateDir) {
+	public BoundCalc(String baseRateDir, History hist) {
 		loadBaseRate(baseRateDir);
+		this.history = hist;
 	}
 	
 	// Default constructor
@@ -61,10 +64,6 @@ public abstract class BoundCalc {
 	
 	public void saveHistory(String dir) {
 		history.saveTransactionHistory(dir);
-	}
-	
-	public void updateRate(double rate) {
-		history.updateFinalRate(rate);
 	}
 			
 	public double[] getStdRate() {
