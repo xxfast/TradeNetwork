@@ -1,6 +1,6 @@
-package negotiation.tactic;
+package negotiation.tactic.timeFunction;
 
-public abstract class TimeWeightedFunction {
+public abstract class TimeWeightedFunction extends Function {
 	protected double K;
 	protected double Beta;
 	protected double TimeMax;
