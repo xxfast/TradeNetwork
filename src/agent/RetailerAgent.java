@@ -78,7 +78,6 @@ public class RetailerAgent extends TradeAgent {
 	private int energyStored = 0;
 	
 	protected void setup() {
-		// Set up the agent
 		
 		// Sets the agent's properties (energy rate & threshold) to passed or default values
 		setAgentProperties();
@@ -86,7 +85,10 @@ public class RetailerAgent extends TradeAgent {
 		//Describes the agent as a retail agent
 		setupServiceProviderComponent();
 		
+
 		say("Retailer "+this.getName());
+
+
 		
 		// Template to filter messages as to only receive CFP messages for the CNR Behaviour
 		MessageTemplate template = MessageTemplate.and(
