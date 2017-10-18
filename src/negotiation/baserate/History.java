@@ -19,7 +19,7 @@ public class History {
 	private Map<AID,TransactionList> transactionHistory = new HashMap<AID,TransactionList>();
 	private Transaction currentTransaction = new Transaction();
 	private AID currentClient;
-	private boolean finalRateAdded = false;
+	private boolean finalRateAdded = true;
 	
 	public History() {
 		
@@ -27,12 +27,10 @@ public class History {
 	
 	public void newTransaction (AID client, int units) {
 		
-		if (!transactionHistory.isEmpty()) {
-			if (!finalRateAdded){
-				System.out.println("The previous transaction hasn't been updated with the final rate decided in the negotiation. Call updateRate() to add the rate");
-			}
+		if (!finalRateAdded){
+			System.out.println("The previous transaction hasn't been updated with the final rate decided in the negotiation. Call updateRate() to add the rate");
 		}
-		
+
 		finalRateAdded = false;
 		
 		this.currentTransaction = new Transaction();
