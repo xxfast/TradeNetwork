@@ -8,6 +8,8 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import FIPA.DateTime;
+import model.Demand;
 import model.Offer;
 import negotiation.Issue;
 import negotiation.Strategy;
@@ -17,8 +19,8 @@ import negotiation.negotiator.RetailerAgentNegotiator;
 import negotiation.negotiator.AgentNegotiator.OfferStatus;
 import negotiation.tactic.Tactic;
 import negotiation.tactic.TimeDependentTactic;
-import negotiation.tactic.TimeWeightedFunction;
-import negotiation.tactic.TimeWeightedPolynomial;
+import negotiation.tactic.timeFunction.TimeWeightedFunction;
+import negotiation.tactic.timeFunction.TimeWeightedPolynomial;
 
 public class TestRetailerAgent {
 
@@ -77,14 +79,11 @@ public class TestRetailerAgent {
 		//add only price item
 		scoreWeights.put(Item.PRICE, new Double(1));
 		
-		//create price range for each offer item-obtain from source
-		Map<Strategy.Item,Issue> itemissue = new HashMap<>();
-		//only add price issue since we are only focusing on price
-		itemissue.put(Strategy.Item.PRICE, new Issue(40, 20));
+	
 		
 		//create negotiator with params
-		RetailerAgentNegotiator neg= new RetailerAgentNegotiator( this.maxNegotiationTime, itemissue, strats, scoreWeights);
-		
+		RetailerAgentNegotiator neg= new RetailerAgentNegotiator( this.maxNegotiationTime,strats, scoreWeights);
+		neg.setInitialIssue(new Demand(10, new DateTime(), 1));
 		Offer off=neg.generateOffer();
 		double val=off.getOfferValue(Item.PRICE);
 		
@@ -132,14 +131,11 @@ public class TestRetailerAgent {
 		//add only price item
 		scoreWeights.put(Item.PRICE, new Double(1));
 		
-		//create price range for each offer item-obtain from source
-		Map<Strategy.Item,Issue> itemissue = new HashMap<>();
-		//only add price issue since we are only focusing on price
-		itemissue.put(Strategy.Item.PRICE, new Issue(40, 20));
+	
 		
 		//create negotiator with params
-		RetailerAgentNegotiator neg= new RetailerAgentNegotiator( this.maxNegotiationTime, itemissue, strats, scoreWeights);
-		
+		RetailerAgentNegotiator neg= new RetailerAgentNegotiator( this.maxNegotiationTime,  strats, scoreWeights);
+		neg.setInitialIssue(new Demand(10, new DateTime(), 1));
 		Map<Item,Double> cust1= new HashMap<Item,Double>();
 		cust1.put(Item.PRICE, new Double(25));
 		

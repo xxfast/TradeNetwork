@@ -1,17 +1,18 @@
 package model;
 
-import java.util.Date;
+import java.io.Serializable;
 
 import FIPA.DateTime;
+import annotations.Adjustable;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
-public class Demand {
+public class Demand implements Serializable{
 	
-	private int units;
-	private DateTime time;
-	private int duration; 
+	@Adjustable(label="Required number of units") private int units;
+	@Adjustable(label="When is it required?")  private DateTime time;
+	@Adjustable(label="For how long is it required")  private int duration; 
 	
 	public ACLMessage createACLMessage(int performative){
 		ACLMessage toReturn = new ACLMessage(performative);
