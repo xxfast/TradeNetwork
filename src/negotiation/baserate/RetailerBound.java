@@ -1,14 +1,15 @@
 package negotiation.baserate;
 
 import jade.core.AID;
+import model.History;
 
 public class RetailerBound extends BoundCalc {
-	public RetailerBound(String baseRateDir) {
-		super(baseRateDir);
+	public RetailerBound(String baseRateDir,History history) {
+		super(baseRateDir,history);
 	}
 	
-	public RetailerBound() {
-		super();
+	public RetailerBound(History history) {
+		super(history);
 	}
 	
 	// Assuming retailer

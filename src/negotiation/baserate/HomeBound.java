@@ -1,14 +1,15 @@
 package negotiation.baserate;
 
 import jade.core.AID;
+import model.History;
 
 public class HomeBound extends BoundCalc {
-	public HomeBound(String baseRateDir) {
-		super(baseRateDir);
+	public HomeBound(String baseRateDir,History history) {
+		super(baseRateDir,history);
 	}
 	
-	public HomeBound() {
-		super();
+	public HomeBound(History history) {
+		super(history);
 	}
 
 	@Override

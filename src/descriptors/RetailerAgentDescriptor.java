@@ -1,35 +1,40 @@
 package descriptors;
 
 public class RetailerAgentDescriptor extends TradeAgentDescriptor {
-	private int energyRate;
-	private int energyThreshold;
-	private int energyStored;
+	private double maxNegotiationTime;
+	private double paramK;
+	private double paramBeta;
 	
-	public int getEnergyRate() {
-		return energyRate;
+	public double getMaxNegotiationTime() {
+		return maxNegotiationTime;
 	}
-	public void setEnergyRate(int energyRate) {
-		this.energyRate = energyRate;
+
+	public void setMaxNegotiationTime(double maxNegotiationTime) {
+		this.maxNegotiationTime = maxNegotiationTime;
 	}
-	public int getEnergyThreshold() {
-		return energyThreshold;
+
+	public double getParamK() {
+		return paramK;
 	}
-	public void setEnergyThreshold(int energyThreshold) {
-		this.energyThreshold = energyThreshold;
+
+	public void setParamK(double paramK) {
+		this.paramK = paramK;
 	}
-	public int getEnergyStored() {
-		return energyStored;
+
+	public double getParamBeta() {
+		return paramBeta;
 	}
-	public void setEnergyStored(int energyStored) {
-		this.energyStored = energyStored;
+
+	public void setParamBeta(double paramBeta) {
+		this.paramBeta = paramBeta;
 	}
-	
+
 	public String getDescription() {
-		return String.format("[RetailerAgent: "+super.getName() +",\n \t Energy Rate: "+ getEnergyRate() +",\n \t Energy Threshold: "+ getEnergyThreshold()+",\n \t Energy Stored: "+ getEnergyStored() +"]");
+		return String.format("[RetailerAgent: "+super.getName() +",\n \t Param K: "+ getParamK() +",\n \t Param Beta: "+ getParamBeta()+",\n \t ]");
 	}
 	
 	public Object[] toArray() {
-		Object[] toReturn = new Object[]{getEnergyRate(),getEnergyThreshold(),getEnergyStored()};
+		Object[] toReturn = new Object[]{getParamK(),getParamBeta()};
 		return toReturn;
 	}
 	

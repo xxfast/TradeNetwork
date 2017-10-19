@@ -3,16 +3,19 @@ package negotiation.negotiator;
 import java.util.ArrayList;
 import java.util.Map;
 
-import model.Offer;
-import negotiation.Issue;
 import negotiation.Strategy;
 import negotiation.Strategy.Item;
+import negotiation.baserate.RetailerBound;
 
 public class RetailerAgentNegotiator extends AgentNegotiator {
 
+	public RetailerAgentNegotiator(double maxNegotiationTime, ArrayList<Strategy> strategies, Map<Item, Double> scoreWeights)
+	{
+		super(maxNegotiationTime,strategies,scoreWeights);
+	}
 	public RetailerAgentNegotiator(double maxNegotiationTime,
-			ArrayList<Strategy> strategies, Map<Item, Double> scoreWeights) {
-		super(maxNegotiationTime, strategies, scoreWeights);
+			ArrayList<Strategy> strategies, Map<Item, Double> scoreWeights,RetailerBound calc) {
+		super(maxNegotiationTime, strategies, scoreWeights,calc);
 		// TODO Auto-generated constructor stub
 	}
 
