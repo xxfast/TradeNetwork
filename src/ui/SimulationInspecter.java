@@ -2,15 +2,14 @@ package ui;
 import java.awt.BorderLayout;
 
 
-import java.awt.Button;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Panel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import javax.swing.BoxLayout;
 import javax.swing.JDialog;
@@ -22,17 +21,21 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JTextPane;
 import javax.swing.JTree;
-import javax.swing.border.TitledBorder;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
-import agent.ApplianceAgent;
-import simulation.SimulationAdapter;
+import controllers.TradeAgentController;
+import descriptors.ApplianceAgentDescriptor;
+import descriptors.HomeAgentDescriptor;
+import simulation.Simulation;
 
 
 public class SimulationInspecter {
 
+	private Simulation toInspect; 
+	
 	private JFrame frame;
+	private JTree tree;
 
 	/**
 	 * Create the application.
@@ -81,13 +84,50 @@ public class SimulationInspecter {
 		mntmApplianceAgent.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JDialog dialog = new TradeAgentCreator(ApplianceAgent.class);
+				TradeAgentCreator dialog = null;
+				try {
+					dialog = new TradeAgentCreator(ApplianceAgentDescriptor.class);
+					dialog.setSimulation(toInspect);
+					dialog.Build();
+					dialog.addWindowListener(new WindowAdapter() {
+					    @Override
+					    public void windowClosed(WindowEvent e) {
+					    		UpdateModel();
+					    }
+					});
+				} catch (InstantiationException e1) {
+					e1.printStackTrace();
+				} catch (IllegalAccessException e1) {
+					e1.printStackTrace();
+				}
 				dialog.setVisible(true);
 			}
 		});
 		mnCreate.add(mntmApplianceAgent);
 		
 		JMenuItem mntmHomeAgent = new JMenuItem("Home Agent");
+		mntmHomeAgent.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				TradeAgentCreator dialog = null;
+				try {
+					dialog = new TradeAgentCreator(HomeAgentDescriptor.class);
+					dialog.setSimulation(toInspect);
+					dialog.Build();
+					dialog.addWindowListener(new WindowAdapter() {
+					    @Override
+					    public void windowClosed(WindowEvent e) {
+					    		UpdateModel();
+					    }
+					});
+				} catch (InstantiationException e1) {
+					e1.printStackTrace();
+				} catch (IllegalAccessException e1) {
+					e1.printStackTrace();
+				}
+				dialog.setVisible(true);
+			}
+		});
 		mnCreate.add(mntmHomeAgent);
 		
 		JMenuItem mntmRetailerAgent = new JMenuItem("Retailer Agent");
@@ -123,20 +163,7 @@ public class SimulationInspecter {
 		console.setText("Console");
 		view.add(console, BorderLayout.SOUTH);
 		
-		JTree tree = new JTree();
-		tree.setModel(new DefaultTreeModel(
-			new DefaultMutableTreeNode("Simulation") {
-				{
-					DefaultMutableTreeNode node_1;
-					node_1 = new DefaultMutableTreeNode("Agents");
-						node_1.add(new DefaultMutableTreeNode("blue"));
-						node_1.add(new DefaultMutableTreeNode("violet"));
-						node_1.add(new DefaultMutableTreeNode("red"));
-						node_1.add(new DefaultMutableTreeNode("yellow"));
-					add(node_1);
-				}
-			}
-		));
+		tree = new JTree();
 		view.add(tree, BorderLayout.CENTER);
 		
 		Panel sidebar = new Panel();
@@ -149,12 +176,37 @@ public class SimulationInspecter {
 		
 	}
 	
+	public void UpdateModel() {
+		tree.setModel(getToInspect().getAgents());
+//		new DefaultTreeModel(
+//				new DefaultMutableTreeNode("Simulation") {
+//					{
+//						DefaultMutableTreeNode node_1 = new DefaultMutableTreeNode("Agents");
+//							node_1.add(new DefaultMutableTreeNode("blue"));
+//							node_1.add(new DefaultMutableTreeNode("violet"));
+//							node_1.add(new DefaultMutableTreeNode("red"));
+//							node_1.add(new DefaultMutableTreeNode("yellow"));
+//						add(node_1);
+//					}
+//				}
+//			)
+	}
+	
+	
 	public JFrame getFrame() {
 		return frame;
 	}
 
 	public void setFrame(JFrame frame) {
 		this.frame = frame;
+	}
+
+	public Simulation getToInspect() {
+		return toInspect;
+	}
+
+	public void setToInspect(Simulation toInspect) {
+		this.toInspect = toInspect;
 	}
 
 }

@@ -2,9 +2,14 @@ package descriptors;
 
 import java.io.Serializable;
 
+import org.eclipse.jdt.annotation.Nullable;
+
+import annotations.Adjustable;
+
+@Adjustable(label = "An agent representing a genric trade agent")
 public abstract class TradeAgentDescriptor implements Serializable {
 	
-	private String name;
+	@Adjustable private String name;
 	
 	public String getName() {
 		return name;

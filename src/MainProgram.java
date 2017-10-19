@@ -14,7 +14,6 @@ import jade.core.Runtime;
 import jade.wrapper.AgentContainer;
 import jade.wrapper.StaleProxyException;
 import simulation.Simulation;
-import simulation.SimulationAdapter;
 import ui.SimulationInspecter;
 
 /**
@@ -30,6 +29,8 @@ public class MainProgram {
 	
 	public static AgentContainer container;
 	
+	public static Simulation toRun;
+	
 	public static void main(String[] args) throws StaleProxyException, InterruptedException {
 		// Get a hold to the JADE runtime
 		Runtime rt = Runtime.instance();
@@ -42,14 +43,16 @@ public class MainProgram {
 		// Get the Agent container
 		container = rt.createMainContainer(pMain);
 		
-		// Set the adapter with a default simulation
-		SimulationAdapter.setToAdapt(CreateDefaultSimulation());
+		// Set a default simulation
+		toRun = CreateDefaultSimulation();
 		
 		// Start the main UI
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
 					SimulationInspecter window = new SimulationInspecter();
+					window.setToInspect(toRun);
+					window.UpdateModel();
 					window.getFrame().setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -64,9 +67,9 @@ public class MainProgram {
 		test.setDescription("This is a test save");
 		test.setContainer(container);
 		// Create a agent of class SchedulingAgent 
-		SchedulingAgentDescriptor mySchedulingAgent = new SchedulingAgentDescriptor();
-		mySchedulingAgent.setName("SA");
-		test.CreateTradeAgent(mySchedulingAgent);
+		//SchedulingAgentDescriptor mySchedulingAgent = new SchedulingAgentDescriptor();
+		//mySchedulingAgent.setName("SA");
+		//test.CreateTradeAgent(mySchedulingAgent);
 		
 		return test;
 		//Starting the Simulation
@@ -98,7 +101,7 @@ public class MainProgram {
 			 savedFile.createNewFile();  
 	         FileOutputStream fileOut = new FileOutputStream(savedFile,true);
 	         ObjectOutputStream out = new ObjectOutputStream(fileOut);
-	         out.writeObject(SimulationAdapter.getToAdapt());
+	         out.writeObject(toRun);
 	         out.close();
 	         fileOut.close();
 	         say("Simulation saved in "+ DEFAULT_SAVE_LOCATION);
@@ -112,7 +115,7 @@ public class MainProgram {
 	      try {
 	         FileInputStream fileIn = new FileInputStream(DEFAULT_SAVE_LOCATION);
 	         ObjectInputStream in = new ObjectInputStream(fileIn);
-	         SimulationAdapter.setToAdapt((Simulation) in.readObject());
+	         toRun = ((Simulation) in.readObject());
 	         in.close();
 	         fileIn.close();
 	      }catch(IOException i) {

@@ -8,11 +8,12 @@ import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
+@Adjustable(label="Demand Unit")
 public class Demand implements Serializable{
 	
-	@Adjustable(label="Required number of units") private int units;
-	@Adjustable(label="When is it required?")  private DateTime time;
-	@Adjustable(label="For how long is it required")  private int duration; 
+	@Adjustable(label="Required number of units") private Integer units = 0;
+	@Adjustable(label="When is it required?")  private Short time = 0 ;
+	@Adjustable(label="For how long is it required")  private Integer duration = 1; 
 	
 	public ACLMessage createACLMessage(int performative){
 		ACLMessage toReturn = new ACLMessage(performative);
@@ -24,19 +25,26 @@ public class Demand implements Serializable{
 			MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
 			MessageTemplate.MatchPerformative(ACLMessage.INFORM));
 	
-	public Demand(DateTime time){
+	public Demand(){
+	}
+	
+	public Demand(Short time){
 		init(0, time, 1);
 	}
 	
-	public Demand(int units, DateTime time){
+	public Demand(int units){
+		init(units, (short) 0, 1);
+	}
+	
+	public Demand(int units, Short time){
 		init(units, time, 1);
 	}
 	
-	public Demand(int units, DateTime time, int duration){
+	public Demand(int units, Short time, int duration){
 		init(units, time, duration);
 	}
 	
-	private void init(int units, DateTime time, int duration){
+	private void init(int units, Short time, int duration){
 		this.setUnits(units);
 		this.setTime(time);
 		this.setDuration(duration);
@@ -48,7 +56,7 @@ public class Demand implements Serializable{
 	}
 	
 	public String getContent(){
-		return getUnits() + ":" + getTime().hour + ":" + getDuration();
+		return getUnits() + ":" + getTime() + ":" + getDuration();
 		
 	}
 	
@@ -56,9 +64,7 @@ public class Demand implements Serializable{
 		String[] messageBits = content.split(":");
 		setUnits( Integer.valueOf(messageBits[0]));
 		setDuration( Integer.valueOf(messageBits[1]));
-		DateTime toSet = new DateTime();
-		toSet.hour = Short.valueOf(messageBits[1]);
-		setTime(toSet);
+		setTime( Short.valueOf(messageBits[1]));
 	}
 
 	public int getUnits() {
@@ -77,11 +83,11 @@ public class Demand implements Serializable{
 		this.duration = hours;
 	}
 
-	public DateTime getTime() {
+	public Short getTime() {
 		return time;
 	}
 
-	public void setTime(DateTime on) {
+	public void setTime(Short on) {
 		this.time = on;
 	}
 	
