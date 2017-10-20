@@ -54,9 +54,16 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 	public int adjustableFields = 0;
 	
 	private List<JTextField> gFields = new ArrayList<JTextField>();
+	
+	private Map<Class<?>, Class<?>> primitiveRegistry = new HashMap<Class<?>, Class<?>> ();
 
 	public TradeAgentCreator(Class<?> type) {
 		this.type = type;
+		primitiveRegistry.put(int.class, Integer.class);
+		primitiveRegistry.put(double.class, Double.class);
+		primitiveRegistry.put(boolean.class, Boolean.class);
+		primitiveRegistry.put(short.class, Short.class);
+		primitiveRegistry.put(long.class, Long.class);
 	}
 	
 	public void Build() throws InstantiationException, IllegalAccessException{
@@ -223,6 +230,7 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 	private void Validate(Object instance, Class<?> whatToValidate, Field toValidate, JTextField toShow) {
 		try {
 			Class<?> desiredType = toValidate.getType();
+			if(primitiveRegistry.containsKey(desiredType)) desiredType = primitiveRegistry.get(desiredType);
 			PropertyDescriptor pd = new PropertyDescriptor(toValidate.getName(), whatToValidate);
 			Method setter = pd.getWriteMethod();
 			String content = toShow.getText();
@@ -234,6 +242,7 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 		}catch (InvocationTargetException |  IntrospectionException | IllegalAccessException e) {
 			toShow.setBackground(Color.ORANGE);
 		} catch (IllegalArgumentException | NullPointerException e) {
+			e.printStackTrace();
 			toShow.setBackground(Color.RED);
 		} 
 	}
@@ -248,7 +257,7 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
         try {
             ret = c.cast(c.getDeclaredMethod("valueOf", String.class).invoke(null, arg)
             );
-        } catch (NoSuchMethodException e) {
+        } catch (NoSuchMethodException e) { 
             cause = e;
         } catch (IllegalAccessException e) {
             cause = e;
