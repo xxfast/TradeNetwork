@@ -1,5 +1,6 @@
 package simulation;
 
+import java.awt.Container;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,8 @@ import descriptors.ApplianceAgentDescriptor;
 import descriptors.HomeAgentDescriptor;
 import descriptors.SchedulingAgentDescriptor;
 import descriptors.TradeAgentDescriptor;
+import interfaces.IOwnable;
+import jade.core.AID;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
@@ -52,10 +55,33 @@ public class Simulation implements Serializable {
 		tradeAgent.setDescriptor(descriptor);
 		createdAgent = container.createNewAgent(descriptor.getName(), SchedulingAgent.class.getName(), descriptor.toArray());
 		tradeAgent.setInnerController(createdAgent);
-		((DefaultMutableTreeNode)agents.getRoot()).add(new TradeAgentNode(tradeAgent));
+		if(descriptor instanceof IOwnable) {
+			IOwnable ownable = (IOwnable) descriptor;
+			GetRootForIn(ownable.getOwner(),(DefaultMutableTreeNode)agents.getRoot()).add(new TradeAgentNode(tradeAgent));
+		}else {
+			((DefaultMutableTreeNode)agents.getRoot()).add(new TradeAgentNode(tradeAgent));
+		}
 		return tradeAgent;
 	}
 	
+	private DefaultMutableTreeNode GetRootForIn(AID lookingFor, DefaultMutableTreeNode in) {
+		for(int i=0;i<in.getChildCount();i++) {
+			if(in.getChildAt(i) instanceof TradeAgentNode) {
+				TradeAgentNode node = (TradeAgentNode) in.getChildAt(i);
+				if(node.getAgent()!=null) {
+					String name = lookingFor.getLocalName().split("@")[0];
+					if(node.getAgent().getDescriptor().getName().equals(name)) {
+						return node;
+					}
+				}
+				DefaultMutableTreeNode inChildren =  GetRootForIn(lookingFor,node);
+				if(inChildren== null) continue;
+				else return inChildren;
+			}
+		}
+		return null;
+	}
+
 	public void Start() throws StaleProxyException{
 		StartNode((TradeAgentNode) agents.getRoot());
 	}

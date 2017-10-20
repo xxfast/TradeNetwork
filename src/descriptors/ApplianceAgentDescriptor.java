@@ -1,13 +1,14 @@
 package descriptors;
 
 import annotations.Adjustable;
+import interfaces.IOwnable;
 import jade.core.AID;
 import model.Demand;
 
 @Adjustable(label = "An agent representing a single appliance")
-public class ApplianceAgentDescriptor extends TradeAgentDescriptor {
+public class ApplianceAgentDescriptor extends TradeAgentDescriptor implements IOwnable {
 	
-	@Adjustable(label = "Name of the Scheduler") private AID schedulerAgent;
+	@Adjustable private AID owner;
 	@Adjustable(label = "Starting Demand")private Demand startingDemand;
 
 	public Demand getStartingDemand() {
@@ -17,16 +18,16 @@ public class ApplianceAgentDescriptor extends TradeAgentDescriptor {
 	public void setStartingDemand(Demand startingDemand) {
 		this.startingDemand = startingDemand;
 	}
-	public AID getSchedulerAgent() {
-		return schedulerAgent;
+	public AID getOwner() {
+		return owner;
 	}
 
-	public void setSchedulerAgent(AID schedulerAgent) {
-		this.schedulerAgent = schedulerAgent;
+	public void setOwner(AID owner) {
+		this.owner = owner;
 	}
 	
 	public String getDescription() {
-		return String.format("[ApplianceAgent: "+super.getName()+"-> ["+getSchedulerAgent()+"] ,\n \t Starting Demand: "+getStartingDemand().getContent()+"]");
+		return String.format("[ApplianceAgent: "+super.getName()+"-> ["+getOwner()+"] ,\n \t Starting Demand: "+getStartingDemand().getContent()+"]");
 	}
 	
 	@Override
@@ -35,7 +36,7 @@ public class ApplianceAgentDescriptor extends TradeAgentDescriptor {
 	}
 	
 	public Object[] toArray() {
-		Object[] toReturn = new Object[]{getSchedulerAgent(),startingDemand};
+		Object[] toReturn = new Object[]{getOwner(),startingDemand};
 		return toReturn;
 	}
 

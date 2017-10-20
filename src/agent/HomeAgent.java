@@ -10,19 +10,25 @@ import java.util.Vector;
 import FIPA.DateTime;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.ParallelBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.FailureException;
+import jade.domain.FIPAAgentManagement.NotUnderstoodException;
 import jade.domain.FIPAAgentManagement.RefuseException;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREInitiator;
+import jade.proto.AchieveREResponder;
 import jade.proto.ContractNetInitiator;
 import jade.util.Logger;
 import model.Demand;
 import model.Offer;
+import model.Schedule;
 import negotiation.Issue;
 import negotiation.NegotiationThread;
 import negotiation.Strategy;
@@ -56,7 +62,6 @@ public class HomeAgent extends TradeAgent {
 	private Map<AID,HomeAgentNegotiator> negotiators;
 
 	private ArrayList<Demand> messages = new ArrayList<>();
-	private AID myscheduler;
 	private List<AID> retailers;
 	
 	//params needed to setup negotiators
@@ -69,6 +74,10 @@ public class HomeAgent extends TradeAgent {
 	private double tacticBehaviourWeight=0.2;
 	private int behaviourRange=2;
 	//private structure
+	
+	private ParallelBehaviour workStack;
+
+	private Schedule schedule = new Schedule(); 
 	
 	protected void setup() {
 		// Registration with the DF		
@@ -86,7 +95,6 @@ public class HomeAgent extends TradeAgent {
 			doDelete();
 		}
 		
-		
 		rand = new Random();
 		//retrieve scheduler form arguments
 		Object[] args = getArguments();
@@ -95,7 +103,6 @@ public class HomeAgent extends TradeAgent {
 			say("Need to specify schedule agent in arguments");
 			doDelete();
 		}
-		myscheduler = new AID((String) args[0],AID.ISLOCALNAME);
 		
 		retailers= new ArrayList<>();	
 		//get agents with retailer service
@@ -107,40 +114,65 @@ public class HomeAgent extends TradeAgent {
 		
 		negotiators= new HashMap<>();
 		
-		addBehaviour(new TickerBehaviour(this,Simulation.Time) {
-			
-			@Override
-			public void onTick() {
-				// TODO Auto-generated method stub
-				// get scheduler agent from AMS
+		/* Setting up a parallel behavior to
+		 *  1) start listening to demands form home's appliances 
+		 *  2) start negotiating with the retailers */
+		
+		workStack = new ParallelBehaviour(ParallelBehaviour.WHEN_ALL);
+		workStack.addSubBehaviour(new DemandListeningBehaviour(this));
+		workStack.addSubBehaviour(new NegotiatingBehaviour(this));
+		addBehaviour(workStack);
+	}
+	
+	private class DemandListeningBehaviour extends AchieveREResponder{
+		
+		public DemandListeningBehaviour(Agent a) {
+			super(a,MessageTemplate.and(
+					MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
+					MessageTemplate.MatchPerformative(ACLMessage.INFORM)));
+		}
+		
+		private Demand recievedDemand; 
+		
+		protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException{
+				recievedDemand = new Demand(request);
+				say("DEMAND received demand from " + request.getSender().getName() + ". Demand is " + recievedDemand.getUnits() + " unit(s) from " + recievedDemand.getTime() + "h for " + recievedDemand.getDuration() + " Hrs");
+				say("OK ");
+				ACLMessage agree = request.createReply();
+				agree.setPerformative(ACLMessage.AGREE);
+				return agree;
+		}
 
-				
-				if(myscheduler!=null)
-				{
-//					System.out.println("intiated behaviour");
-					AchieveREInitiator req = new RequestDemand(myAgent, new ACLMessage(ACLMessage.REQUEST), myscheduler);
-					if(retailers.size()>0)
-					{
-						req.registerHandleInform(new RequestQuote(myAgent, null, retailers));
-						addBehaviour(req);
-					}
-						
-				}
-										
-					
-				}
-				
-			
-		});
+		protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException{
+			if(schedule(recievedDemand.getUnits(),recievedDemand.getTime(),recievedDemand.getDuration())){	
+				say("YES Scehduled the demand succesfully");
+				ACLMessage inform = request.createReply();
+				inform.setPerformative(ACLMessage.INFORM);
+				return inform;
+			}else{
+				say("Action failed, informing initiator");
+				throw new FailureException("unexpected-error");
+			}
+		}
 		
 	}
+	
+	private class NegotiatingBehaviour extends TickerBehaviour{
+
+		public NegotiatingBehaviour(Agent a) {
+			super(a, Simulation.Time);
+		}
 		
+		@Override
+		public void onTick() {
+			workStack.addSubBehaviour(new RequestQuote(myAgent, null, retailers));
+		}
+	}
 	
 	protected Random getRandomizer()
 	{
 		return rand;
 	}
-	
 	
 	protected void setupHomeNegotiators(Integer activeAgents)
 	{
@@ -191,10 +223,6 @@ public class HomeAgent extends TradeAgent {
 		//add only price item
 		scoreWeights.put(Item.PRICE, new Double(1));
 		
-		
-		
-	
-		
 		//create negotiators with params for each retailer
 		for(AID agent:retailers)
 		{
@@ -202,36 +230,6 @@ public class HomeAgent extends TradeAgent {
 		}
 		 
 		
-		
-	}
-	
-
-	public class RequestDemand extends AchieveREInitiator {
-		private AID mySchedulerAgent;
-
-		public RequestDemand(Agent a, ACLMessage msg, AID scheduler) {
-			super(a, msg);
-			mySchedulerAgent = scheduler;
-			// TODO Auto-generated constructor stub
-		}
-
-		@Override
-		protected Vector prepareRequests(ACLMessage request) {
-			// construct request to be sent to scheduler
-			System.out.println("Sending message");
-			Demand demand= new Demand(0);
-			ACLMessage demReq=demand.createACLMessage(ACLMessage.REQUEST);
-			demReq.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
-			demReq.addReceiver(mySchedulerAgent);
-			demReq.setSender(myAgent.getAID());
-
-			// TODO Auto-generated method stub
-			return super.prepareRequests(demReq);
-		}
-
-		
-
-
 		
 	}
 	
@@ -296,9 +294,6 @@ public class HomeAgent extends TradeAgent {
 			}
 			else
 				myLogger.log(Logger.SEVERE,"NULL Message sent for Quote");
-			
-			
-			
 			return cfps;
 		}
 		
@@ -467,5 +462,12 @@ public class HomeAgent extends TradeAgent {
 		
 	}
 	
-
+	public Schedule getSchedule(){
+		return schedule;
+	}
+	
+	public boolean schedule(int amount, Short time, int duration){
+		schedule.getTime().get(time).add(amount);
+		return true;
+	}
 }

@@ -83,7 +83,7 @@ public class TestRetailerAgent {
 		
 		//create negotiator with params
 		RetailerAgentNegotiator neg= new RetailerAgentNegotiator( this.maxNegotiationTime,strats, scoreWeights);
-		neg.setInitialIssue(new Demand(10, new DateTime(), 1));
+		neg.setInitialIssue(new Demand(10));
 		Offer off=neg.generateOffer();
 		double val=off.getOfferValue(Item.PRICE);
 		
@@ -135,7 +135,7 @@ public class TestRetailerAgent {
 		
 		//create negotiator with params
 		RetailerAgentNegotiator neg= new RetailerAgentNegotiator( this.maxNegotiationTime,  strats, scoreWeights);
-		neg.setInitialIssue(new Demand(10, new DateTime(), 1));
+		neg.setInitialIssue(new Demand(10));
 		Map<Item,Double> cust1= new HashMap<Item,Double>();
 		cust1.put(Item.PRICE, new Double(25));
 		

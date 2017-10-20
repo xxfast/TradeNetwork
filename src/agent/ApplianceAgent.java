@@ -19,7 +19,7 @@ import simulation.Simulation;
  */
 public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentInterface { 
 	
-	private AID scheduler;
+	private AID home;
 	private Demand startDemand; 
 	
 	/**
@@ -28,9 +28,9 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 	 */
 	protected void setup() {
 		Object[] args = getArguments();
-		setScheduler((AID)args[0]);
+		setHome((AID)args[0]);
 		setStartDemand((Demand) args[1]);
-		if( getScheduler() != null) StartDemanding();
+		if( getHome() != null) StartDemanding();
 	}
 	
 	/**
@@ -55,7 +55,7 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 			Demand myDemand = new Demand(1);
 //			say("Making a demand to the scheduler DEMAND=("+ myDemand.getContent()+")");
 			ACLMessage msg = myDemand.createACLMessage(ACLMessage.INFORM);
-			msg.addReceiver(scheduler);
+			msg.addReceiver(home);
 			msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 			msg.setReplyByDate(new Date(System.currentTimeMillis() + 500));
 			myAgent.addBehaviour( new AchieveREInitiator(myAgent,msg){
@@ -70,14 +70,12 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 		}
 	}
 
-	public AID getScheduler() {
-		// TODO Auto-generated method stub
-		return scheduler;
+	public AID getHome() {
+		return home;
 	}
 	
-	public void setScheduler(AID scheduler) {
-		this.scheduler = scheduler;
-		
+	public void setHome(AID home) {
+		this.home = home;
 	}
 
 	public Demand getStartDemand() {
