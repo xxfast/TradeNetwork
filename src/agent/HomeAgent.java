@@ -219,9 +219,7 @@ public class HomeAgent extends TradeAgent {
 		protected Vector prepareRequests(ACLMessage request) {
 			// construct request to be sent to scheduler
 			System.out.println("Sending message");
-			DateTime time = new DateTime();
-			time.hour=0;
-			Demand demand= new Demand(time);
+			Demand demand= new Demand(0);
 			ACLMessage demReq=demand.createACLMessage(ACLMessage.REQUEST);
 			demReq.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 			demReq.addReceiver(mySchedulerAgent);
