@@ -22,11 +22,6 @@ public class SchedulingAgent extends Agent {
 	private Schedule schedule = new Schedule(); 
 	
 	protected void setup() {
-		ServiceDescription sd = new ServiceDescription();
-		sd.setType("SUPPLY");
-		sd.setName("SCHEDULER");
-		register(sd);
-		
 		MessageTemplate demandTemplate = MessageTemplate.and(
 				MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
 				MessageTemplate.MatchPerformative(ACLMessage.INFORM));

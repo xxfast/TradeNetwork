@@ -7,11 +7,11 @@ import interfaces.Object2ApplianceAgentInterface;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
+import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
 import model.Demand;
 import simulation.Simulation;
-import jade.domain.FIPANames;
 
 /**
  * @author Isuru

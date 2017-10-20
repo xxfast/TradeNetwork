@@ -1,6 +1,7 @@
 package negotiation.tactic;
 
 import negotiation.Issue;
+import negotiation.tactic.timeFunction.TimeWeightedFunction;
 
 public class TimeDependentTactic extends Tactic{
 	private TimeWeightedFunction weightedFunction;
