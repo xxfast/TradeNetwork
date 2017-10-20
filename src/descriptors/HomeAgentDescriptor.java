@@ -15,7 +15,12 @@ public class HomeAgentDescriptor extends TradeAgentDescriptor {
 	}
 	
 	public String getDescription() {
-		return String.format("[HomeAgent:" +  getName() + " -> ["+ getSchedulerAgent().getLocalName() +"] ]");
+		return String.format("[HomeAgent:" +  getName() + " -> ["+ getSchedulerAgent() +"] ]");
+	}
+
+	@Override
+	public String toString() {
+		return getDescription();
 	}
 	
 	public Object[] toArray() {

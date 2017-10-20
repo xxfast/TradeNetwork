@@ -3,6 +3,7 @@ package ui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.Graphics;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.lang.reflect.Field;
@@ -16,6 +17,7 @@ import java.util.Map;
 import java.util.Stack;
 
 import javax.swing.BorderFactory;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -177,16 +179,6 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 								input.setBackground(Color.ORANGE);
 							} 
 						}
-						/* add a focus listener to validate on focus lost */
-						input.addFocusListener(new FocusListener() {
-							@Override
-							public void focusGained(FocusEvent e) { }
-							@Override
-							public void focusLost(FocusEvent e) {
-								Validate(instance, type, f, ((JTextField)input));
-								AllowSave(AllValid(gFields));
-							}
-						});
 						/*  all inputs will have the same length for now */
 						((JTextField)input).setColumns(10);
 						inputs.add(input);
@@ -195,7 +187,16 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 						input = new TrageAgentSelector(simulation.getAgents());
 						inputs.add(input);
 					}
-					
+					/* add a focus listener to validate on focus lost */
+					input.addFocusListener(new FocusListener() {
+						@Override
+						public void focusGained(FocusEvent e) { }
+						@Override
+						public void focusLost(FocusEvent e) {
+							Validate(instance, type, f, input);
+							AllowSave(AllValid(gFields));
+						}
+					});
 					if(!gFields.contains(input)) gFields.add(input);
 					
 
@@ -248,14 +249,19 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 		}
 	}
 	
-	private void Validate(Object instance, Class<?> whatToValidate, Field toValidate, JTextField toShow) {
+	private void Validate(Object instance, Class<?> whatToValidate, Field toValidate, JComponent toShow) {
+		String content = "";
 		try {
 			Class<?> desiredType = toValidate.getType();
 			if(primitiveRegistry.containsKey(desiredType)) desiredType = primitiveRegistry.get(desiredType);
 			PropertyDescriptor pd = new PropertyDescriptor(toValidate.getName(), whatToValidate);
 			Method setter = pd.getWriteMethod();
-			String content = toShow.getText();
-			if(content.equals("") && !toValidate.isAnnotationPresent(Nullable.class)) {
+			if(toShow instanceof JTextField) {
+				content = ((JTextField)toShow).getText();
+			}else if(toShow instanceof TrageAgentSelector) {
+				content = (String) ((TrageAgentSelector)toShow).getSelectedItem();
+			}
+			if((content.equals("") || content.equals(null)) && !toValidate.isAnnotationPresent(Nullable.class)) {
 				toShow.setToolTipText("This field is not nullable");
 				throw new NullPointerException(toValidate.getName() + " is not nullable");
 			}
@@ -266,11 +272,20 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 			toShow.setToolTipText(e.getCause().getMessage());
 			toShow.setBackground(Color.ORANGE);
 		} catch (IllegalArgumentException e) {
-			toShow.setToolTipText(toShow.getText()+ " is not a " + toValidate.getType().getSimpleName());
+			toShow.setToolTipText(content+ " is not a " + toValidate.getType().getSimpleName());
 			toShow.setBackground(Color.RED);
 		} catch (NullPointerException e) {
 			toShow.setToolTipText(e.getMessage());
 			toShow.setBackground(Color.RED);
+			if(toShow instanceof TrageAgentSelector) {
+				((TrageAgentSelector)toShow).setRenderer(new DefaultListCellRenderer() {
+				    @Override
+				    public void paint(Graphics g) {
+				        setBackground(Color.RED);
+				        super.paint(g);
+				    }
+				});
+			}
 		} 
 	}
 	

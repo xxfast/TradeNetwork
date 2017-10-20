@@ -12,8 +12,6 @@ import simulation.Simulation;
 
 public class TrageAgentSelector extends JComboBox<String>{
 	
-	Class<?> selectedType;
-	
 	public TrageAgentSelector(TreeModel agents) {
 		super(CreateModel(agents));
 	}
@@ -25,9 +23,6 @@ public class TrageAgentSelector extends JComboBox<String>{
 		for(TradeAgentNode node : agents) {
 			agentNames.add(node.getAgent().getDescriptor().getName());
 		}
-		if(agentNames.size()<=0) { 
-			agentNames.add(" - ");
-		}
 		model = new DefaultComboBoxModel<String>(agentNames.toArray(new String[0]));
 		return model;
 	}
@@ -38,9 +33,13 @@ public class TrageAgentSelector extends JComboBox<String>{
 			TradeAgentNode child = (TradeAgentNode) toExpand.getChildAt(i);
 			List<TradeAgentNode> grandChildren = null;
 			if(child.getChildCount()>0) grandChildren = ExpandNode(child); 
-			toReturn.addAll(grandChildren);
+			if(grandChildren!= null )toReturn.addAll(grandChildren);
 		}
 		return toReturn;
+	}
+	
+	public boolean isEmpty() {
+		return this.getModel().getSize() > 0;
 	}
 
 }
