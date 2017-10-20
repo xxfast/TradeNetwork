@@ -7,13 +7,13 @@
 			<attribute name="javadoc_location" value="http://jade.tilab.com/doc/api/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/Isuru/Developer/JAVA/TradeNetwork/lib/miglayout15-swing.jar" sourcepath="miglayout-src.zip"/>
 	<classpathentry kind="lib" path="lib/JUnit/junit-4.12.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://junit.org/junit4/javadoc/4.12/"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/JUnit/hamcrest-core-1.3.jar"/>
-	<classpathentry kind="lib" path="/Users/Isuru/Developer/JAVA/TradeNetwork/lib/org.eclipse.jdt.annotation_2.1.100.v20170511-1408.jar"/>
+	<classpathentry kind="lib" path="lib/miglayout15-swing.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.jdt.annotation_2.1.100.v20170511-1408.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

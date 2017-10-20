@@ -30,7 +30,7 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 		Object[] args = getArguments();
 		setScheduler(new AID((String) args[0],AID.ISLOCALNAME));
 //		setStartDemand((Demand) args[1]);
-		startDemand= new Demand(2,new DateTime());
+		startDemand= new Demand(2);
 		if( getScheduler() != null) StartDemanding();
 	}
 	

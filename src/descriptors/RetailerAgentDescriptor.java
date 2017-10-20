@@ -1,8 +1,14 @@
 package descriptors;
 
+import annotations.Adjustable;
+
+@Adjustable(label = "An agent representing a single retailer")
 public class RetailerAgentDescriptor extends TradeAgentDescriptor {
+	@Adjustable(label = "Maximum Negotiation Time")
 	private double maxNegotiationTime;
+	@Adjustable(label = "Paramaeter K")
 	private double paramK;
+	@Adjustable(label = "Paramaeter Beta")
 	private double paramBeta;
 	
 	public double getMaxNegotiationTime() {

@@ -1,19 +1,24 @@
 package descriptors;
 
+import annotations.Adjustable;
 import jade.core.AID;
 
+@Adjustable(label = "An agent representing a single home")
 public class HomeAgentDescriptor extends TradeAgentDescriptor {
-
-	private AID schedulerAgent;
+	@Adjustable(label = "Name of the Scheduler")
+	private String schedulerAgent;
+	@Adjustable(label = "Maximum Negotiation Time")
 	private double maxNegotiationTime;
+	@Adjustable(label = "Paramaeter K")
 	private double paramK;
+	@Adjustable(label = "Paramaeter Beta")
 	private double paramBeta;
 
-	public AID getSchedulerAgent() {
+	public String getSchedulerAgent() {
 		return schedulerAgent;
 	}
 
-	public void setSchedulerAgent(AID schedulerAgent) {
+	public void setSchedulerAgent(String schedulerAgent) {
 		this.schedulerAgent = schedulerAgent;
 	}
 	
@@ -42,7 +47,7 @@ public class HomeAgentDescriptor extends TradeAgentDescriptor {
 	}
 
 	public String getDescription() {
-		return String.format("[HomeAgent:" +  getName() + " -> ["+ getSchedulerAgent().getLocalName() +","+getMaxNegotiationTime()+","+getParamK()+","+getParamBeta()+"] ]");
+		return String.format("[HomeAgent:" +  getName() + " -> ["+ getSchedulerAgent() +","+getMaxNegotiationTime()+","+getParamK()+","+getParamBeta()+"] ]");
 	}
 	
 	public Object[] toArray() {

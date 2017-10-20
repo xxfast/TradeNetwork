@@ -64,7 +64,7 @@ public abstract class AgentNegotiator {
 				this.scoreWeights = scoreWeights;
 				this.myOffers= new ArrayList<>();
 				this.currentTime=0;
-				demand= new Demand(new DateTime());
+				demand= new Demand();
 				negotiationThread= new NegotiationThread();
 				passNegotiationThreadToTactics();
 			}
@@ -210,7 +210,7 @@ public abstract class AgentNegotiator {
 				
 				//set price issue
 				//get price range from boundcalc
-				double[] range=this.priceCalc.calcBounds(new AID(off.getOwner(),AID.ISLOCALNAME), off.getDemand().getUnits(), off.getDemand().getTime().hour);
+				double[] range=this.priceCalc.calcBounds(new AID(off.getOwner(),AID.ISLOCALNAME), off.getDemand().getUnits(), off.getDemand().getTime());
 				this.itemIssue.put(Item.PRICE, new Issue(range[1], range[0]));
 				
 			}
