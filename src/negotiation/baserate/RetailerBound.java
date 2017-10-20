@@ -18,9 +18,9 @@ public class RetailerBound extends BoundCalc {
 		double lowerBound = getStdRate()[time];
 		double upperBound = getStdRate()[time];
 		
-		int pastUnitTransactions = hist.getTotalUnitsTradedForClient(id);
-		double pastMoneyTransactions = hist.getTotalMoneyTradedForClient(id);
-		int pastTransactions = hist.getTotalTransactionsForClient(id);
+		int pastUnitTransactions = hist.getTotalUnitsTradedForClient(id.getName());
+		double pastMoneyTransactions = hist.getTotalMoneyTradedForClient(id.getName());
+		int pastTransactions = hist.getTotalTransactionsForClient(id.getName());
 		
 		// To make the retailer initially asks for more than the standard.
 		// TODO Think of appropriate value here
