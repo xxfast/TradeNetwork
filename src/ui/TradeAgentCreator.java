@@ -246,9 +246,7 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
         Exception cause = null;
         T ret = null;
         try {
-            ret = c.cast(
-                c.getDeclaredMethod("valueOf", String.class)
-                .invoke(null, arg)
+            ret = c.cast(c.getDeclaredMethod("valueOf", String.class).invoke(null, arg)
             );
         } catch (NoSuchMethodException e) {
             cause = e;
