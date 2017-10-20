@@ -21,6 +21,7 @@ import descriptors.TradeAgentDescriptor;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
+import model.TradeAgentNode;
 
 public class Simulation implements Serializable {
 	
@@ -35,7 +36,7 @@ public class Simulation implements Serializable {
 	private transient ContainerController container;
 	
 	public Simulation() {
-		agents = new DefaultTreeModel(new DefaultMutableTreeNode("Simulation"));
+		agents = new DefaultTreeModel(new TradeAgentNode("Simulation"));
 	}
 	
 	public TradeAgentController CreateTradeAgent(TradeAgentDescriptor descriptor) throws StaleProxyException {
@@ -60,7 +61,7 @@ public class Simulation implements Serializable {
 	}
 	
 	private void StartNode(TradeAgentNode toStart) throws StaleProxyException {
-		toStart.agent.start();
+		toStart.getAgent().start();
 		for(int i=0;i<toStart.getChildCount();i++) {
 			StartNode((TradeAgentNode) toStart.getChildAt(i));
 		}
@@ -71,7 +72,7 @@ public class Simulation implements Serializable {
 	}
 	
 	private void KillNode(TradeAgentNode toStart) throws StaleProxyException {
-		toStart.agent.kill();
+		toStart.getAgent().kill();
 		for(int i=0;i<toStart.getChildCount();i++) {
 			KillNode((TradeAgentNode) toStart.getChildAt(i));
 		}
@@ -111,21 +112,4 @@ public class Simulation implements Serializable {
 	
 	public enum State{ Running, Paused, Stopped }
 	
-
-	public class TradeAgentNode extends DefaultMutableTreeNode{
-		private TradeAgentController agent;
-
-		public TradeAgentNode(TradeAgentController agent) {
-			super(agent.getDescriptor().getName());
-			setAgent(agent);
-		}
-		
-		public TradeAgentController getAgent() {
-			return agent;
-		}
-
-		public void setAgent(TradeAgentController agent) {
-			this.agent = agent;
-		}
-	}
 }

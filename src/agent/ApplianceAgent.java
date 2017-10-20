@@ -28,7 +28,7 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 	 */
 	protected void setup() {
 		Object[] args = getArguments();
-		setScheduler(new AID((String) args[0],AID.ISLOCALNAME));
+		setScheduler((AID)args[0]);
 		setStartDemand((Demand) args[1]);
 		if( getScheduler() != null) StartDemanding();
 	}

@@ -7,7 +7,7 @@ import model.Demand;
 @Adjustable(label = "An agent representing a single appliance")
 public class ApplianceAgentDescriptor extends TradeAgentDescriptor {
 	
-	@Adjustable(label = "Name of the Scheduler") private String schedulerAgent;
+	@Adjustable(label = "Name of the Scheduler") private AID schedulerAgent;
 	@Adjustable(label = "Starting Demand")private Demand startingDemand;
 
 	public Demand getStartingDemand() {
@@ -17,11 +17,11 @@ public class ApplianceAgentDescriptor extends TradeAgentDescriptor {
 	public void setStartingDemand(Demand startingDemand) {
 		this.startingDemand = startingDemand;
 	}
-	public String getSchedulerAgent() {
+	public AID getSchedulerAgent() {
 		return schedulerAgent;
 	}
 
-	public void setSchedulerAgent(String schedulerAgent) {
+	public void setSchedulerAgent(AID schedulerAgent) {
 		this.schedulerAgent = schedulerAgent;
 	}
 	
