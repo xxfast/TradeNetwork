@@ -1,9 +1,12 @@
 package descriptors;
 
+import annotations.Adjustable;
+
+@Adjustable 
 public class RetailerAgentDescriptor extends TradeAgentDescriptor {
-	private int energyRate;
-	private int energyThreshold;
-	private int energyStored;
+	@Adjustable private int energyRate;
+	@Adjustable private int energyThreshold;
+	@Adjustable private int energyStored;
 	
 	public int getEnergyRate() {
 		return energyRate;
@@ -26,6 +29,11 @@ public class RetailerAgentDescriptor extends TradeAgentDescriptor {
 	
 	public String getDescription() {
 		return String.format("[RetailerAgent: "+super.getName() +",\n \t Energy Rate: "+ getEnergyRate() +",\n \t Energy Threshold: "+ getEnergyThreshold()+",\n \t Energy Stored: "+ getEnergyStored() +"]");
+	}
+	
+	@Override
+	public String toString() {
+		return getDescription();
 	}
 	
 	public Object[] toArray() {

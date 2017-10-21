@@ -6,31 +6,27 @@ import java.awt.event.MouseEvent;
 
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
+
+import jade.wrapper.StaleProxyException;
+import simulation.Simulation;
+
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
 
 public class SimulationController extends JPanel {
-
-	/**
-	 * Create the panel.
-	 */
-	public SimulationController() {
+	
+	private Simulation toControl;
+	public Button playBtn;
+	
+	public SimulationController(Simulation toControl) {
+		this.toControl = toControl;
 		setBorder(new TitledBorder(null, "Controls", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
-		Button playBtn = new Button("Play");
-		playBtn.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-			}
-		});
-		
-		JComboBox comboBox = new JComboBox();
-		comboBox.setModel(new DefaultComboBoxModel(new String[] {"1", "2", "3", "4"}));
-		add(comboBox);
+		playBtn = new Button("Play");
 		add(playBtn);
 		
 		Button stopBtn = new Button("Stop");
 		add(stopBtn);
 	}
-
+	
 }

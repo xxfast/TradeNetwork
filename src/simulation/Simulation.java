@@ -13,10 +13,12 @@ import javax.swing.tree.TreeModel;
 import agent.SchedulingAgent;
 import controllers.ApplianceAgentController;
 import controllers.HomeAgentController;
+import controllers.RetailerAgentController;
 import controllers.SchedulingAgentController;
 import controllers.TradeAgentController;
 import descriptors.ApplianceAgentDescriptor;
 import descriptors.HomeAgentDescriptor;
+import descriptors.RetailerAgentDescriptor;
 import descriptors.SchedulingAgentDescriptor;
 import descriptors.TradeAgentDescriptor;
 import interfaces.IOwnable;
@@ -48,9 +50,11 @@ public class Simulation implements Serializable {
 		if(descriptor instanceof SchedulingAgentDescriptor) {
 			tradeAgent = new SchedulingAgentController();
 		}else if(descriptor instanceof ApplianceAgentDescriptor) {
-			tradeAgent = new ApplianceAgentController();}
-		else if(descriptor instanceof HomeAgentDescriptor) {
+			tradeAgent = new ApplianceAgentController();
+		}else if(descriptor instanceof HomeAgentDescriptor) {
 			tradeAgent = new HomeAgentController();
+		}else if(descriptor instanceof RetailerAgentDescriptor) {
+			tradeAgent = new RetailerAgentController();
 		}
 		tradeAgent.setDescriptor(descriptor);
 		createdAgent = container.createNewAgent(descriptor.getName(), SchedulingAgent.class.getName(), descriptor.toArray());
@@ -87,7 +91,7 @@ public class Simulation implements Serializable {
 	}
 	
 	private void StartNode(TradeAgentNode toStart) throws StaleProxyException {
-		toStart.getAgent().start();
+		if(toStart.getAgent()!=null) toStart.getAgent().start();
 		for(int i=0;i<toStart.getChildCount();i++) {
 			StartNode((TradeAgentNode) toStart.getChildAt(i));
 		}

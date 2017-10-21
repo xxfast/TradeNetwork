@@ -8,6 +8,8 @@ import java.awt.Dimension;
 import java.awt.Panel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -27,6 +29,9 @@ import javax.swing.tree.DefaultTreeModel;
 import controllers.TradeAgentController;
 import descriptors.ApplianceAgentDescriptor;
 import descriptors.HomeAgentDescriptor;
+import descriptors.RetailerAgentDescriptor;
+import jade.wrapper.StaleProxyException;
+import model.TradeAgentNode;
 import simulation.Simulation;
 
 
@@ -131,6 +136,28 @@ public class SimulationInspecter {
 		mnCreate.add(mntmHomeAgent);
 		
 		JMenuItem mntmRetailerAgent = new JMenuItem("Retailer Agent");
+		mntmRetailerAgent.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				TradeAgentCreator dialog = null;
+				try {
+					dialog = new TradeAgentCreator(RetailerAgentDescriptor.class);
+					dialog.setSimulation(toInspect);
+					dialog.Build();
+					dialog.addWindowListener(new WindowAdapter() {
+					    @Override
+					    public void windowClosed(WindowEvent e) {
+					    		UpdateModel();
+					    }
+					});
+				} catch (InstantiationException e1) {
+					e1.printStackTrace();
+				} catch (IllegalAccessException e1) {
+					e1.printStackTrace();
+				}
+				dialog.setVisible(true);
+			}
+		});
 		mnCreate.add(mntmRetailerAgent);
 		
 		JMenuItem mntmRemove = new JMenuItem("Remove Selected");
@@ -169,8 +196,21 @@ public class SimulationInspecter {
 		Panel sidebar = new Panel();
 		sidebar.setPreferredSize(new Dimension(250, 0));
 		view.add(sidebar, BorderLayout.EAST);
+		SimulationController simulationCtrl = new SimulationController(toInspect);
 		
-		sidebar.add(new SimulationController());
+		simulationCtrl.playBtn.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				try {
+					toInspect.Start();
+				} catch (StaleProxyException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		});
+		
+		sidebar.add(simulationCtrl);
 		sidebar.add(new TradeAgentInspector());
 		
 		
@@ -178,18 +218,8 @@ public class SimulationInspecter {
 	
 	public void UpdateModel() {
 		tree.setModel(getToInspect().getAgents());
-//		new DefaultTreeModel(
-//				new DefaultMutableTreeNode("Simulation") {
-//					{
-//						DefaultMutableTreeNode node_1 = new DefaultMutableTreeNode("Agents");
-//							node_1.add(new DefaultMutableTreeNode("blue"));
-//							node_1.add(new DefaultMutableTreeNode("violet"));
-//							node_1.add(new DefaultMutableTreeNode("red"));
-//							node_1.add(new DefaultMutableTreeNode("yellow"));
-//						add(node_1);
-//					}
-//				}
-//			)
+        tree.setCellRenderer(new TradeAgentNode.TradeAgentNodeRenderer());
+		tree.updateUI();
 	}
 	
 	

@@ -1,7 +1,9 @@
 package descriptors;
 
+import annotations.Adjustable;
 import jade.core.AID;
 
+@Adjustable 
 public class HomeAgentDescriptor extends TradeAgentDescriptor {
 	
 	public String getDescription() {
