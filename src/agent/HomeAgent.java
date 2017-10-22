@@ -59,9 +59,6 @@ public class HomeAgent extends TradeAgent {
 
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
 	private Random rand;
-	private History history = new History();
-	private BoundCalc boundCalculator = new HomeBound();
-
 	private Map<AID, HomeAgentNegotiator> negotiators;
 	private AgentDailyNegotiationThread dailyThread;
 
@@ -90,13 +87,15 @@ public class HomeAgent extends TradeAgent {
 		agentHour = 0;
 		rand = new Random();
 		dailyThread = new AgentDailyNegotiationThread();
+		
 		Object[] args = getArguments();
 		// retrieve max time from args
-		this.maxNegotiationTime = Double.valueOf((String) args[1]);
+		this.maxNegotiationTime = (double) (args[0]);
 		// retrieve K and Beta from args
-		this.ParamK = Double.valueOf((String) args[2]);
-		this.ParamBeta = Double.valueOf((String) args[3]);
+		this.ParamK = ((Double) args[1]);
+		this.ParamBeta = ((Double) args[2]);
 		retailers = new ArrayList<>();
+		
 		// get agents with retailer service
 		DFAgentDescription[] agents = getServiceAgents("RetailerAgent");
 		for (DFAgentDescription agent : agents) {
@@ -171,6 +170,7 @@ public class HomeAgent extends TradeAgent {
 	protected void setupHomeNegotiators(Integer activeAgents) {
 		say("Setting up negotiators");
 		// setup strategies
+
 		// tactic setup
 		// create TWfunction- for time dependent tactic
 		TimeWeightedFunction poly = new TimeWeightedPolynomial(this.ParamK, this.ParamBeta, this.maxNegotiationTime);
@@ -214,7 +214,7 @@ public class HomeAgent extends TradeAgent {
 
 		// get my history object-simply creating new history, TODO object shud handle
 		// loading agent history
-		History history = new History();
+		History history = new History(this.getLocalName());
 		// create bound calc for price
 		HomeBound homecacl = new HomeBound(history);
 
@@ -223,7 +223,6 @@ public class HomeAgent extends TradeAgent {
 			this.negotiators.put(agent,
 					new HomeAgentNegotiator(this.maxNegotiationTime, strats, scoreWeights, homecacl));
 		}
-
 	}
 
 	public class RequestQuote extends ContractNetInitiator {
@@ -435,7 +434,9 @@ public class HomeAgent extends TradeAgent {
 					bestscore = entry.getValue();
 					bestproposal = entry.getKey();
 				}
+
 			}
+			System.out.println("Accepting " + bestproposal.getSender().getLocalName() + " since best of all offers");
 			// accept best proposal and reject rest
 			// clear acceptances
 			acceptances.clear();

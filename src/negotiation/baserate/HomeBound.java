@@ -13,7 +13,7 @@ public class HomeBound extends BoundCalc {
 	}
 
 	@Override
-	public double[] calcBounds(AID id, int units, int time, History hist) {
+	public double[] calcBounds(AID id, int units, int time) {
 		double lowerBound = getStdRate()[time];
 		double upperBound = getStdRate()[time];
 		

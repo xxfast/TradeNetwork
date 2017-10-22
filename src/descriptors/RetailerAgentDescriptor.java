@@ -42,7 +42,7 @@ public class RetailerAgentDescriptor extends TradeAgentDescriptor {
 	}
 	
 	public Object[] toArray() {
-		Object[] toReturn = new Object[]{getParamK(),getParamBeta()};
+		Object[] toReturn = new Object[]{getMaxNegotiationTime(),getParamK(),getParamBeta()};
 		return toReturn;
 	}
 	

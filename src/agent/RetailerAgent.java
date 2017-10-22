@@ -53,8 +53,6 @@ public class RetailerAgent extends TradeAgent {
     
 	private final boolean INC=true;// supplier mentality
 	private RetailerAgentNegotiator negotiator;
-	private History history = new History("0");
-	private BoundCalc boundCalculator = new RetailerBound();
 
 	private class EnergyUnit {
 		private int time;
@@ -97,7 +95,13 @@ public class RetailerAgent extends TradeAgent {
 		//history.addTransaction(AID client, int units, double rate);
 		
 		// Sets the agent's properties (energy rate & threshold) to passed or default values
-		setAgentProperties();
+
+		Object[] args = this.getArguments();
+		//set negotiation time from arguments
+		this.maxNegotiationTime=((Double) args[0]);
+		//retrieve K and Beta from args
+		this.ParamK=((Double)args[1]);
+		this.ParamBeta=((Double)args[2]);
 		
 		//Describes the agent as a retail agent
 		setupServiceProviderComponent();
@@ -123,15 +127,6 @@ public class RetailerAgent extends TradeAgent {
 		});
 	}
 	
-	private void setAgentProperties() {
-		Object[] args = this.getArguments();
-		//set negotiation time from arguments
-		this.maxNegotiationTime=Double.parseDouble((String) args[0]);
-		//retrieve K and Beta from args
-		this.ParamK=Double.valueOf((String)args[1]);
-		this.ParamBeta=Double.valueOf((String)args[2]);
-	  	
-	}
 	public void setupNegotiator()
 	{
 				
@@ -176,7 +171,7 @@ public class RetailerAgent extends TradeAgent {
 		scoreWeights.put(Item.PRICE, new Double(1));
 		
 		//get my history object-simply creating new history, TODO object shud handle loading agent history, maybe pass in AID
-		History history = new History();
+		History history = new History(this.getLocalName());
 		//create bound calc for price
 		RetailerBound retailcalc= new RetailerBound(history);
 		
