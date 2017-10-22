@@ -12,12 +12,10 @@ import java.util.*;
 public abstract class BoundCalc {
 		
 	private double[] stdRate = new double[24]; 
-	private History history;
 	
 	// Constructor
-	public BoundCalc(String baseRateDir, History hist) {
+	public BoundCalc(String baseRateDir) {
 		loadBaseRate(baseRateDir);
-		this.history = hist;
 	}
 	
 	// Default constructor
@@ -61,21 +59,13 @@ public abstract class BoundCalc {
             System.out.println(String.format("Error reading file \"%s\"", dir));                
         }
 	}
-	
-	public void saveHistory(String dir) {
-		history.saveTransactionHistory(dir);
-	}
 			
 	public double[] getStdRate() {
 		return this.stdRate;
 	}
 	
-	public History getHistory() {
-		return this.history;
-	}
-	
 	// Calculate inital rate for the initiator/responder to use
-	public abstract double[] calcBounds (AID id, int units, int time);
+	public abstract double[] calcBounds (AID id, int units, int time, History hist);
 	
 	// Discount based on amount of transactions in history
 	public abstract double getAIDHistoryDiscount (int transactions);

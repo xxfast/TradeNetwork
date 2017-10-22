@@ -44,6 +44,9 @@ import negotiation.tactic.timeFunction.ResourceAgentsFunction;
 import negotiation.tactic.timeFunction.ResourceTimeFunction;
 import negotiation.tactic.timeFunction.TimeWeightedFunction;
 import negotiation.tactic.timeFunction.TimeWeightedPolynomial;
+import negotiation.baserate.BoundCalc;
+import negotiation.baserate.RetailerBound;
+import model.History;
 
 
 public class RetailerAgent extends TradeAgent {
@@ -51,13 +54,14 @@ public class RetailerAgent extends TradeAgent {
 	
 	private final boolean INC=true;// supplier mentality
 	private RetailerAgentNegotiator negotiator;
+	private History history = new History();
+	private BoundCalc boundCalculator = new RetailerBound();
 
 	private class EnergyUnit {
 		private int time;
 		private int units;
 		private int cost;
 		
-	
 	}	
 	
 	private AgentDailyNegotiationThread dailyThread;
@@ -90,13 +94,17 @@ public class RetailerAgent extends TradeAgent {
 	
 	protected void setup() {
 		
+		//boundCalculator.calcBounds(AID id, int units, int time, History hist)
+		//history.addTransaction(AID client, int units, double rate);
+		
 		// Sets the agent's properties (energy rate & threshold) to passed or default values
 		setAgentProperties();
 		
 		//Describes the agent as a retail agent
 		setupServiceProviderComponent();
-		
+
 		dailyThread= new AgentDailyNegotiationThread();
+
 		say("Retailer "+this.getName());
 
 

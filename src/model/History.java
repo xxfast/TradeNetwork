@@ -16,38 +16,88 @@ import negotiation.baserate.TransactionList;
 
 public class History {
 	
-	private Map<AID,TransactionList> transactionHistory = new HashMap<AID,TransactionList>();
+	private Map<String,TransactionList> transactionHistory = new HashMap<String,TransactionList>();
+	private String id;
 	
-	public History() {
-		
+	public History(String id) {
+		this.id = id;
 	}
 	
-	public void addTransaction (AID client, int units, double rate) {
-		
+	public void addTransaction (String client, int units, double rate) {
+				
 		if (transactionHistory.containsKey(client)) {
 			transactionHistory.get(client).getTransactions().add(new Transaction(units, rate));
+			
 		} else {
 			TransactionList TL = new TransactionList();
 			TL.getTransactions().add(new Transaction(units, rate));
 			transactionHistory.put(client, TL);
+			
 		}
-		
 	}
 	
-	public void saveTransactionHistory (String dir) {
+	public void loadTransactionHistory () {
+    	String dir = "src\\history\\";
+    	dir += this.id + ".txt";
+		
+    	
+        String line = null;
+
         try {
+            FileReader reader = new FileReader(dir);
+            BufferedReader bufferedReader = new BufferedReader(reader);
+            
+            int clientNum = Integer.parseInt(bufferedReader.readLine());
+            System.out.println("CN: " + clientNum);
+
+            for (int i = 0; i < clientNum; i++) {
+            	
+                String client = bufferedReader.readLine();
+                int transactionNum = Integer.parseInt(bufferedReader.readLine());
+                
+                for (int j = 0; j < transactionNum; j++) {
+                	String[] transaction = bufferedReader.readLine().split(",");   	
+                	this.addTransaction(client, Integer.parseInt(transaction[0]), Double.parseDouble(transaction[1]));
+                }
+            }
+                        
+            bufferedReader.close();         
+        }
+        catch(FileNotFoundException ex) {
+            System.out.println(String.format("Unable to open file \"%s\"", dir));                
+        }
+        catch(IOException ex) {
+            System.out.println(String.format("Error reading file \"%s\"", dir));                
+        }
+        
+	}
+	
+	public void saveTransactionHistory () {
+		
+    	String dir = "src\\history\\";
+    	dir += this.id + ".txt"; 	
+    	
+        try {
+        	
             FileWriter fileWriter = new FileWriter(dir);
             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
             
-            bufferedWriter.write(transactionHistory.size());
+            String size = Integer.toString(transactionHistory.size());
+            
+            bufferedWriter.write(size);
             bufferedWriter.newLine();
             
-            for (Map.Entry<AID,TransactionList> entry : transactionHistory.entrySet()) {
+            for (Map.Entry<String,TransactionList> entry : transactionHistory.entrySet()) {
             	
-                bufferedWriter.write(entry.getKey().getName());
+                bufferedWriter.write(entry.getKey());
                 bufferedWriter.newLine();
-
+                
+                size = Integer.toString(entry.getValue().getTransactions().size());                
+                bufferedWriter.write(size);
+                bufferedWriter.newLine();
+                	
                 for (Transaction t: entry.getValue().getTransactions()) {
+                	
                     bufferedWriter.write(String.format("%d,%f", t.getUnits(), t.getRate()));
                     bufferedWriter.newLine();
                 }
@@ -59,7 +109,7 @@ public class History {
         }
 	}
 	
-	public double getTotalMoneyTradedForClient(AID id) {
+	public double getTotalMoneyTradedForClient(String id) {
 		if (transactionHistory.containsKey(id)) {
 			return transactionHistory.get(id).getTotalMoneyPayed();
 		} else {
@@ -67,7 +117,7 @@ public class History {
 		}
 	}
 	
-	public int getTotalUnitsTradedForClient(AID id) {
+	public int getTotalUnitsTradedForClient(String id) {
 		if (transactionHistory.containsKey(id)) {
 			return transactionHistory.get(id).getTotalUnitsTraded();
 		} else {
@@ -75,7 +125,7 @@ public class History {
 		}
 	}
 	
-	public int getTotalTransactionsForClient (AID id) {
+	public int getTotalTransactionsForClient (String id) {
 		if (transactionHistory.containsKey(id)) {
 			return transactionHistory.get(id).getTotalTransactions();
 		} else {

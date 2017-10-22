@@ -41,13 +41,18 @@ import negotiation.tactic.behaviour.AverageTitForTat;
 import negotiation.tactic.timeFunction.ResourceAgentsFunction;
 import negotiation.tactic.timeFunction.TimeWeightedFunction;
 import negotiation.tactic.timeFunction.TimeWeightedPolynomial;
+import negotiation.baserate.BoundCalc;
+import negotiation.baserate.HomeBound;
 import simulation.Simulation;
+import model.History;
 
 public class HomeAgent extends TradeAgent {
 	private final boolean INC=false;//customer mentality
 	
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
 	private Random rand;
+	private History history = new History();
+	private BoundCalc boundCalculator = new HomeBound();
 	
 	private Map<AID,HomeAgentNegotiator> negotiators;
 	private AgentDailyNegotiationThread dailyThread;
@@ -223,9 +228,11 @@ public class HomeAgent extends TradeAgent {
 		protected Vector prepareRequests(ACLMessage request) {
 			// construct request to be sent to scheduler
 			System.out.println("Sending message");
+
 			short agenthr=(short)agentHour;
 			Demand demand= new Demand(new Short(agenthr));
 			
+
 			ACLMessage demReq=demand.createACLMessage(ACLMessage.REQUEST);
 			demReq.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 			demReq.addReceiver(mySchedulerAgent);
