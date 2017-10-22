@@ -15,7 +15,7 @@ public class RetailerBound extends BoundCalc {
 	
 	// Assuming retailer
 	@Override
-	public double[] calcBounds (AID id, int units, int time, History hist){
+	public double[] calcBounds (AID id, int units, int time){
 		double lowerBound = getStdRate()[time];
 		double upperBound = getStdRate()[time];
 		
