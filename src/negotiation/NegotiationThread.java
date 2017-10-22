@@ -1,6 +1,7 @@
 package negotiation;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import model.Offer;
@@ -29,6 +30,31 @@ public class NegotiationThread {
 	public Offer get(int index)
 	{
 		return history.get(index);
+	}
+	
+	//return list of opponent offers
+	public List<Offer> getOpponentOffers()
+	{
+		List<Offer> opponent= new ArrayList<>();
+		//add all even entries
+		for(int i=0;i<history.size();i++)
+		{
+			if(i%2==0)
+				opponent.add(history.get(i));				
+		}
+		return opponent;
+	}
+	//return list of self offers
+	public List<Offer> getSelfOffers()
+	{
+		List<Offer> self= new ArrayList<>();
+		//add all even entries
+		for(int i=0;i<history.size();i++)
+		{
+			if(i%2==1)
+				self.add(history.get(i));				
+		}
+		return self;
 	}
 
 	@Override

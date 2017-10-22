@@ -26,7 +26,8 @@ public class Offer {
 	public void setOwner(String owner) {
 		this.owner = owner;
 	}
-
+	
+	
 
 	public ACLMessage createACLMessage(int performative){
 		ACLMessage toReturn = new ACLMessage(performative);
@@ -40,12 +41,12 @@ public class Offer {
 	public Offer()
 	{
 		this.offerValues= new HashMap<>();
-		demand=new Demand(new DateTime());
+		demand=new Demand();
 		
 	}
 	public Offer(Map<Strategy.Item,Double> offervals){
 		this.offerValues=offervals;
-		this.demand= new Demand(1,new DateTime());
+		this.demand= new Demand(0,(short)0);
 	}
 	
 	public Offer(Map<Strategy.Item,Double> offervals,Demand demand){
@@ -56,7 +57,7 @@ public class Offer {
 	
 	public Offer(ACLMessage message){
 		offerValues= new HashMap<Strategy.Item, Double>();
-		demand= new Demand(new DateTime());
+		demand= new Demand();
 		setContent(message.getContent());
 		owner=message.getSender().getLocalName();
 	}

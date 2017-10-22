@@ -19,8 +19,8 @@ public abstract class BoundCalc {
 	}
 	
 	// Default constructor
-	public BoundCalc() {
-		this("src\\negotiation\\baserate\\baserate.txt");
+	public BoundCalc(History history) {
+		this("src\\negotiation\\baserate\\baserate.txt", history);
 	}
 	
 	// Prints the base rate array in easily readable config

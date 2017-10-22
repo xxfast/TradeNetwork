@@ -4,15 +4,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hamcrest.core.IsInstanceOf;
-
 import FIPA.DateTime;
+import jade.core.AID;
 import model.Demand;
 import model.Offer;
 import negotiation.Issue;
 import negotiation.NegotiationThread;
 import negotiation.Strategy;
 import negotiation.Strategy.Item;
+import negotiation.baserate.BoundCalc;
 import negotiation.tactic.BehaviourDependentTactic;
 import negotiation.tactic.Tactic;
 
@@ -30,6 +30,7 @@ public abstract class AgentNegotiator {
 			protected double currentTime;
 			protected Demand demand;
 			protected NegotiationThread negotiationThread;
+			protected BoundCalc priceCalc;
 		
 			///////////////
 			public enum OfferStatus{
@@ -50,7 +51,8 @@ public abstract class AgentNegotiator {
 			{
 				this.currentTime=0;
 			}
-			public AgentNegotiator(double maxNegotiationTime, ArrayList<Strategy> strategies, Map<Item, Double> scoreWeights) {			
+			public AgentNegotiator(double maxNegotiationTime, ArrayList<Strategy> strategies, Map<Item, Double> scoreWeights)
+			{
 				this.maxNegotiationTime = maxNegotiationTime;
 				this.itemIssue=new HashMap<>();
 				this.strategies = new ArrayList<>();
@@ -62,10 +64,15 @@ public abstract class AgentNegotiator {
 				this.scoreWeights = scoreWeights;
 				this.myOffers= new ArrayList<>();
 				this.currentTime=0;
-				demand= new Demand(new DateTime());
+				demand= new Demand();
 				negotiationThread= new NegotiationThread();
-				//pass negotiation thread to strategies with behaviour tactics
 				passNegotiationThreadToTactics();
+			}
+			public AgentNegotiator(double maxNegotiationTime, ArrayList<Strategy> strategies, Map<Item, Double> scoreWeights,BoundCalc boundCalc) {			
+				this(maxNegotiationTime,strategies,scoreWeights);
+				this.priceCalc=boundCalc;
+				//pass negotiation thread to strategies with behaviour tactics
+				
 				
 			}
 			
@@ -184,17 +191,27 @@ public abstract class AgentNegotiator {
 					currentTime++;
 				
 			}
-			//setup intial issue which determines min and max range values
-			public void setInitialIssue(Demand demand)
+			//set initial issue- for testing purposes
+			public void setInitialIssue(Demand dem)
 			{
-				//TODO change for market price issue
-				//simply creating a default issue based on demand
-				this.demand=demand;
+				this.demand=dem;
 				for(Strategy strat:strategies)
 				{
 					this.itemIssue.put(strat.getItem(), new Issue(40,20));
 				}
+			}
+			//setup intial issue which determines min and max range values
+			public void setInitialIssue(Offer off)
+			{
+				//TODO change for market price issue
+				//simply creating a default issue based on demand
+				this.demand=off.getDemand();
+				//set issues for each strategy-TODO try to make it dynamic
 				
+				//set price issue
+				//get price range from boundcalc
+				double[] range=this.priceCalc.calcBounds(new AID(off.getOwner(),AID.ISLOCALNAME), off.getDemand().getUnits(), off.getDemand().getTime());
+				this.itemIssue.put(Item.PRICE, new Issue(range[1], range[0]));
 				
 			}
 			public Offer getLastOffer()

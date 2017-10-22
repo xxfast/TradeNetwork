@@ -63,7 +63,10 @@ public class Demand implements Serializable{
 	public void setContent(String content){
 		String[] messageBits = content.split(":");
 		setUnits( Integer.valueOf(messageBits[0]));
-		setDuration( Integer.valueOf(messageBits[1]));
+
+		setDuration( Integer.valueOf(messageBits[2]));
+
+
 		setTime( Short.valueOf(messageBits[1]));
 	}
 
