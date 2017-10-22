@@ -25,6 +25,7 @@ import jade.proto.SSIteratedContractNetResponder;
 import jade.proto.SSResponderDispatcher;
 // Used to log exceptions
 import jade.util.Logger;
+import model.AgentDailyNegotiationThread;
 import model.Demand;
 import model.History;
 import model.Offer;
@@ -58,6 +59,8 @@ public class RetailerAgent extends TradeAgent {
 		
 	
 	}	
+	
+	private AgentDailyNegotiationThread dailyThread;
 	
 	//params needed to setup negotiators
 	//coming from args
@@ -93,7 +96,7 @@ public class RetailerAgent extends TradeAgent {
 		//Describes the agent as a retail agent
 		setupServiceProviderComponent();
 		
-
+		dailyThread= new AgentDailyNegotiationThread();
 		say("Retailer "+this.getName());
 
 
@@ -186,10 +189,13 @@ public class RetailerAgent extends TradeAgent {
 			super(a, initialMessage);
 			
 			setupNegotiator();
+			
 			//get demand from initial Message
 			Offer off = new Offer(initialMessage);
 			Demand demand=off.getDemand();
 			System.out.println("demand "+demand.getContent());
+//			add negotiator to daily thread
+			dailyThread.addHourThread(demand.getTime(), initialMessage.getSender(), negotiator.getNegotiationThread());
 			//setup initial issue 
 			negotiator.setInitialIssue(off);
 			System.out.println("intial issue for "+initialMessage.getSender().getLocalName()+" issue "+negotiator.getItemIssue().get(Item.PRICE));
@@ -242,6 +248,14 @@ public class RetailerAgent extends TradeAgent {
 		protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
 			say("Proposal rejected "+reject.getContent());
 		}
+
+		@Override
+		public int onEnd() {
+			// TODO Auto-generated method stub
+			 System.out.println(dailyThread.toString());
+			return super.onEnd();
+		}
+		
 	}
 	
 	private boolean performAction() {

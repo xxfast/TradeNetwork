@@ -21,13 +21,16 @@ import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
 import jade.proto.ContractNetInitiator;
 import jade.util.Logger;
+import model.AgentDailyNegotiationThread;
 import model.Demand;
 import model.History;
 import model.Offer;
+import model.AgentDailyNegotiationThread.Party;
 import negotiation.NegotiationThread;
 import negotiation.Strategy;
 import negotiation.Strategy.Item;
 import negotiation.baserate.HomeBound;
+import negotiation.negotiator.AgentNegotiator;
 import negotiation.negotiator.AgentNegotiator.OfferStatus;
 import negotiation.negotiator.HomeAgentNegotiator;
 import negotiation.tactic.BehaviourDependentTactic;
@@ -47,11 +50,13 @@ public class HomeAgent extends TradeAgent {
 	private Random rand;
 	
 	private Map<AID,HomeAgentNegotiator> negotiators;
+	private AgentDailyNegotiationThread dailyThread;
 
 	private ArrayList<Demand> messages = new ArrayList<>();
 	private AID myscheduler;
 	private List<AID> retailers;
 	
+	private int agentHour;
 	//params needed to setup negotiators
 	//coming from args
 	@Adjustable(label="Max Iterations")
@@ -68,25 +73,12 @@ public class HomeAgent extends TradeAgent {
 	//private structure
 	
 	protected void setup() {
-		// Registration with the DF		
-//		DFAgentDescription dfd = new DFAgentDescription();
-//		ServiceDescription sd = new ServiceDescription();
-//		sd.setType("HomeAgent");
-//		sd.setName(getName());
-//		sd.setOwnership("TradeNetwork");
-//		dfd.setName(getAID());
-//		dfd.addServices(sd);
-//		try {
-//			DFService.register(this, dfd);
-//		} catch (FIPAException e) {
-//			myLogger.log(Logger.SEVERE, "Agent " + getLocalName() + " - Cannot register with DF", e);
-//			doDelete();
-//		}
+
 		
-		
+		agentHour=0;
 		rand = new Random();
 		setAgentProperties();
-		
+		dailyThread= new AgentDailyNegotiationThread();
 		retailers= new ArrayList<>();	
 		//get agents with retailer service
 		DFAgentDescription[] agents = getServiceAgents("RetailerAgent");
@@ -147,6 +139,10 @@ public class HomeAgent extends TradeAgent {
 		return rand;
 	}
 	
+	public void goNextHour()
+	{
+		++agentHour;
+	}
 	
 	protected void setupHomeNegotiators(Integer activeAgents)
 	{
@@ -227,7 +223,9 @@ public class HomeAgent extends TradeAgent {
 		protected Vector prepareRequests(ACLMessage request) {
 			// construct request to be sent to scheduler
 			System.out.println("Sending message");
-			Demand demand= new Demand(0);
+			short agenthr=(short)agentHour;
+			Demand demand= new Demand(new Short(agenthr));
+			
 			ACLMessage demReq=demand.createACLMessage(ACLMessage.REQUEST);
 			demReq.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 			demReq.addReceiver(mySchedulerAgent);
@@ -250,16 +248,24 @@ public class HomeAgent extends TradeAgent {
 		private Demand schedDemand=null;
 		private Integer activeAgents;
 		private Map<ACLMessage,Double> acceptedScores;
-		
+		private Map<ACLMessage,Double> proposalScores;
 		
 		public RequestQuote(Agent a, ACLMessage msg, List<AID> retailers) {
 			super(a, msg);
 			retailAgents=retailers;
 			activeAgents=new Integer(retailers.size());
 			acceptedScores= new HashMap<>();
+			proposalScores= new HashMap<>();
+			
 			
 			//setup home negotiators
 			setupHomeNegotiators(activeAgents);
+			//add negotiations to dailyNegotiaition threads
+			for(Map.Entry<AID, HomeAgentNegotiator> entry:negotiators.entrySet())
+			{
+				
+				dailyThread.addHourThread(agentHour, entry.getKey(), entry.getValue().getNegotiationThread());
+			}
 			// TODO Auto-generated constructor stub
 		}
 		@Override
@@ -324,6 +330,8 @@ public class HomeAgent extends TradeAgent {
 			AID ret=propose.getSender();
 			Offer off = new Offer(propose);
 			OfferStatus status=negotiators.get(ret).interpretOffer(off);
+			//store the scores for each proposal evaluated
+			proposalScores.put(propose, negotiators.get(ret).evalScore(off));
 			ACLMessage reply = propose.createReply();
 			if(status.equals(OfferStatus.REJECT))
 			{
@@ -358,6 +366,7 @@ public class HomeAgent extends TradeAgent {
 		@Override
 		protected void handleRefuse(ACLMessage refuse) {
 			// TODO add logic to refuse, decrement activeagents 
+			activeAgents--;
 			say("Rejected from "+refuse.getSender().getLocalName());
 			super.handleRefuse(refuse);
 		}
@@ -381,6 +390,7 @@ public class HomeAgent extends TradeAgent {
 					}
 				}
 				//create rejections for any counter offers since no point negotiating further
+				//maybe can later capitalize on opponents conceding mentality by holding the price for other negotiations
 				for(Object obj :acceptances)
 				{
 					ACLMessage msg=(ACLMessage)obj;
@@ -403,10 +413,26 @@ public class HomeAgent extends TradeAgent {
 						reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
 					
 					acceptances.addElement(reply);
-				}
+				}			
 				
+			}
+			//check if all rejected- we select best offer we cn get
+			boolean allRej=true;
+			for(Object obj :acceptances)
+			{
+				ACLMessage msg = (ACLMessage) obj;
+				//check if all rejected
+				if(msg.getPerformative()!=ACLMessage.REJECT_PROPOSAL)
+				{
+					allRej=false;
+					break;
+				}				
 				
-				
+			}
+			if(allRej)
+			{
+				//select and accept best possible offer
+				handleAllRejections(acceptances);
 			}
 			//iterate through acceptances and determine if a new iteration of CFPs 
 			boolean isNextIter=false;
@@ -424,7 +450,8 @@ public class HomeAgent extends TradeAgent {
 			if(isNextIter)
 				newIteration(acceptances);
 	
-			
+			//clear proposalscores for next iteration
+			proposalScores.clear();
 			
 			
 		
@@ -437,16 +464,56 @@ public class HomeAgent extends TradeAgent {
 				ACLMessage msg =(ACLMessage) notification;
 				System.out.println("Inform recieved from "+msg.getSender().getLocalName());
 				System.out.println("Msg is "+msg.getContent());
-				NegotiationThread t = negotiators.get(msg.getSender()).getNegotiationThread();
-				say(t.toString());
+//				NegotiationThread t = negotiators.get(msg.getSender()).getNegotiationThread();
+//				say(t.toString());
 			}
 			
+			
+			
 		}
-		 protected ACLMessage createReply(int perfomative,ACLMessage msg,String content)
+		
+		public void handleAllRejections(Vector acceptances)
+		{
+			//select one with best score
+			double bestscore=0;
+			ACLMessage bestproposal=null;
+			for(Map.Entry<ACLMessage, Double> entry:proposalScores.entrySet())
+			{
+				if(entry.getValue()>bestscore)
+				{
+					bestscore=entry.getValue();
+					bestproposal=entry.getKey();
+				}
+			} 
+			//accept best proposal and reject rest
+			//clear acceptances
+			acceptances.clear();
+			for(Map.Entry<ACLMessage, Double> entry:proposalScores.entrySet())
+			{
+				ACLMessage reply=entry.getKey().createReply();
+				reply.setContent(entry.getKey().getContent());
+				if(entry.getKey().getSender().equals(bestproposal.getSender()))
+				{
+					reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+				}
+				else
+					reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
+				
+				acceptances.addElement(reply);
+			}
+		}
+		
+		 @Override
+		public int onEnd() {
+			// TODO Auto-generated method stub
+//			 System.out.println(dailyThread.toString());
+				goNextHour();
+			return super.onEnd();
+		}
+		protected ACLMessage createReply(int perfomative,ACLMessage msg,String content)
 		 {
 			ACLMessage reply=msg.createReply();
-			reply.setPerformative(perfomative);
-			
+			reply.setPerformative(perfomative);			
 			reply.setContent(content);
 			return reply;
 		 }
@@ -457,26 +524,6 @@ public class HomeAgent extends TradeAgent {
 			return reply;
 		 }
 		 
-		 protected ACLMessage getBestProposal(List<ACLMessage> proposals)
-		 {
-			 //randomly select and approve a proposal
-			 Random rand = getRandomizer();
-			 int choice=rand.nextInt(proposals.size());
-			 return proposals.get(choice);
-		 }
-		 
-		 protected HashMap<ACLMessage,Boolean> evaluateProposals(ArrayList<ACLMessage> proposals)
-		 {
-			 HashMap<ACLMessage, Boolean> eval= new HashMap<>();
-			 for(ACLMessage msg : proposals)
-			 {
-				 //randomly accept/reject
-				 boolean choice = rand.nextBoolean();
-				 eval.put(msg, choice);
-			 }
-			 
-			 return eval;
-		 }
 		
 	}
 	
