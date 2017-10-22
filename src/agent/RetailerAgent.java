@@ -54,8 +54,8 @@ public class RetailerAgent extends TradeAgent {
 	
 	private final boolean INC=true;// supplier mentality
 	private RetailerAgentNegotiator negotiator;
-	private History history = new History();
-	private BoundCalc boundCalculator = new RetailerBound();
+
+	
 
 	private class EnergyUnit {
 		private int time;
@@ -177,7 +177,7 @@ public class RetailerAgent extends TradeAgent {
 		scoreWeights.put(Item.PRICE, new Double(1));
 		
 		//get my history object-simply creating new history, TODO object shud handle loading agent history, maybe pass in AID
-		History history = new History();
+		History history = new History(this.getLocalName());
 		//create bound calc for price
 		RetailerBound retailcalc= new RetailerBound(history);
 		
