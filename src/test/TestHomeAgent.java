@@ -9,6 +9,8 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import FIPA.DateTime;
+import model.Demand;
 import model.Offer;
 import negotiation.Issue;
 import negotiation.Strategy;
@@ -17,8 +19,8 @@ import negotiation.negotiator.AgentNegotiator.OfferStatus;
 import negotiation.negotiator.HomeAgentNegotiator;
 import negotiation.tactic.Tactic;
 import negotiation.tactic.TimeDependentTactic;
-import negotiation.tactic.TimeWeightedFunction;
-import negotiation.tactic.TimeWeightedPolynomial;
+import negotiation.tactic.timeFunction.TimeWeightedFunction;
+import negotiation.tactic.timeFunction.TimeWeightedPolynomial;
 
 public class TestHomeAgent {
 	private final boolean INC=false;//customer mentality
@@ -74,14 +76,11 @@ public class TestHomeAgent {
 		//add only price item
 		scoreWeights.put(Item.PRICE, new Double(1));
 		
-		//create price range for each offer item-obtain from source
-		Map<Strategy.Item,Issue> itemissue = new HashMap<>();
-		//only add price issue since we are only focusing on price
-		itemissue.put(Strategy.Item.PRICE, new Issue(40, 20));
+		
 		
 		//create negotiator with params
-		HomeAgentNegotiator neg= new HomeAgentNegotiator( this.maxNegotiationTime, itemissue, strats, scoreWeights);
-		
+		HomeAgentNegotiator neg= new HomeAgentNegotiator( this.maxNegotiationTime,  strats, scoreWeights);
+		neg.setInitialIssue(new Demand(10));
 		Offer off=neg.generateOffer();
 		double val=off.getOfferValue(Item.PRICE);
 		
@@ -128,13 +127,9 @@ public class TestHomeAgent {
 		//add only price item
 		scoreWeights.put(Item.PRICE, new Double(1));
 		
-		//create price range for each offer item-obtain from source
-		Map<Strategy.Item,Issue> itemissue = new HashMap<>();
-		//only add price issue since we are only focusing on price
-		itemissue.put(Strategy.Item.PRICE, new Issue(40, 20));
-		
 		//create negotiator with params
-		HomeAgentNegotiator neg= new HomeAgentNegotiator( this.maxNegotiationTime, itemissue, strats, scoreWeights);
+		HomeAgentNegotiator neg= new HomeAgentNegotiator( this.maxNegotiationTime, strats, scoreWeights);
+		neg.setInitialIssue(new Demand(10));
 		
 		Map<Item,Double> ret1= new HashMap<Item,Double>();
 		ret1.put(Item.PRICE, new Double(29));
@@ -153,10 +148,6 @@ public class TestHomeAgent {
 		
 		Offer o3 = new Offer(ret3);
 		o3.setOwner("ret3");
-		
-
-	
-		
 		
 		List<Offer> offers = new ArrayList<>();
 		offers.add(o1);

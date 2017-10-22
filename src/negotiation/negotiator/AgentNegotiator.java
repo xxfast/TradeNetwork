@@ -4,10 +4,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import FIPA.DateTime;
+import jade.core.AID;
+import model.Demand;
 import model.Offer;
 import negotiation.Issue;
+import negotiation.NegotiationThread;
 import negotiation.Strategy;
 import negotiation.Strategy.Item;
+import negotiation.baserate.BoundCalc;
+import negotiation.tactic.BehaviourDependentTactic;
+import negotiation.tactic.Tactic;
 
 public abstract class AgentNegotiator {
 	//NOTES
@@ -21,6 +28,9 @@ public abstract class AgentNegotiator {
 			protected Map<Strategy.Item,Double> scoreWeights;
 			protected ArrayList<Offer> myOffers;
 			protected double currentTime;
+			protected Demand demand;
+			protected NegotiationThread negotiationThread;
+			protected BoundCalc priceCalc;
 		
 			///////////////
 			public enum OfferStatus{
@@ -37,13 +47,32 @@ public abstract class AgentNegotiator {
 			 * @param strategies
 			 * @param scoreWeights
 			 */
-			public AgentNegotiator(double maxNegotiationTime, Map<Item,Issue> itemIssue, ArrayList<Strategy> strategies, Map<Item, Double> scoreWeights) {			
+			public AgentNegotiator()
+			{
+				this.currentTime=0;
+			}
+			public AgentNegotiator(double maxNegotiationTime, ArrayList<Strategy> strategies, Map<Item, Double> scoreWeights)
+			{
 				this.maxNegotiationTime = maxNegotiationTime;
-				this.itemIssue=itemIssue;
-				this.strategies = strategies;
+				this.itemIssue=new HashMap<>();
+				this.strategies = new ArrayList<>();
+				//add clones of strategies, avoids single reference problems
+				for(Strategy strat: strategies)
+				{
+					this.strategies.add(strat.clone());
+				}
 				this.scoreWeights = scoreWeights;
 				this.myOffers= new ArrayList<>();
 				this.currentTime=0;
+				demand= new Demand();
+				negotiationThread= new NegotiationThread();
+				passNegotiationThreadToTactics();
+			}
+			public AgentNegotiator(double maxNegotiationTime, ArrayList<Strategy> strategies, Map<Item, Double> scoreWeights,BoundCalc boundCalc) {			
+				this(maxNegotiationTime,strategies,scoreWeights);
+				this.priceCalc=boundCalc;
+				//pass negotiation thread to strategies with behaviour tactics
+				
 				
 			}
 			
@@ -53,8 +82,21 @@ public abstract class AgentNegotiator {
 
 			public abstract double scoreFunction(double nextVal,double minVal,double maxVal);
 			
-			
-			protected double evalScore(Offer offer)
+			protected void passNegotiationThreadToTactics()
+			{
+				for(Strategy strat: strategies)
+				{
+					for(Map.Entry<Tactic, Double> entry :strat.getTactics().entrySet())
+					{
+						if(entry.getKey() instanceof BehaviourDependentTactic)
+						{
+							BehaviourDependentTactic beh =(BehaviourDependentTactic)entry.getKey();
+							beh.getTitForTat().setNegotiationThread(this.negotiationThread);
+						}
+					}
+				}
+			}
+			public double evalScore(Offer offer)
 			{
 				//agent scoring mechanism logic
 				double score=0;
@@ -88,6 +130,54 @@ public abstract class AgentNegotiator {
 				return offer;
 			}
 			
+			public OfferStatus interpretOffer(Offer offer)
+			{
+				//store offer in negotiationThread
+				negotiationThread.addOffer(offer);
+				
+				//check if iterations have exceeded
+				if(currentTime>maxNegotiationTime)
+				{
+					//check if the offer is the same as my previous offer- this has to be done due to protocol limitations
+					// the retailer can only accept a proposal by proposing the last counter offer made
+					if(evalScore(offer)==evalScore(getLastOffer()))
+					{
+						//retailer has accepted counter offer, so ACCEPT this offer
+						return OfferStatus.ACCEPT;
+					}
+					//if it has then reject all offers, negotiation failed in time
+					
+					return OfferStatus.REJECT;
+				}
+				//generate counter offer
+				Offer counter=this.generateOffer();
+				OfferStatus stat;
+				//check if offer better than counter offer
+				if(isBetterOffer(offer, counter))
+				{
+					stat=OfferStatus.ACCEPT;
+				}
+				else
+				{
+					stat=OfferStatus.COUNTER;
+					//add counter offer to neg thread
+					negotiationThread.addOffer(counter);
+				}
+					
+				
+				//update issues
+				nextIteration();
+				
+				return stat;
+				
+			}
+			private boolean isBetterOffer(Offer offer,Offer counterOffer)
+			{
+				double score=evalScore(counterOffer);
+				return score<evalScore(offer);		
+			}
+
+			
 			public void nextIteration()
 			{
 				
@@ -101,15 +191,52 @@ public abstract class AgentNegotiator {
 					currentTime++;
 				
 			}
+			//set initial issue- for testing purposes
+			public void setInitialIssue(Demand dem)
+			{
+				this.demand=dem;
+				for(Strategy strat:strategies)
+				{
+					this.itemIssue.put(strat.getItem(), new Issue(40,20));
+				}
+			}
+			//setup intial issue which determines min and max range values
+			public void setInitialIssue(Offer off)
+			{
+				//TODO change for market price issue
+				//simply creating a default issue based on demand
+				this.demand=off.getDemand();
+				//set issues for each strategy-TODO try to make it dynamic
+				
+				//set price issue
+				//get price range from boundcalc
+				double[] range=this.priceCalc.calcBounds(new AID(off.getOwner(),AID.ISLOCALNAME), off.getDemand().getUnits(), off.getDemand().getTime());
+				this.itemIssue.put(Item.PRICE, new Issue(range[1], range[0]));
+				
+			}
 			public Offer getLastOffer()
 			{
 				if(myOffers.size()>0)
-					return myOffers.get(myOffers.size()-1);
+				{
+					Offer off=myOffers.get(myOffers.size()-1);
+					off.setDemand(demand);
+					return off;
+				}
+					
 				else
 					return null;
 			}
 
 			public Map<Strategy.Item, Issue> getItemIssue() {
 				return itemIssue;
+			}
+			public Demand getDemand() {
+				return demand;
+			}
+			public NegotiationThread getNegotiationThread() {
+				return negotiationThread;
+			}
+			public void setDemand(Demand demand) {
+				this.demand = demand;
 			}
 }

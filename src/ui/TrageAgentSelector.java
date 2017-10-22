@@ -7,6 +7,7 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.tree.TreeModel;
 
+import jade.core.AID;
 import model.TradeAgentNode;
 import simulation.Simulation;
 
@@ -31,11 +32,16 @@ public class TrageAgentSelector extends JComboBox<String>{
 		List<TradeAgentNode> toReturn = new ArrayList<TradeAgentNode>();
 		for(int i=0;i<toExpand.getChildCount();i++) {
 			TradeAgentNode child = (TradeAgentNode) toExpand.getChildAt(i);
+			toReturn.add(child);
 			List<TradeAgentNode> grandChildren = null;
 			if(child.getChildCount()>0) grandChildren = ExpandNode(child); 
 			if(grandChildren!= null )toReturn.addAll(grandChildren);
 		}
 		return toReturn;
+	}
+	
+	public AID getSelectedAgent() {
+		return new AID((String)super.getSelectedItem(),AID.ISLOCALNAME);
 	}
 	
 	public boolean isEmpty() {

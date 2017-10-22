@@ -6,8 +6,8 @@ import org.junit.Test;
 
 import negotiation.Issue;
 import negotiation.tactic.TimeDependentTactic;
-import negotiation.tactic.TimeWeightedExponential;
-import negotiation.tactic.TimeWeightedPolynomial;
+import negotiation.tactic.timeFunction.TimeWeightedExponential;
+import negotiation.tactic.timeFunction.TimeWeightedPolynomial;
 
 public class TestTimeDependentTactics {
 	public final double Delta=0.001;

@@ -3,16 +3,19 @@ package negotiation.negotiator;
 import java.util.ArrayList;
 import java.util.Map;
 
-import model.Offer;
-import negotiation.Issue;
 import negotiation.Strategy;
 import negotiation.Strategy.Item;
+import negotiation.baserate.RetailerBound;
 
 public class RetailerAgentNegotiator extends AgentNegotiator {
 
-	public RetailerAgentNegotiator(double maxNegotiationTime, Map<Item, Issue> itemIssue,
-			ArrayList<Strategy> strategies, Map<Item, Double> scoreWeights) {
-		super(maxNegotiationTime, itemIssue, strategies, scoreWeights);
+	public RetailerAgentNegotiator(double maxNegotiationTime, ArrayList<Strategy> strategies, Map<Item, Double> scoreWeights)
+	{
+		super(maxNegotiationTime,strategies,scoreWeights);
+	}
+	public RetailerAgentNegotiator(double maxNegotiationTime,
+			ArrayList<Strategy> strategies, Map<Item, Double> scoreWeights,RetailerBound calc) {
+		super(maxNegotiationTime, strategies, scoreWeights,calc);
 		// TODO Auto-generated constructor stub
 	}
 
@@ -26,36 +29,5 @@ public class RetailerAgentNegotiator extends AgentNegotiator {
 		return val;
 	}
 	
-	public OfferStatus interpretOffer(Offer offer)
-	{
-		//generate counter offer
-		Offer counter=this.generateOffer();
-		//check if iterations have exceeded
-		if(currentTime>maxNegotiationTime)
-		{
-			//if it has then reject all offers, negotiation failed in time
-			
-			return OfferStatus.REJECT;
-		}
-		OfferStatus stat;
-		//check if offer better than counter offer
-		if(isBetterOffer(offer, counter))
-		{
-			stat=OfferStatus.ACCEPT;
-		}
-		else
-			stat=OfferStatus.COUNTER;
-		
-		//update issues
-		nextIteration();
-		
-		return stat;
-		
-	}
-	private boolean isBetterOffer(Offer offer,Offer counterOffer)
-	{
-		double score=evalScore(counterOffer);
-		return score<evalScore(offer);		
-	}
-
+	
 }

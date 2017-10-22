@@ -6,12 +6,19 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import agent.ApplianceAgent;
+import agent.HomeAgent;
 import controllers.TradeAgentController;
+import descriptors.ApplianceAgentDescriptor;
+import descriptors.HomeAgentDescriptor;
+import descriptors.RetailerAgentDescriptor;
 import descriptors.SchedulingAgentDescriptor;
+import jade.core.AID;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
 import jade.wrapper.AgentContainer;
+import jade.wrapper.AgentController;
 import jade.wrapper.StaleProxyException;
 import simulation.Simulation;
 import ui.SimulationInspecter;
@@ -71,27 +78,28 @@ public class MainProgram {
 		//mySchedulingAgent.setName("SA");
 		//test.CreateTradeAgent(mySchedulingAgent);
 		
-		return test;
 		//Starting the Simulation
 		
-//		// Create a agent of class HomeAgent 
-//		say("Starting up a HomeAgent...");
-//		HomeAgentDescriptor myHomeAgent = new HomeAgentDescriptor();
-//		myHomeAgent.setName("HA");
-//		myHomeAgent.setSchedulerAgent(schedulerAgent);
-//		AgentController homeAgentCtrl = mainCtrl.createNewAgent("HA", HomeAgent.class.getName(),new Object[] {schedulerName});
-//		currentSimulation.Add(homeAgentCtrl);
-//		
-//		// Create a agent of class ApplianceAgent 
-//		say("Starting up a ApplianceAgent...");
-//		AgentController ApplianceAgentCtrl = mainCtrl.createNewAgent("AA", ApplianceAgent.class.getName(),new Object[] {schedulerName});
-//		currentSimulation.Add(ApplianceAgentCtrl);
-//		
-//		// Create a agent of class RetailerAgent 
-//		say("Starting up a RetailerAgent...");
-//		AgentController RetailerAgentCtrl = mainCtrl.createNewAgent("RA", RetailerAgent.class.getName(),new Object[0]);
-//		
-//		currentSimulation.Add(RetailerAgentCtrl);
+		// Create a agent of class HomeAgent 
+		say("Starting up a HomeAgent...");
+		HomeAgentDescriptor myHomeAgent = new HomeAgentDescriptor();
+		myHomeAgent.setName("Home");
+		test.CreateTradeAgent(myHomeAgent);
+		
+		//Create a agent of class ApplianceAgent 
+		say("Starting up a ApplianceAgent...");
+		ApplianceAgentDescriptor myApplianceAgent = new ApplianceAgentDescriptor();
+		myApplianceAgent.setName("Lights");
+		myApplianceAgent.setOwner(new AID(myHomeAgent.getName(), AID.ISLOCALNAME));
+		test.CreateTradeAgent(myApplianceAgent);
+		
+		// Create a agent of class RetailerAgent 
+		say("Starting up a RetailerAgent...");
+		RetailerAgentDescriptor myRetailerAgent = new RetailerAgentDescriptor();
+		myRetailerAgent.setName("SimpleEnergy");
+		test.CreateTradeAgent(myRetailerAgent);
+		
+		return test;
 	}
 	
 	public static void Save() {

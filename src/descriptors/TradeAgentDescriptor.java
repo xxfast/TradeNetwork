@@ -26,5 +26,10 @@ public abstract class TradeAgentDescriptor implements Serializable {
 		Object[] toReturn = new Object[]{};
 		return toReturn;
 	}
+
+	@Override
+	public String toString() {
+		return getDescription();
+	}
 	
 }

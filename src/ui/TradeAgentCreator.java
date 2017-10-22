@@ -185,6 +185,15 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 					}else {
 						/* if the type refers to another Agent, create a list of other agents */
 						input = new TrageAgentSelector(simulation.getAgents());
+						if(!f.isAnnotationPresent(Nullable.class)) {
+							try {
+								PropertyDescriptor pd = new PropertyDescriptor(f.getName(), type);
+								Method getter = pd.getReadMethod();
+								Object fd = getter.invoke(instance);
+							}catch (InvocationTargetException |  IntrospectionException | IllegalAccessException e) {
+								input.setBackground(Color.ORANGE);
+							} 
+						}
 						inputs.add(input);
 					}
 					/* add a focus listener to validate on focus lost */
@@ -237,6 +246,7 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 		return isValid;
 	}
 	
+	/* Callback for save */
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{
@@ -259,7 +269,11 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 			if(toShow instanceof JTextField) {
 				content = ((JTextField)toShow).getText();
 			}else if(toShow instanceof TrageAgentSelector) {
-				content = (String) ((TrageAgentSelector)toShow).getSelectedItem();
+				AID value =  ((TrageAgentSelector)toShow).getSelectedAgent();
+				if(!value.equals(null)) {
+					Object fd = setter.invoke(instance, value);
+					return;
+				}
 			}
 			if((content.equals("") || content.equals(null)) && !toValidate.isAnnotationPresent(Nullable.class)) {
 				toShow.setToolTipText("This field is not nullable");

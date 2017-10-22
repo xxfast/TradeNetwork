@@ -1,6 +1,7 @@
 package negotiation;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 import negotiation.tactic.Tactic;
@@ -30,16 +31,52 @@ public class Strategy {
 	private void computeNextOfferVal()
 	{
 		double finalval=0;
+		double distWeight=0;
 		double temp=0;
+		Map<Tactic,Double> tacticsNextValues = new HashMap<>();
 		Issue next=issues.get(issues.size()-1);
 		//get each tactic to compute next value
 		for(Map.Entry<Tactic, Double> entry: tactics.entrySet())
 		{
 			//calculate next value
 			temp=entry.getKey().nextValue(next);
-			//add weighted value to total
-			finalval+=entry.getValue()*temp;
+			//store next values in map 
+			if(temp!=0)
+				tacticsNextValues.put(entry.getKey(), temp);
+			else
+				//keep track of their weights
+				distWeight+=entry.getValue();
+		
 		}
+
+		//check if any of the new values are 0, if so they shouldnt be taken into the final value
+		//the weight for that tactic should be evenly distributed to other tactics
+		
+		Map<Tactic,Double> weights;
+		//if need redistribution of weights, create map with new weights 
+		if(distWeight!=0)
+		{
+			
+			Map<Tactic,Double> newWeights = new HashMap<>();
+			for(Map.Entry<Tactic, Double> entry:tactics.entrySet())
+			{
+				newWeights.put(entry.getKey(), entry.getValue()+distWeight/(double)tacticsNextValues.size());
+			}
+			weights=newWeights;
+		}
+		else
+		{
+			//use default tactics with weights
+			weights=tactics;
+		}
+		
+		//compute final value
+		for(Map.Entry<Tactic, Double> entry:tacticsNextValues.entrySet())
+		{
+//			System.out.println("tactic "+entry.getKey()+" next val"+entry.getValue());
+			finalval+=entry.getValue()*weights.get(entry.getKey());
+		}
+		
 		currentVal=finalval;
 	}
 	
@@ -72,12 +109,7 @@ public class Strategy {
 			else
 				return false;
 		}
-		
-			
-	
-			
-		
-		
+				
 	}
 	
 	public void setTactics(Map<Tactic,Double> tactics) throws Exception
@@ -106,6 +138,24 @@ public class Strategy {
 
 	public ArrayList<Issue> getIssues() {
 		return issues;
+	}
+
+	public Map<Tactic, Double> getTactics() {
+		return tactics;
+	}
+	
+	public Strategy clone()
+	{
+		Strategy clone = new Strategy(this.value);
+		//clone issues
+		clone.tactics=this.tactics;
+		clone.issues= new ArrayList<>();
+		for(Issue issue:this.issues)
+		{
+			clone.issues.add(issue);
+		}
+		clone.currentVal=this.currentVal;
+		return clone;
 	}
 
 

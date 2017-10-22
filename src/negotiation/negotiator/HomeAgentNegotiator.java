@@ -5,11 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jade.lang.acl.ACLMessage;
+import model.Demand;
 import model.Offer;
 import negotiation.Issue;
 import negotiation.Strategy;
 import negotiation.Strategy.Item;
+import negotiation.baserate.HomeBound;
 
 public class HomeAgentNegotiator extends AgentNegotiator{
 
@@ -22,8 +23,12 @@ public class HomeAgentNegotiator extends AgentNegotiator{
 		 * @param strategies
 		 * @param scoreWeights
 		 */
-		public HomeAgentNegotiator(double maxNegotiationTime, Map<Item,Issue> itemIssue, ArrayList<Strategy> strategies, Map<Item, Double> scoreWeights) {			
-			super(maxNegotiationTime,itemIssue,strategies,scoreWeights);
+		public HomeAgentNegotiator(double maxNegotiationTime, ArrayList<Strategy> strategies, Map<Item, Double> scoreWeights)
+		{
+			super(maxNegotiationTime,strategies,scoreWeights);
+		}
+		public HomeAgentNegotiator(double maxNegotiationTime, ArrayList<Strategy> strategies, Map<Item, Double> scoreWeights,HomeBound calc) {			
+			super(maxNegotiationTime,strategies,scoreWeights,calc);
 			
 		}
 		
@@ -151,6 +156,10 @@ public class HomeAgentNegotiator extends AgentNegotiator{
 			//simply select the 1st one, but TODO can change if adding intelligence
 			return equal.get(0);
 		}
+
+	
+		
+		
 //		public Map<Strategy.Item, Issue> getItemIssue() {
 //			return itemIssue;
 //		}

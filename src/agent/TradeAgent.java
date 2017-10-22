@@ -16,6 +16,7 @@ public class TradeAgent extends Agent {
 	private TradeAgentDescriptor descriptor;
 	
 	protected void setup() {
+		say("Initialising!");
 	}
 	
 	public String getDescription(){

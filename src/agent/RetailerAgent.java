@@ -1,51 +1,56 @@
 package agent;
 
-// Used to make the agent a Service Provider Agent
-import jade.domain.FIPAException;
-import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.ServiceDescription;
-import jade.domain.DFService;
-
-// Used to make the agent a ContractNetResponder Agent
-import jade.core.Agent;
-import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
-import jade.proto.ContractNetResponder;
-import jade.proto.SSIteratedContractNetResponder;
-import jade.proto.SSResponderDispatcher;
-import jade.domain.FIPANames;
-import jade.domain.FIPAAgentManagement.NotUnderstoodException;
-import jade.domain.FIPAAgentManagement.RefuseException;
-import jade.domain.FIPAAgentManagement.FailureException;
-import jade.core.behaviours.Behaviour;
-
-// Used to implement the FSM Behaviour
-import jade.core.behaviours.FSMBehaviour;
-import jade.core.behaviours.OneShotBehaviour;
-
-// Used to log exceptions
-import jade.util.Logger;
-import model.Offer;
-import negotiation.Issue;
-import negotiation.Strategy;
-import negotiation.Strategy.Item;
-import negotiation.negotiator.RetailerAgentNegotiator;
-import negotiation.negotiator.AgentNegotiator.OfferStatus;
-import negotiation.tactic.Tactic;
-import negotiation.tactic.TimeDependentTactic;
-import negotiation.tactic.TimeWeightedFunction;
-import negotiation.tactic.TimeWeightedPolynomial;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 //Used for the energy schedule
 import java.util.Vector;
 
+import annotations.Adjustable;
+// Used to make the agent a ContractNetResponder Agent
+import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
+import jade.domain.DFService;
+// Used to make the agent a Service Provider Agent
+import jade.domain.FIPAException;
+import jade.domain.FIPANames;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.FailureException;
+import jade.domain.FIPAAgentManagement.NotUnderstoodException;
+import jade.domain.FIPAAgentManagement.RefuseException;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+import jade.proto.SSIteratedContractNetResponder;
+import jade.proto.SSResponderDispatcher;
+// Used to log exceptions
+import jade.util.Logger;
+import model.AgentDailyNegotiationThread;
+import model.Demand;
+import model.History;
+import model.Offer;
+import negotiation.Strategy;
+import negotiation.Strategy.Item;
+import negotiation.baserate.HomeBound;
+import negotiation.baserate.RetailerBound;
+import negotiation.negotiator.AgentNegotiator.OfferStatus;
+import negotiation.negotiator.RetailerAgentNegotiator;
+import negotiation.tactic.BehaviourDependentTactic;
+import negotiation.tactic.ResourceDependentTactic;
+import negotiation.tactic.Tactic;
+import negotiation.tactic.TimeDependentTactic;
+import negotiation.tactic.behaviour.AverageTitForTat;
+import negotiation.tactic.timeFunction.ResourceAgentsFunction;
+import negotiation.tactic.timeFunction.ResourceTimeFunction;
+import negotiation.tactic.timeFunction.TimeWeightedFunction;
+import negotiation.tactic.timeFunction.TimeWeightedPolynomial;
+import negotiation.baserate.BoundCalc;
+import negotiation.baserate.RetailerBound;
+import model.History;
+
 
 public class RetailerAgent extends TradeAgent {
     
-	private double maxNegotiationTime=10;
 	private final boolean INC=true;// supplier mentality
 	private RetailerAgentNegotiator negotiator;
 
@@ -54,8 +59,23 @@ public class RetailerAgent extends TradeAgent {
 		private int units;
 		private int cost;
 		
-	
 	}	
+	
+	private AgentDailyNegotiationThread dailyThread;
+	
+	//params needed to setup negotiators
+	//coming from args
+	@Adjustable(label="Max Iterations")
+	private double maxNegotiationTime=10;
+	@Adjustable(label="Parameter K")
+	private double ParamK=0.01;
+	@Adjustable(label="Parameter Beta")
+	private double ParamBeta=0.5;
+	
+	private double tacticTimeWeight=0.4;
+	private double tacticResourceWeight=0.6;
+	private double tacticBehaviourWeight=0.3;
+	private int behaviourRange=2;
 
 	private Vector<EnergyUnit> energyUnitSchedule = new Vector<EnergyUnit>();
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
@@ -70,15 +90,27 @@ public class RetailerAgent extends TradeAgent {
 	private int energyStored = 0;
 	
 	protected void setup() {
-		// Set up the agent
+		
+		//boundCalculator.calcBounds(AID id, int units, int time, History hist)
+		//history.addTransaction(AID client, int units, double rate);
 		
 		// Sets the agent's properties (energy rate & threshold) to passed or default values
-		setAgentProperties();
+
+		Object[] args = this.getArguments();
+		//set negotiation time from arguments
+		this.maxNegotiationTime=((Double) args[0]);
+		//retrieve K and Beta from args
+		this.ParamK=((Double)args[1]);
+		this.ParamBeta=((Double)args[2]);
 		
 		//Describes the agent as a retail agent
 		setupServiceProviderComponent();
-		
-		say("EnergyRate = $" + energyRate + "/unit, EnergyThreshold = " + energyThreshold + " units.");
+
+		dailyThread= new AgentDailyNegotiationThread();
+
+		say("Retailer "+this.getName());
+
+
 		
 		// Template to filter messages as to only receive CFP messages for the CNR Behaviour
 		MessageTemplate template = MessageTemplate.and(
@@ -97,21 +129,29 @@ public class RetailerAgent extends TradeAgent {
 	
 	public void setupNegotiator()
 	{
-		double WFParamK=0.3;
-		double WFParamBeta=0.5;  //Beta <1 competitive Beta >1 passive		
+				
 		
 		//create TWfunction
-		TimeWeightedFunction poly = new TimeWeightedPolynomial(WFParamK, WFParamBeta, this.maxNegotiationTime);
+		TimeWeightedFunction poly = new TimeWeightedPolynomial(this.ParamK, this.ParamBeta, this.maxNegotiationTime);
+		//create RAFunction- for resource dep tactic
+		ResourceTimeFunction rsrcFunc= new ResourceTimeFunction(this.ParamK, this.maxNegotiationTime);
+		
+		//create behTFT- for behaviour dep tactic
+		AverageTitForTat tft = new AverageTitForTat(Item.PRICE);
 		
 		//create tactics
 		TimeDependentTactic tactic1= new TimeDependentTactic(poly, this.INC);
+		ResourceDependentTactic tactic2= new ResourceDependentTactic(rsrcFunc, this.INC);
+		BehaviourDependentTactic tactic3= new BehaviourDependentTactic(tft, this.behaviourRange);
 		
 		//create strategy and add tactics with weights
 		Strategy priceStrat= new Strategy(Strategy.Item.PRICE);
-		double timeTacticWeight=1;//changes as new tactics added
+		;//changes as new tactics added
 		
 		Map<Tactic,Double> tactics = new HashMap<Tactic,Double>();
-		tactics.put(tactic1, new Double(timeTacticWeight));
+		tactics.put(tactic1, new Double(tacticTimeWeight));
+		tactics.put(tactic2, new Double(tacticResourceWeight));
+//		tactics.put(tactic3, new Double(tacticBehaviourWeight));
 		try {
 			priceStrat.setTactics(tactics);
 		} catch (Exception e) {
@@ -130,29 +170,37 @@ public class RetailerAgent extends TradeAgent {
 		//add only price item
 		scoreWeights.put(Item.PRICE, new Double(1));
 		
-		//create price range for each offer item-obtain from source
-		Map<Strategy.Item,Issue> itemissue = new HashMap<>();
-		//only add price issue since we are only focusing on price
-		itemissue.put(Strategy.Item.PRICE, new Issue(40, 20));
+		//get my history object-simply creating new history, TODO object shud handle loading agent history, maybe pass in AID
+		History history = new History(this.getLocalName());
+		//create bound calc for price
+		RetailerBound retailcalc= new RetailerBound(history);
+		
 		
 		//create negotiator with params
-		this.negotiator= new RetailerAgentNegotiator( this.maxNegotiationTime, itemissue, strats, scoreWeights);
+		this.negotiator= new RetailerAgentNegotiator( this.maxNegotiationTime, strats, scoreWeights,retailcalc);
 	}
 	
 
 	
 	private class RetailerCNRBehaviour extends SSIteratedContractNetResponder{
-		private EnergyUnit currentUnitRequest = null;
-		
-		private Map<Item,Double> myvals;
-		private Offer offer;
-		int offset=2;
+		private EnergyUnit currentUnitRequest = null;		
+
 		
 		
 		RetailerCNRBehaviour(Agent a, ACLMessage initialMessage) {
 			super(a, initialMessage);
 			
 			setupNegotiator();
+			
+			//get demand from initial Message
+			Offer off = new Offer(initialMessage);
+			Demand demand=off.getDemand();
+			System.out.println("demand "+demand.getContent());
+//			add negotiator to daily thread
+			dailyThread.addHourThread(demand.getTime(), initialMessage.getSender(), negotiator.getNegotiationThread());
+			//setup initial issue 
+			negotiator.setInitialIssue(off);
+			System.out.println("intial issue for "+initialMessage.getSender().getLocalName()+" issue "+negotiator.getItemIssue().get(Item.PRICE));
 			say("Creating new SSICNR behaviour");
 		}
 		
@@ -173,9 +221,9 @@ public class RetailerAgent extends TradeAgent {
 			reply.setPerformative(ACLMessage.PROPOSE);
 			if(stat.equals(OfferStatus.ACCEPT))
 			{
-				//responder cant accept cfps so sending same offer received from cfp as proposal									
-			}
-			
+				//responder cant accept cfps so sending same offer received from cfp as proposal	
+				reply.setContent(cfp.getContent());
+			}			
 			if(stat.equals(OfferStatus.COUNTER))
 			{
 				
@@ -200,8 +248,16 @@ public class RetailerAgent extends TradeAgent {
 		}
 
 		protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
-			say("Proposal rejected");
+			say("Proposal rejected "+reject.getContent());
 		}
+
+		@Override
+		public int onEnd() {
+			// TODO Auto-generated method stub
+			 System.out.println(dailyThread.toString());
+			return super.onEnd();
+		}
+		
 	}
 	
 	private boolean performAction() {
@@ -211,38 +267,7 @@ public class RetailerAgent extends TradeAgent {
 	
 	
 	// Temporary method until the method of setting rate is determined
-	private void setAgentProperties() {
-		Object[] args = this.getArguments();
-		
-	  	if (args != null && args.length > 0) {
-			switch (args.length) {
-			case 1:
-				// One argument, assumed to be rate
-				// Implies there will be no energy threshold
-				energyRate = convStrToInt((String)args[0]);
-				energyThreshold = -1;
-				break;
-			case 2:
-				// Two arguments, assumed to be rate and threshold
-				// If threshold is less than zero it is ignored in calculations
-				energyRate = convStrToInt((String)args[0]);
-				energyThreshold = convStrToInt((String)args[1]);
-				break;
-			default:
-				// Too many (>2) arguments
-				// Maybe make exception
-				
-				energyRate = (int) (Math.random() * 10);
-				energyThreshold = -1;
-				break;
-			}
-		} else {
-			
-			// Too few (<1) argument
-			energyRate = (int) (Math.random() * 10);
-			energyThreshold = -1;
-		}
-	}
+
 		
 	private void setupServiceProviderComponent () {
 		DFAgentDescription dfd = new DFAgentDescription();
