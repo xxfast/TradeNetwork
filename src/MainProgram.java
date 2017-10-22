@@ -20,6 +20,7 @@ import jade.core.Runtime;
 import jade.wrapper.AgentContainer;
 import jade.wrapper.AgentController;
 import jade.wrapper.StaleProxyException;
+import model.Demand;
 import simulation.Simulation;
 import ui.SimulationInspecter;
 
@@ -91,6 +92,7 @@ public class MainProgram {
 		ApplianceAgentDescriptor myApplianceAgent = new ApplianceAgentDescriptor();
 		myApplianceAgent.setName("Lights");
 		myApplianceAgent.setOwner(new AID(myHomeAgent.getName(), AID.ISLOCALNAME));
+		myApplianceAgent.setStartingDemand(new Demand(1));
 		test.CreateTradeAgent(myApplianceAgent);
 		
 		// Create a agent of class RetailerAgent 
