@@ -76,6 +76,53 @@ public class TestBehaviourDependentTactics {
 		
 	}
 	@Test
+	public void TestNegotiationThread() {
+		NegotiationThread th = new NegotiationThread();
+		Map<Item,Double> ret1= new HashMap<Item,Double>();
+		ret1.put(Item.PRICE, new Double(29));
+		
+		Offer o1= new Offer(ret1);
+		o1.setOwner("ret1");
+		
+		Map<Item,Double> cust= new HashMap<Item,Double>();
+		cust.put(Item.PRICE, new Double(20));
+		
+		Offer c1= new Offer(cust);
+		c1.setOwner("cust");
+		
+		th.addOffer(o1);
+		th.addOffer(c1);
+		
+		//next iteration
+		ret1.put(Item.PRICE, new Double(27));
+		cust.put(Item.PRICE, new Double(21));
+		th.addOffer(o1);
+		th.addOffer(c1);
+		
+		//next iteration
+		ret1.put(Item.PRICE, new Double(25));
+		cust.put(Item.PRICE, new Double(21.5));
+		th.addOffer(o1);
+		th.addOffer(c1);
+//		
+//		//next iteration
+		ret1.put(Item.PRICE, new Double(24));		
+		th.addOffer(o1);
+		
+		//check opponent offers
+		List<Offer> opp=th.getOpponentOffers();
+		assertEquals("shud be same", 29,opp.get(0).getOfferValue(Item.PRICE),Delta);
+		assertEquals("shud be same", 27,opp.get(1).getOfferValue(Item.PRICE),Delta);
+		assertEquals("shud be same", 25,opp.get(2).getOfferValue(Item.PRICE),Delta);
+		assertEquals("shud be same", 24,opp.get(3).getOfferValue(Item.PRICE),Delta);
+		
+		//check self offers
+		List<Offer> self=th.getSelfOffers();
+		assertEquals("shud be same", 20,self.get(0).getOfferValue(Item.PRICE),Delta);
+		assertEquals("shud be same", 21,self.get(1).getOfferValue(Item.PRICE),Delta);
+		assertEquals("shud be same", 21.5,self.get(2).getOfferValue(Item.PRICE),Delta);
+	}
+	@Test
 	public void TestAverageTitForTat() {
 		NegotiationThread th = new NegotiationThread();
 		double val=0;

@@ -14,13 +14,13 @@ public abstract class BoundCalc {
 	private double[] stdRate = new double[24]; 
 	
 	// Constructor
-	public BoundCalc(String baseRateDir) {
+	public BoundCalc(String baseRateDir, History history) {
 		loadBaseRate(baseRateDir);
 	}
 	
 	// Default constructor
-	public BoundCalc() {
-		this("src\\negotiation\\baserate\\baserate.txt");
+	public BoundCalc(History history) {
+		this("src\\negotiation\\baserate\\baserate.txt", history);
 	}
 	
 	// Prints the base rate array in easily readable config

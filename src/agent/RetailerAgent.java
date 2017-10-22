@@ -6,6 +6,7 @@ import java.util.Map;
 //Used for the energy schedule
 import java.util.Vector;
 
+import annotations.Adjustable;
 // Used to make the agent a ContractNetResponder Agent
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -24,10 +25,14 @@ import jade.proto.SSIteratedContractNetResponder;
 import jade.proto.SSResponderDispatcher;
 // Used to log exceptions
 import jade.util.Logger;
+import model.AgentDailyNegotiationThread;
 import model.Demand;
+import model.History;
 import model.Offer;
 import negotiation.Strategy;
 import negotiation.Strategy.Item;
+import negotiation.baserate.HomeBound;
+import negotiation.baserate.RetailerBound;
 import negotiation.negotiator.AgentNegotiator.OfferStatus;
 import negotiation.negotiator.RetailerAgentNegotiator;
 import negotiation.tactic.BehaviourDependentTactic;
@@ -46,10 +51,9 @@ import model.History;
 
 public class RetailerAgent extends TradeAgent {
     
-	
 	private final boolean INC=true;// supplier mentality
 	private RetailerAgentNegotiator negotiator;
-	private History history = new History();
+	private History history = new History("0");
 	private BoundCalc boundCalculator = new RetailerBound();
 
 	private class EnergyUnit {
@@ -59,11 +63,17 @@ public class RetailerAgent extends TradeAgent {
 		
 	}	
 	
+	private AgentDailyNegotiationThread dailyThread;
+	
 	//params needed to setup negotiators
 	//coming from args
+	@Adjustable(label="Max Iterations")
 	private double maxNegotiationTime=10;
+	@Adjustable(label="Parameter K")
 	private double ParamK=0.01;
+	@Adjustable(label="Parameter Beta")
 	private double ParamBeta=0.5;
+	
 	private double tacticTimeWeight=0.4;
 	private double tacticResourceWeight=0.6;
 	private double tacticBehaviourWeight=0.3;
@@ -91,7 +101,9 @@ public class RetailerAgent extends TradeAgent {
 		
 		//Describes the agent as a retail agent
 		setupServiceProviderComponent();
-		
+
+		dailyThread= new AgentDailyNegotiationThread();
+
 		say("Retailer "+this.getName());
 
 
@@ -115,6 +127,9 @@ public class RetailerAgent extends TradeAgent {
 		Object[] args = this.getArguments();
 		//set negotiation time from arguments
 		this.maxNegotiationTime=Double.parseDouble((String) args[0]);
+		//retrieve K and Beta from args
+		this.ParamK=Double.valueOf((String)args[1]);
+		this.ParamBeta=Double.valueOf((String)args[2]);
 	  	
 	}
 	public void setupNegotiator()
@@ -160,11 +175,14 @@ public class RetailerAgent extends TradeAgent {
 		//add only price item
 		scoreWeights.put(Item.PRICE, new Double(1));
 		
-		
+		//get my history object-simply creating new history, TODO object shud handle loading agent history, maybe pass in AID
+		History history = new History();
+		//create bound calc for price
+		RetailerBound retailcalc= new RetailerBound(history);
 		
 		
 		//create negotiator with params
-		this.negotiator= new RetailerAgentNegotiator( this.maxNegotiationTime, strats, scoreWeights);
+		this.negotiator= new RetailerAgentNegotiator( this.maxNegotiationTime, strats, scoreWeights,retailcalc);
 	}
 	
 
@@ -178,12 +196,16 @@ public class RetailerAgent extends TradeAgent {
 			super(a, initialMessage);
 			
 			setupNegotiator();
+			
 			//get demand from initial Message
 			Offer off = new Offer(initialMessage);
 			Demand demand=off.getDemand();
 			System.out.println("demand "+demand.getContent());
+//			add negotiator to daily thread
+			dailyThread.addHourThread(demand.getTime(), initialMessage.getSender(), negotiator.getNegotiationThread());
 			//setup initial issue 
-			negotiator.setInitialIssue(demand);
+			negotiator.setInitialIssue(off);
+			System.out.println("intial issue for "+initialMessage.getSender().getLocalName()+" issue "+negotiator.getItemIssue().get(Item.PRICE));
 			say("Creating new SSICNR behaviour");
 		}
 		
@@ -233,6 +255,14 @@ public class RetailerAgent extends TradeAgent {
 		protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
 			say("Proposal rejected "+reject.getContent());
 		}
+
+		@Override
+		public int onEnd() {
+			// TODO Auto-generated method stub
+			 System.out.println(dailyThread.toString());
+			return super.onEnd();
+		}
+		
 	}
 	
 	private boolean performAction() {

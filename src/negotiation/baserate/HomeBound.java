@@ -4,12 +4,12 @@ import jade.core.AID;
 import model.History;
 
 public class HomeBound extends BoundCalc {
-	public HomeBound(String baseRateDir) {
-		super(baseRateDir);
+	public HomeBound(String baseRateDir,History history) {
+		super(baseRateDir,history);
 	}
 	
-	public HomeBound() {
-		super();
+	public HomeBound(History history) {
+		super(history);
 	}
 
 	@Override
@@ -17,9 +17,9 @@ public class HomeBound extends BoundCalc {
 		double lowerBound = getStdRate()[time];
 		double upperBound = getStdRate()[time];
 		
-		int pastUnitTransactions = hist.getTotalUnitsTradedForClient(id);
-		double pastMoneyTransactions = hist.getTotalMoneyTradedForClient(id);
-		int pastTransactions = hist.getTotalTransactionsForClient(id);
+		int pastUnitTransactions = hist.getTotalUnitsTradedForClient(id.getName());
+		double pastMoneyTransactions = hist.getTotalMoneyTradedForClient(id.getName());
+		int pastTransactions = hist.getTotalTransactionsForClient(id.getName());
 		
 		// To make the home initially ask less than the standard.
 		// TODO Think of appropriate value here
