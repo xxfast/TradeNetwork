@@ -73,13 +73,11 @@ public class HomeAgent extends TradeAgent {
 	private double tacticResourceWeight=0.2;
 	private double tacticBehaviourWeight=0.2;
 	private int behaviourRange=2;
-	//private structure
 	
-	private ParallelBehaviour workStack;
-
 	private Schedule schedule = new Schedule(); 
 	
 	protected void setup() {
+		super.setup();
 		// Registration with the DF		
 		DFAgentDescription dfd = new DFAgentDescription();
 		ServiceDescription sd = new ServiceDescription();
@@ -98,11 +96,6 @@ public class HomeAgent extends TradeAgent {
 		rand = new Random();
 		//retrieve scheduler form arguments
 		Object[] args = getArguments();
-		if(args.length!=1)
-		{
-			say("Need to specify schedule agent in arguments");
-			doDelete();
-		}
 		
 		retailers= new ArrayList<>();	
 		//get agents with retailer service
@@ -114,14 +107,13 @@ public class HomeAgent extends TradeAgent {
 		
 		negotiators= new HashMap<>();
 		
-		/* Setting up a parallel behavior to
+		
+		/* Setting up
 		 *  1) start listening to demands form home's appliances 
 		 *  2) start negotiating with the retailers */
 		
-		workStack = new ParallelBehaviour(ParallelBehaviour.WHEN_ALL);
-		workStack.addSubBehaviour(new DemandListeningBehaviour(this));
-		workStack.addSubBehaviour(new NegotiatingBehaviour(this));
-		addBehaviour(workStack);
+		addBehaviour(new DemandListeningBehaviour(this));
+		addBehaviour(new NegotiatingBehaviour(this));
 	}
 	
 	private class DemandListeningBehaviour extends AchieveREResponder{
@@ -165,7 +157,7 @@ public class HomeAgent extends TradeAgent {
 		
 		@Override
 		public void onTick() {
-			workStack.addSubBehaviour(new RequestQuote(myAgent, null, retailers));
+			addBehaviour(new RequestQuote(myAgent, null, retailers));
 		}
 	}
 	
@@ -224,12 +216,9 @@ public class HomeAgent extends TradeAgent {
 		scoreWeights.put(Item.PRICE, new Double(1));
 		
 		//create negotiators with params for each retailer
-		for(AID agent:retailers)
-		{
+		for(AID agent:retailers){
 			this.negotiators.put(agent, new HomeAgentNegotiator( this.maxNegotiationTime, strats, scoreWeights));
 		}
-		 
-		
 		
 	}
 	
@@ -241,7 +230,6 @@ public class HomeAgent extends TradeAgent {
 		private Integer activeAgents;
 		private Map<ACLMessage,Double> acceptedScores;
 		
-		
 		public RequestQuote(Agent a, ACLMessage msg, List<AID> retailers) {
 			super(a, msg);
 			retailAgents=retailers;
@@ -252,22 +240,20 @@ public class HomeAgent extends TradeAgent {
 			setupHomeNegotiators(activeAgents);
 			// TODO Auto-generated constructor stub
 		}
+		
 		@Override
 		protected Vector prepareCfps(ACLMessage msg)
 		{
-			say("Gonna make call for proposal");
-			//retrieve demand msg from datastore
-			String demandMsgKey = (String) ((AchieveREInitiator) getParent()).REPLY_KEY;
-			ACLMessage demandMsg=(ACLMessage) getDataStore().get(demandMsgKey);		
+			//retrieve demand
+			Demand demandMsg=  calculateDemandForHour((short) 0);		
+			say("Gonna make call for proposal for " + demandMsg.getTime()+"h which was " +demandMsg.getUnits() + " units");
 			
 			ACLMessage quoteRequest = null;
 			Vector<ACLMessage> cfps= new Vector<>();
 			if(demandMsg!=null)
 			{
-				
-				
 				//construct quote request to send to retailers
-				schedDemand =new Demand(demandMsg);
+				schedDemand =demandMsg;
 				//TODO- ask negotiators to set intital issues
 				for(Map.Entry<AID, HomeAgentNegotiator> entry:negotiators.entrySet())
 				{
@@ -469,5 +455,16 @@ public class HomeAgent extends TradeAgent {
 	public boolean schedule(int amount, Short time, int duration){
 		schedule.getTime().get(time).add(amount);
 		return true;
+	}
+	
+	public Demand calculateDemandForHour(Short time) {
+		Demand inform = new Demand(time);
+		List<Integer> demands = getSchedule().getTime().get(time);
+		int total = 0;
+		for(Integer demand : demands){
+			total+= demand;
+		}
+		inform.setUnits(total);
+		return inform;
 	}
 }
