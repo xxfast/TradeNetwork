@@ -57,7 +57,7 @@ public class SimulationInspecter {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
-		setFrame(new JFrame());
+		setFrame(new JFrame("TradeNetwork"));
 		getFrame().setBounds(100, 100, 500, 350);
 		getFrame().setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
