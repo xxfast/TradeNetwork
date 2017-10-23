@@ -59,7 +59,8 @@ public class Offer {
 		offerValues= new HashMap<Strategy.Item, Double>();
 		demand= new Demand();
 		setContent(message.getContent());
-		owner=message.getSender().getLocalName();
+		if(message.getSender()!=null)
+			owner=message.getSender().getLocalName();
 	}
 	
 	public String getContent(){

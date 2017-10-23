@@ -2,21 +2,18 @@ package agent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Vector;
 
-import FIPA.DateTime;
 import annotations.Adjustable;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
-import jade.domain.DFService;
-import jade.domain.FIPAException;
 import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
 import jade.proto.ContractNetInitiator;
@@ -25,11 +22,10 @@ import model.AgentDailyNegotiationThread;
 import model.Demand;
 import model.History;
 import model.Offer;
-import model.AgentDailyNegotiationThread.Party;
-import negotiation.NegotiationThread;
 import negotiation.Strategy;
 import negotiation.Strategy.Item;
 import negotiation.baserate.HomeBound;
+import negotiation.baserate.Transaction;
 import negotiation.negotiator.AgentNegotiator;
 import negotiation.negotiator.AgentNegotiator.OfferStatus;
 import negotiation.negotiator.HomeAgentNegotiator;
@@ -41,10 +37,7 @@ import negotiation.tactic.behaviour.AverageTitForTat;
 import negotiation.tactic.timeFunction.ResourceAgentsFunction;
 import negotiation.tactic.timeFunction.TimeWeightedFunction;
 import negotiation.tactic.timeFunction.TimeWeightedPolynomial;
-import negotiation.baserate.BoundCalc;
-import negotiation.baserate.HomeBound;
 import simulation.Simulation;
-import model.History;
 
 public class HomeAgent extends TradeAgent {
 	private final boolean INC=false;//customer mentality
@@ -56,9 +49,10 @@ public class HomeAgent extends TradeAgent {
 	private Map<AID,HomeAgentNegotiator> negotiators;
 	private AgentDailyNegotiationThread dailyThread;
 
-	private ArrayList<Demand> messages = new ArrayList<>();
+	
 	private AID myscheduler;
 	private List<AID> retailers;
+	
 	
 	private int agentHour;
 	//params needed to setup negotiators
@@ -74,16 +68,20 @@ public class HomeAgent extends TradeAgent {
 	private double tacticResourceWeight=0.2;
 	private double tacticBehaviourWeight=0.2;
 	private int behaviourRange=2;
+	
+	
 	//private structure
 	
 	protected void setup() {
 
+		super.setup();
 		
 		agentHour=0;
 		rand = new Random();
 		setAgentProperties();
 		dailyThread= new AgentDailyNegotiationThread();
-		retailers= new ArrayList<>();	
+		retailers= new ArrayList<>();
+		
 		//get agents with retailer service
 		DFAgentDescription[] agents = getServiceAgents("RetailerAgent");
 		for(DFAgentDescription agent : agents)
@@ -197,10 +195,9 @@ public class HomeAgent extends TradeAgent {
 		//add only price item
 		scoreWeights.put(Item.PRICE, new Double(1));
 		
-		//get my history object-simply creating new history, TODO object shud handle loading agent history
-		History history = new History(this.getLocalName());
+		
 		//create bound calc for price
-		HomeBound homecacl= new HomeBound(history);
+		HomeBound homecacl= new HomeBound(myHistory);
 	
 		
 		//create negotiators with params for each retailer
@@ -290,6 +287,13 @@ public class HomeAgent extends TradeAgent {
 				
 				//construct quote request to send to retailers
 				schedDemand =new Demand(demandMsg);
+				//terminate if units required is 0
+				if(schedDemand.getUnits()==0)
+				{
+					forceTransitionTo(DUMMY_FINAL);
+					return cfps;
+				}
+					
 				//TODO- ask negotiators to set intital issues
 				for(Map.Entry<AID, HomeAgentNegotiator> entry:negotiators.entrySet())
 				{
@@ -371,9 +375,11 @@ public class HomeAgent extends TradeAgent {
 		}
 		@Override
 		protected void handleRefuse(ACLMessage refuse) {
-			// TODO add logic to refuse, decrement activeagents 
+			// TODO add logic to refuse, decrement activeagents, update history
 			activeAgents--;
-			say("Rejected from "+refuse.getSender().getLocalName());
+			//get negotiator
+			HomeAgentNegotiator neg=negotiators.get(refuse.getSender());
+			addToHistory(neg, refuse, false,refuse.getSender());
 			super.handleRefuse(refuse);
 		}
 		/*get all PROPOSE msgs and compare proposals
@@ -406,11 +412,12 @@ public class HomeAgent extends TradeAgent {
 						msg.setPerformative(ACLMessage.REJECT_PROPOSAL);
 					}
 				}
-				//create rejections for accepted
+				//create rejections for other accepted
 				for(Map.Entry<ACLMessage, Double> entry:acceptedScores.entrySet())
 				{
 					ACLMessage reply=entry.getKey().createReply();
 					reply.setContent(entry.getKey().getContent());
+					
 					if(entry.getKey().getSender().equals(bestproposal.getSender()))
 					{
 						reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
@@ -453,8 +460,15 @@ public class HomeAgent extends TradeAgent {
 				
 					
 			}
+			
+			//update history with result of negotiations- done only for any accepted or rejected
+			updateHistory(acceptances);
+			
 			if(isNextIter)
 				newIteration(acceptances);
+			
+			
+			
 	
 			//clear proposalscores for next iteration
 			proposalScores.clear();
@@ -477,6 +491,43 @@ public class HomeAgent extends TradeAgent {
 			
 			
 		}
+		public void updateHistory(Vector acceptances)
+		{
+			//go through acceptances and keep track of accepted and rejected 
+			//get accepted proposal
+			List<ACLMessage> accProps=new ArrayList<>();
+			List<ACLMessage> rejProps=new ArrayList<>();
+			for(Object obj:acceptances)
+			{
+				ACLMessage msg=(ACLMessage) obj;
+				if(msg.getPerformative()==ACLMessage.ACCEPT_PROPOSAL)
+				{
+					accProps.add(msg);
+					
+				}	
+				else if(msg.getPerformative()==ACLMessage.REJECT_PROPOSAL)
+				{
+					rejProps.add(msg);
+				}
+			}
+			//update history for accepted proposals
+			for(ACLMessage msg:accProps)
+			{
+				AID client=getfirstReciever(msg);
+				AgentNegotiator neg=negotiators.get(client);
+				addToHistory(neg, msg, true, client);
+			}
+			//update history for rejected proposals
+			for(ACLMessage msg:rejProps)
+			{
+				AID client=getfirstReciever(msg);
+				AgentNegotiator neg=negotiators.get(client);
+				addToHistory(neg, msg, false, client);
+			}
+			
+		}
+		
+
 		
 		public void handleAllRejections(Vector acceptances)
 		{
@@ -515,6 +566,8 @@ public class HomeAgent extends TradeAgent {
 		public int onEnd() {
 			// TODO Auto-generated method stub
 //			 System.out.println(dailyThread.toString());
+			 //save history to file
+			 myHistory.saveTransactionHistory();
 				goNextHour();
 			return super.onEnd();
 		}
