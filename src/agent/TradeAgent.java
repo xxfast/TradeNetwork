@@ -1,5 +1,7 @@
 package agent;
 
+import java.util.Iterator;
+
 import descriptors.TradeAgentDescriptor;
 import jade.core.AID;
 import jade.core.Agent;
@@ -10,12 +12,21 @@ import jade.domain.FIPAAgentManagement.AMSAgentDescription;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.lang.acl.ACLMessage;
+import model.History;
+import model.Offer;
+import negotiation.Strategy.Item;
+import negotiation.baserate.Transaction;
+import negotiation.negotiator.AgentNegotiator;
 
 public class TradeAgent extends Agent {
 	
 	private TradeAgentDescriptor descriptor;
+	protected History myHistory;
 	
 	protected void setup() {
+		
+		myHistory= new History(this.getLocalName());
 	}
 	
 	public String getDescription(){
@@ -58,6 +69,29 @@ public class TradeAgent extends Agent {
 		catch (Exception fe) {}
 		return null;
 
+	}
+	public void addToHistory(AgentNegotiator neg,ACLMessage result,boolean success,AID client)
+	{
+		Transaction trans=neg.getNegotiationThread().getAsTransaction();
+		if(!success)
+		{
+			trans.setRate(AgentNegotiator.REJECTRATE);
+		}
+		else
+		{
+//			System.out.println("reply "+result.toString());
+			Offer off =new Offer(result);
+			double finalPrice=off.getOfferValue(Item.PRICE);
+			trans.setRate(finalPrice);
+		}
+		
+		myHistory.addTransaction(client.getLocalName(), trans);
+	}
+	public AID getfirstReciever(ACLMessage msg)
+	{
+		Iterator it=msg.getAllReceiver();
+		AID rec=(AID) it.next();
+		return rec;
 	}
 	
 	public void say(String message){
