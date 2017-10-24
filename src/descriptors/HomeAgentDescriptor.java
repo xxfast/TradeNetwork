@@ -5,22 +5,9 @@ import jade.core.AID;
 
 @Adjustable(label = "An agent representing a single home")
 public class HomeAgentDescriptor extends TradeAgentDescriptor {
-	@Adjustable(label = "Name of the Scheduler")
-	private String schedulerAgent;
-	@Adjustable(label = "Maximum Negotiation Time")
-	private double maxNegotiationTime;
-	@Adjustable(label = "Paramaeter K")
-	private double paramK;
-	@Adjustable(label = "Paramaeter Beta")
-	private double paramBeta;
-
-	public String getSchedulerAgent() {
-		return schedulerAgent;
-	}
-
-	public void setSchedulerAgent(String schedulerAgent) {
-		this.schedulerAgent = schedulerAgent;
-	}
+	@Adjustable private double maxNegotiationTime; // must be non-zero
+	@Adjustable private double paramK;
+	@Adjustable private double paramBeta;
 	
 	public double getMaxNegotiationTime() {
 		return maxNegotiationTime;
@@ -47,11 +34,11 @@ public class HomeAgentDescriptor extends TradeAgentDescriptor {
 	}
 
 	public String getDescription() {
-		return String.format("[HomeAgent:" +  getName() + " -> ["+ getSchedulerAgent() +","+getMaxNegotiationTime()+","+getParamK()+","+getParamBeta()+"] ]");
+		return String.format("[HomeAgent: "+getMaxNegotiationTime()+","+getParamK()+","+getParamBeta()+"]");
 	}
 	
 	public Object[] toArray() {
-		Object[] toReturn = new Object[]{getSchedulerAgent(),getMaxNegotiationTime(),getParamK(),getParamBeta()};
+		Object[] toReturn = new Object[]{getMaxNegotiationTime(),getParamK(),getParamBeta()};
 		return toReturn;
 	}
 	

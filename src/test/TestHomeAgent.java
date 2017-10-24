@@ -80,8 +80,7 @@ public class TestHomeAgent {
 		
 		//create negotiator with params
 		HomeAgentNegotiator neg= new HomeAgentNegotiator( this.maxNegotiationTime,  strats, scoreWeights);
-		neg.setInitialIssue(new Demand(10, (short)0, 1));
-		
+		neg.setInitialIssue(new Demand(10));
 		Offer off=neg.generateOffer();
 		double val=off.getOfferValue(Item.PRICE);
 		
@@ -128,11 +127,9 @@ public class TestHomeAgent {
 		//add only price item
 		scoreWeights.put(Item.PRICE, new Double(1));
 		
-		
-		
 		//create negotiator with params
 		HomeAgentNegotiator neg= new HomeAgentNegotiator( this.maxNegotiationTime, strats, scoreWeights);
-		neg.setInitialIssue(new Demand(10, (short)0, 1));
+		neg.setInitialIssue(new Demand(10));
 		
 		Map<Item,Double> ret1= new HashMap<Item,Double>();
 		ret1.put(Item.PRICE, new Double(29));
@@ -151,10 +148,6 @@ public class TestHomeAgent {
 		
 		Offer o3 = new Offer(ret3);
 		o3.setOwner("ret3");
-		
-
-	
-		
 		
 		List<Offer> offers = new ArrayList<>();
 		offers.add(o1);

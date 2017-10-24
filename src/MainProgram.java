@@ -6,13 +6,21 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import agent.ApplianceAgent;
+import agent.HomeAgent;
 import controllers.TradeAgentController;
+import descriptors.ApplianceAgentDescriptor;
+import descriptors.HomeAgentDescriptor;
+import descriptors.RetailerAgentDescriptor;
 import descriptors.SchedulingAgentDescriptor;
+import jade.core.AID;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
 import jade.wrapper.AgentContainer;
+import jade.wrapper.AgentController;
 import jade.wrapper.StaleProxyException;
+import model.Demand;
 import simulation.Simulation;
 import ui.SimulationInspecter;
 
@@ -23,7 +31,7 @@ import ui.SimulationInspecter;
  */
 public class MainProgram {
 	
-	public static final String DEFAULT_SAVE_LOCATION = "./data/test.tns";	
+	public static final String DEFAULT_SAVE_LOCATION = "/data/test.tns";	
 	
 	public static String consoleOutput = "";
 	
@@ -66,32 +74,34 @@ public class MainProgram {
 		test.setName("Test Simulation");
 		test.setDescription("This is a test save");
 		test.setContainer(container);
-		// Create a agent of class SchedulingAgent 
-		//SchedulingAgentDescriptor mySchedulingAgent = new SchedulingAgentDescriptor();
-		//mySchedulingAgent.setName("SA");
-		//test.CreateTradeAgent(mySchedulingAgent);
+		
+		// Create a agent of class HomeAgent 
+		say("Starting up a HomeAgent...");
+		HomeAgentDescriptor myHomeAgent = new HomeAgentDescriptor();
+		myHomeAgent.setName("Home");
+		myHomeAgent.setMaxNegotiationTime(6);
+		myHomeAgent.setParamK(0.01);
+		myHomeAgent.setParamBeta(0.5);
+		test.CreateTradeAgent(myHomeAgent);
+		
+		//Create a agent of class ApplianceAgent 
+		say("Starting up a ApplianceAgent...");
+		ApplianceAgentDescriptor myApplianceAgent = new ApplianceAgentDescriptor();
+		myApplianceAgent.setName("Lights");
+		myApplianceAgent.setOwner(new AID(myHomeAgent.getName(), AID.ISLOCALNAME));
+		myApplianceAgent.setStartingDemand(new Demand(1));
+		test.CreateTradeAgent(myApplianceAgent);
+		
+		// Create a agent of class RetailerAgent 
+		say("Starting up a RetailerAgent...");
+		RetailerAgentDescriptor myRetailerAgent = new RetailerAgentDescriptor();
+		myRetailerAgent.setName("SimpleEnergy");
+		myRetailerAgent.setMaxNegotiationTime(6);
+		myRetailerAgent.setParamK(0.01);
+		myRetailerAgent.setParamBeta(0.5);
+		test.CreateTradeAgent(myRetailerAgent);
 		
 		return test;
-		//Starting the Simulation
-		
-//		// Create a agent of class HomeAgent 
-//		say("Starting up a HomeAgent...");
-//		HomeAgentDescriptor myHomeAgent = new HomeAgentDescriptor();
-//		myHomeAgent.setName("HA");
-//		myHomeAgent.setSchedulerAgent(schedulerAgent);
-//		AgentController homeAgentCtrl = mainCtrl.createNewAgent("HA", HomeAgent.class.getName(),new Object[] {schedulerName});
-//		currentSimulation.Add(homeAgentCtrl);
-//		
-//		// Create a agent of class ApplianceAgent 
-//		say("Starting up a ApplianceAgent...");
-//		AgentController ApplianceAgentCtrl = mainCtrl.createNewAgent("AA", ApplianceAgent.class.getName(),new Object[] {schedulerName});
-//		currentSimulation.Add(ApplianceAgentCtrl);
-//		
-//		// Create a agent of class RetailerAgent 
-//		say("Starting up a RetailerAgent...");
-//		AgentController RetailerAgentCtrl = mainCtrl.createNewAgent("RA", RetailerAgent.class.getName(),new Object[0]);
-//		
-//		currentSimulation.Add(RetailerAgentCtrl);
 	}
 	
 	public static void Save() {

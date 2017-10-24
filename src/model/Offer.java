@@ -16,19 +16,7 @@ public class Offer {
 	private Map<Strategy.Item,Double> offerValues;
 	private Demand demand;
 	private String owner="";
-	
-	
-	public String getOwner() {
-		return owner;
-	}
-
-
-	public void setOwner(String owner) {
-		this.owner = owner;
-	}
-	
-	
-
+    
 	public ACLMessage createACLMessage(int performative){
 		ACLMessage toReturn = new ACLMessage(performative);
 		toReturn.setContent(getContent());
@@ -109,11 +97,17 @@ public class Offer {
 		return demand;
 	}
 
-
 	public void setDemand(Demand demand) {
 		this.demand = demand;
 	}
-
+    
+    public String getOwner() {
+        return owner;
+    }
+    
+    public void setOwner(String owner) {
+        this.owner = owner;
+    }
 
 	public Map<Strategy.Item, Double> getOfferValues() {
 		return offerValues;
@@ -123,14 +117,9 @@ public class Offer {
 	{
 		return offerValues.get(offerItem);
 	}
-
-
+    
 	@Override
 	public String toString() {
 		return "Offer [offerValues=" + offerValues + ", owner=" + owner + "]";
 	}
-	
-	
-	
-
 }

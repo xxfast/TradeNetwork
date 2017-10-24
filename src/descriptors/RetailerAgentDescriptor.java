@@ -4,12 +4,9 @@ import annotations.Adjustable;
 
 @Adjustable(label = "An agent representing a single retailer")
 public class RetailerAgentDescriptor extends TradeAgentDescriptor {
-	@Adjustable(label = "Maximum Negotiation Time")
-	private double maxNegotiationTime;
-	@Adjustable(label = "Paramaeter K")
-	private double paramK;
-	@Adjustable(label = "Paramaeter Beta")
-	private double paramBeta;
+	@Adjustable private double maxNegotiationTime;
+	@Adjustable private double paramK;
+	@Adjustable private double paramBeta;
 	
 	public double getMaxNegotiationTime() {
 		return maxNegotiationTime;
@@ -36,11 +33,16 @@ public class RetailerAgentDescriptor extends TradeAgentDescriptor {
 	}
 
 	public String getDescription() {
-		return String.format("[RetailerAgent: "+super.getName() +",\n \t Param K: "+ getParamK() +",\n \t Param Beta: "+ getParamBeta()+",\n \t ]");
+		return String.format("[RetailerAgent: "+super.getName() +",\n \t Max Negotiation time: "+ getMaxNegotiationTime()+",\n \t Param K: "+ getParamK() +",\n \t Param Beta: "+ getParamBeta()+",\n \t ]");
+	}
+	
+	@Override
+	public String toString() {
+		return getDescription();
 	}
 	
 	public Object[] toArray() {
-		Object[] toReturn = new Object[]{getParamK(),getParamBeta()};
+		Object[] toReturn = new Object[]{getMaxNegotiationTime(),getParamK(),getParamBeta()};
 		return toReturn;
 	}
 	

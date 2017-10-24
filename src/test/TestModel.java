@@ -18,9 +18,6 @@ public class TestModel {
 		ret1.put(Item.PRICE, new Double(29));
 		ret1.put(Item.DURATION, new Double(20));
 		
-		
-	
-		
 		Demand dem = new Demand(5,(short)2,3);
 		
 		Offer o1= new Offer(ret1);

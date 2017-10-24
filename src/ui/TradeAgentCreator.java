@@ -3,6 +3,7 @@ package ui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.Graphics;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.lang.reflect.Field;
@@ -16,7 +17,9 @@ import java.util.Map;
 import java.util.Stack;
 
 import javax.swing.BorderFactory;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
@@ -26,6 +29,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import agent.ApplianceAgent;
 import annotations.Adjustable;
 import descriptors.TradeAgentDescriptor;
+import jade.core.AID;
 import jade.wrapper.StaleProxyException;
 import simulation.Simulation;
 
@@ -53,7 +57,20 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 
 	public int adjustableFields = 0;
 	
-	private List<JTextField> gFields = new ArrayList<JTextField>();
+	private List<JComponent> gFields = new ArrayList<JComponent>();
+	
+	private static Map<Class<?>, Class<?>> primitiveRegistry = RegisterPremitives();
+	
+	private static HashMap<Class<?>, Class<?>> RegisterPremitives()
+    {
+		HashMap<Class<?>, Class<?>> toReturn = new HashMap<Class<?>, Class<?>> ();
+		toReturn.put(int.class, Integer.class);
+		toReturn.put(double.class, Double.class);
+		toReturn.put(boolean.class, Boolean.class);
+		toReturn.put(short.class, Short.class);
+		toReturn.put(long.class, Long.class);
+        return toReturn;
+    }
 
 	public TradeAgentCreator(Class<?> type) {
 		this.type = type;
@@ -118,7 +135,7 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 		/* Create holders for later*/ 
 		List<JLabel> labels = new ArrayList<JLabel>();
 		List<String> inspectorLabel = new ArrayList<String>();
-		List<JTextField> inputs = new ArrayList<JTextField>();
+		List<JComponent> inputs = new ArrayList<JComponent>();
 		List<JPanel> inpectors = new ArrayList<JPanel>();
 		
 		for(Field f : type.getDeclaredFields()) {
@@ -148,18 +165,37 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 					String labelText = ((c.label().equals("")) ? UIUtilities.ProcessVariableName(f.getName()) : c.label());
 					JLabel label = new JLabel(labelText, JLabel.RIGHT);
 					labels.add(label);
-					JTextField input= new JTextField();
-					if(!f.isAnnotationPresent(Nullable.class)) {
-						try {
-							PropertyDescriptor pd = new PropertyDescriptor(f.getName(), type);
-							Method getter = pd.getReadMethod();
-							Object fd = getter.invoke(instance);
-							if(fd!=null) input.setText(fd.toString());
-						}catch (InvocationTargetException |  IntrospectionException | IllegalAccessException e) {
-							input.setBackground(Color.ORANGE);
-						} 
+					JComponent input;
+					/* Checks if the type refers to another Agent */
+					if(f.getType()!=AID.class) {
+						input = new JTextField();
+						if(!f.isAnnotationPresent(Nullable.class)) {
+							try {
+								PropertyDescriptor pd = new PropertyDescriptor(f.getName(), type);
+								Method getter = pd.getReadMethod();
+								Object fd = getter.invoke(instance);
+								if(fd!=null) ((JTextField)input).setText(fd.toString());
+							}catch (InvocationTargetException |  IntrospectionException | IllegalAccessException e) {
+								input.setBackground(Color.ORANGE);
+							} 
+						}
+						/*  all inputs will have the same length for now */
+						((JTextField)input).setColumns(10);
+						inputs.add(input);
+					}else {
+						/* if the type refers to another Agent, create a list of other agents */
+						input = new TrageAgentSelector(simulation.getAgents());
+						if(!f.isAnnotationPresent(Nullable.class)) {
+							try {
+								PropertyDescriptor pd = new PropertyDescriptor(f.getName(), type);
+								Method getter = pd.getReadMethod();
+								Object fd = getter.invoke(instance);
+							}catch (InvocationTargetException |  IntrospectionException | IllegalAccessException e) {
+								input.setBackground(Color.ORANGE);
+							} 
+						}
+						inputs.add(input);
 					}
-					if(!gFields.contains(input)) gFields.add(input);
 					/* add a focus listener to validate on focus lost */
 					input.addFocusListener(new FocusListener() {
 						@Override
@@ -170,10 +206,10 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 							AllowSave(AllValid(gFields));
 						}
 					});
+					if(!gFields.contains(input)) gFields.add(input);
+					
 
-					/*  all inputs will have the same length for now */
-					input.setColumns(10);
-					inputs.add(input);
+					
 				}
 			}
 		}
@@ -198,16 +234,19 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 	    return container;
 	}
 	
-	public boolean AllValid(List<JTextField> inputs) {
+	public boolean AllValid(List<JComponent> inputs) {
 		boolean isValid = true;
-		for(JTextField field : inputs) {
-			if(!field.getBackground().equals(Color.GREEN)){
-				isValid = false;
+		for(JComponent field : inputs) {
+			if(field instanceof JTextField) {
+				if(!field.getBackground().equals(Color.GREEN)){
+					isValid = false;
+				}
 			}
 		}
 		return isValid;
 	}
 	
+	/* Callback for save */
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{
@@ -220,21 +259,47 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 		}
 	}
 	
-	private void Validate(Object instance, Class<?> whatToValidate, Field toValidate, JTextField toShow) {
+	private void Validate(Object instance, Class<?> whatToValidate, Field toValidate, JComponent toShow) {
+		String content = "";
 		try {
 			Class<?> desiredType = toValidate.getType();
+			if(primitiveRegistry.containsKey(desiredType)) desiredType = primitiveRegistry.get(desiredType);
 			PropertyDescriptor pd = new PropertyDescriptor(toValidate.getName(), whatToValidate);
 			Method setter = pd.getWriteMethod();
-			String content = toShow.getText();
-			if(content.equals("") && !toValidate.isAnnotationPresent(Nullable.class)) {
+			if(toShow instanceof JTextField) {
+				content = ((JTextField)toShow).getText();
+			}else if(toShow instanceof TrageAgentSelector) {
+				AID value =  ((TrageAgentSelector)toShow).getSelectedAgent();
+				if(!value.equals(null)) {
+					Object fd = setter.invoke(instance, value);
+					return;
+				}
+			}
+			if((content.equals("") || content.equals(null)) && !toValidate.isAnnotationPresent(Nullable.class)) {
+				toShow.setToolTipText("This field is not nullable");
 				throw new NullPointerException(toValidate.getName() + " is not nullable");
 			}
 			Object fd = setter.invoke(instance, (desiredType!=String.class)?valueOf(desiredType, content ) : content);
 			toShow.setBackground(Color.GREEN);
+			toShow.setToolTipText(null);
 		}catch (InvocationTargetException |  IntrospectionException | IllegalAccessException e) {
+			toShow.setToolTipText(e.getCause().getMessage());
 			toShow.setBackground(Color.ORANGE);
-		} catch (IllegalArgumentException | NullPointerException e) {
+		} catch (IllegalArgumentException e) {
+			toShow.setToolTipText(content+ " is not a " + toValidate.getType().getSimpleName());
 			toShow.setBackground(Color.RED);
+		} catch (NullPointerException e) {
+			toShow.setToolTipText(e.getMessage());
+			toShow.setBackground(Color.RED);
+			if(toShow instanceof TrageAgentSelector) {
+				((TrageAgentSelector)toShow).setRenderer(new DefaultListCellRenderer() {
+				    @Override
+				    public void paint(Graphics g) {
+				        setBackground(Color.RED);
+				        super.paint(g);
+				    }
+				});
+			}
 		} 
 	}
 	
@@ -246,11 +311,9 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
         Exception cause = null;
         T ret = null;
         try {
-            ret = c.cast(
-                c.getDeclaredMethod("valueOf", String.class)
-                .invoke(null, arg)
+            ret = c.cast(c.getDeclaredMethod("valueOf", String.class).invoke(null, arg)
             );
-        } catch (NoSuchMethodException e) {
+        } catch (NoSuchMethodException e) { 
             cause = e;
         } catch (IllegalAccessException e) {
             cause = e;
