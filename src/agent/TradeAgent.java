@@ -24,6 +24,8 @@ public class TradeAgent extends Agent {
 	private TradeAgentDescriptor descriptor;
 	protected History myHistory;
 	
+	private boolean muted;
+	
 	protected void setup() {
 		say("Initialising!");
 		myHistory= new History(this.getLocalName());
@@ -95,7 +97,7 @@ public class TradeAgent extends Agent {
 	}
 	
 	public void say(String message){
-		System.out.println(this.getLocalName() +": "+ message);
+		if(!muted) System.out.println(this.getLocalName() +": "+ message);
 	}
 
 	public TradeAgentDescriptor getDescriptor() {
@@ -104,6 +106,14 @@ public class TradeAgent extends Agent {
 
 	public void setDescriptor(TradeAgentDescriptor descriptor) {
 		this.descriptor = descriptor;
+	}
+
+	public boolean isMuted() {
+		return muted;
+	}
+
+	public void setMuted(boolean muted) {
+		this.muted = muted;
 	}
 
 }

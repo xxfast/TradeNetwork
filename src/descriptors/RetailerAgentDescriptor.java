@@ -33,7 +33,7 @@ public class RetailerAgentDescriptor extends TradeAgentDescriptor {
 	}
 
 	public String getDescription() {
-		return String.format("[RetailerAgent: "+super.getName() +",\n \t Param K: "+ getParamK() +",\n \t Param Beta: "+ getParamBeta()+",\n \t ]");
+		return String.format("[RetailerAgent: "+super.getName() +",\n \t Max Negotiation time: "+ getMaxNegotiationTime()+",\n \t Param K: "+ getParamK() +",\n \t Param Beta: "+ getParamBeta()+",\n \t ]");
 	}
 	
 	@Override

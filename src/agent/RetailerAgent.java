@@ -191,14 +191,12 @@ public class RetailerAgent extends TradeAgent {
 		
 		RetailerCNRBehaviour(Agent a, ACLMessage initialMessage) {
 			super(a, initialMessage);
-			
 			setupNegotiator();
-			
 			//get demand from initial Message
 			Offer off = new Offer(initialMessage);
 			Demand demand=off.getDemand();
-			System.out.println("demand "+demand.getContent());
-//			add negotiator to daily thread
+			say("recieved demand "+demand.getContent());
+			//add negotiator to daily thread
 			dailyThread.addHourThread(demand.getTime(), initialMessage.getSender(), negotiator.getNegotiationThread());
 			//setup initial issue 
 			negotiator.setInitialIssue(off);

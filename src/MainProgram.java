@@ -31,7 +31,7 @@ import ui.SimulationInspecter;
  */
 public class MainProgram {
 	
-	public static final String DEFAULT_SAVE_LOCATION = "./data/test.tns";	
+	public static final String DEFAULT_SAVE_LOCATION = "/data/test.tns";	
 	
 	public static String consoleOutput = "";
 	
@@ -74,17 +74,14 @@ public class MainProgram {
 		test.setName("Test Simulation");
 		test.setDescription("This is a test save");
 		test.setContainer(container);
-		// Create a agent of class SchedulingAgent 
-		//SchedulingAgentDescriptor mySchedulingAgent = new SchedulingAgentDescriptor();
-		//mySchedulingAgent.setName("SA");
-		//test.CreateTradeAgent(mySchedulingAgent);
-		
-		//Starting the Simulation
 		
 		// Create a agent of class HomeAgent 
 		say("Starting up a HomeAgent...");
 		HomeAgentDescriptor myHomeAgent = new HomeAgentDescriptor();
 		myHomeAgent.setName("Home");
+		myHomeAgent.setMaxNegotiationTime(6);
+		myHomeAgent.setParamK(0.01);
+		myHomeAgent.setParamBeta(0.5);
 		test.CreateTradeAgent(myHomeAgent);
 		
 		//Create a agent of class ApplianceAgent 
@@ -99,6 +96,9 @@ public class MainProgram {
 		say("Starting up a RetailerAgent...");
 		RetailerAgentDescriptor myRetailerAgent = new RetailerAgentDescriptor();
 		myRetailerAgent.setName("SimpleEnergy");
+		myRetailerAgent.setMaxNegotiationTime(6);
+		myRetailerAgent.setParamK(0.01);
+		myRetailerAgent.setParamBeta(0.5);
 		test.CreateTradeAgent(myRetailerAgent);
 		
 		return test;

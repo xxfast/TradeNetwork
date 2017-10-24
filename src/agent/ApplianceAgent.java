@@ -22,12 +22,15 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 	private AID home;
 	private Demand startDemand; 
 	
+	
+	
 	/**
 	 *  Sets up the Appliance Agent
 	 *  Arguments provided, are assumed to follow the same order as defined in the ApplianceAgentDescriptor 
 	 */
 	protected void setup() {
 		super.setup();
+		setMuted(true);
 		Object[] args = getArguments();
 		setHome((AID)args[0]);
 		setStartDemand((Demand) args[1]);

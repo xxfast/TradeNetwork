@@ -5,7 +5,7 @@ import jade.core.AID;
 
 @Adjustable(label = "An agent representing a single home")
 public class HomeAgentDescriptor extends TradeAgentDescriptor {
-	@Adjustable private double maxNegotiationTime;
+	@Adjustable private double maxNegotiationTime; // must be non-zero
 	@Adjustable private double paramK;
 	@Adjustable private double paramBeta;
 	

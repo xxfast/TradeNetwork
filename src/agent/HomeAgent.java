@@ -70,7 +70,7 @@ public class HomeAgent extends TradeAgent {
 
 	protected void setup() {
 		super.setup();
-		agentHour = 0;
+		setAgentHour(0);
 		rand = new Random();
 		dailyThread = new AgentDailyNegotiationThread();
 
@@ -125,7 +125,7 @@ public class HomeAgent extends TradeAgent {
 	}
 
 	public void goNextHour() {
-		++agentHour;
+		setAgentHour(getAgentHour() + 1);
 	}
 
 	protected void setupHomeNegotiators(Integer activeAgents) {
@@ -184,6 +184,15 @@ public class HomeAgent extends TradeAgent {
 
 	}
 	
+	private int getAgentHour() {
+		return agentHour;
+	}
+
+
+	private void setAgentHour(int agentHour) {
+		this.agentHour = agentHour;
+	}
+
 	private class DemandListeningBehaviour extends AchieveREResponder {
 
 		public DemandListeningBehaviour(Agent a) {
@@ -249,14 +258,15 @@ public class HomeAgent extends TradeAgent {
 			setupHomeNegotiators(activeAgents);
 			// add negotiations to dailyNegotiaition threads
 			for (Map.Entry<AID, HomeAgentNegotiator> entry : negotiators.entrySet()) {
-				dailyThread.addHourThread(agentHour, entry.getKey(), entry.getValue().getNegotiationThread());
+				dailyThread.addHourThread(getAgentHour(), entry.getKey(), entry.getValue().getNegotiationThread());
 			}
 		}
 
 		@Override
 		protected Vector prepareCfps(ACLMessage msg) {
 			// retrieve demand
-			Demand demandMsg = calculateDemandForHour((short) 0);
+			short value = (short) getAgentHour();
+			Demand demandMsg = calculateDemandForHour(new Short(value));
 			say("Gonna make call for proposal for " + demandMsg.getTime() + "h which was " + demandMsg.getUnits()
 					+ " units");
 
@@ -279,7 +289,7 @@ public class HomeAgent extends TradeAgent {
 					off.setOwner(entry.getKey().getLocalName());
 					off.setDemand(schedDemand);
 					entry.getValue().setInitialIssue(off);
-					System.out.println("intial issue for " + entry.getKey().getLocalName() + " issue "
+					say("intial issue for " + entry.getKey().getLocalName() + " issue "
 							+ entry.getValue().getItemIssue().get(Item.PRICE));
 				}
 
@@ -437,8 +447,8 @@ public class HomeAgent extends TradeAgent {
 		protected void handleAllResultNotifications(Vector resultNotifications) {
 			for (Object notification : resultNotifications) {
 				ACLMessage msg = (ACLMessage) notification;
-				System.out.println("Inform recieved from " + msg.getSender().getLocalName());
-				System.out.println("Msg is " + msg.getContent());
+				say("Inform recieved from " + msg.getSender().getLocalName());
+				say("Msg is " + msg.getContent());
 				// NegotiationThread t =
 				// negotiators.get(msg.getSender()).getNegotiationThread();
 				// say(t.toString());
@@ -486,7 +496,7 @@ public class HomeAgent extends TradeAgent {
 				}
 
 			}
-			System.out.println("Accepting " + bestproposal.getSender().getLocalName() + " since best of all offers");
+			say("Accepting " + getfirstReciever(bestproposal).getLocalName() + " since best of all offers");
 			// accept best proposal and reject rest
 			// clear acceptances
 			acceptances.clear();
@@ -504,7 +514,7 @@ public class HomeAgent extends TradeAgent {
 
 		@Override
 		public int onEnd() {
-			// System.out.println(dailyThread.toString());
+			// say(dailyThread.toString());
 			// save history to file
 			myHistory.saveTransactionHistory();
 			goNextHour();
