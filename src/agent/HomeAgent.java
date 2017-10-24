@@ -105,8 +105,9 @@ public class HomeAgent extends TradeAgent {
 		negotiators = new HashMap<>();
 
 		/*
-		 * Setting up 1) start listening to demands form home's appliances 2) start
-		 * negotiating with the retailers
+		 * Setting up 
+		 * 1) start listening to demands form home's appliances
+		 * 2) start negotiating with the retailers
 		 */
 
 		addBehaviour(new DemandListeningBehaviour(this));
