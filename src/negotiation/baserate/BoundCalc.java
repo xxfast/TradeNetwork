@@ -1,6 +1,7 @@
 package negotiation.baserate;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -11,7 +12,7 @@ import java.util.*;
 
 public abstract class BoundCalc {
 	
-	public final static String DEFAULT_LOAD_LOCATION = System.getProperty("user.dir") + "/resources/data/" ; 
+	public final static String DEFAULT_LOAD_LOCATION = System.getProperty("user.dir") + File.separator +"resources"+ File.separator +"data" + File.separator; 
 		
 	private double[] stdRate = new double[24]; 
 	protected History hist;
