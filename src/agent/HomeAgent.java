@@ -24,6 +24,7 @@ import model.AgentDailyNegotiationThread;
 import model.Demand;
 import model.Offer;
 import model.Schedule;
+import model.Time;
 import negotiation.Strategy;
 import negotiation.Strategy.Item;
 import negotiation.baserate.HomeBound;
@@ -46,7 +47,6 @@ public class HomeAgent extends TradeAgent {
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
 	private Random rand;
 	private Map<AID, HomeAgentNegotiator> negotiators;
-	private AgentDailyNegotiationThread dailyThread;
 
 	private ArrayList<Demand> messages = new ArrayList<>();
 	private List<AID> retailers;
@@ -67,12 +67,15 @@ public class HomeAgent extends TradeAgent {
 	private int behaviourRange = 2;
 
 	private Schedule schedule = new Schedule();
+	
+	private NegotiatingBehaviour negotiation; 
+	private TimeKeepingBehavior time; 
 
 	protected void setup() {
+		
 		super.setup();
 		setAgentHour(0);
 		rand = new Random();
-		dailyThread = new AgentDailyNegotiationThread();
 
 		Object[] args = getArguments();
 		// retrieve max time from args
@@ -91,12 +94,18 @@ public class HomeAgent extends TradeAgent {
 		negotiators = new HashMap<>();
 
 		/*
-		 * Setting up 1) start listening to demands form home's appliances 2) start
-		 * negotiating with the retailers
+		 * Setting up 
+		 * 1) start listening to demands form home's appliances 
+		 * 2) start negotiating with the retailers
+		 * 3) start keeping time
+		 * 4) start telling time
 		 */
-
+		negotiation = new NegotiatingBehaviour(this);
+		time = new TimeKeepingBehavior(this);
 		addBehaviour(new DemandListeningBehaviour(this));
-		addBehaviour(new NegotiatingBehaviour(this));
+		addBehaviour(negotiation);
+		addBehaviour(time);
+		addBehaviour(new TimeTellingBehaviour(this));
 	}
 
 
@@ -125,7 +134,10 @@ public class HomeAgent extends TradeAgent {
 	}
 
 	public void goNextHour() {
-		setAgentHour(getAgentHour() + 1);
+		if(getAgentHour()==23)
+			setAgentHour(0);
+		else
+			setAgentHour(getAgentHour()+1);
 	}
 
 	protected void setupHomeNegotiators(Integer activeAgents) {
@@ -192,7 +204,60 @@ public class HomeAgent extends TradeAgent {
 	private void setAgentHour(int agentHour) {
 		this.agentHour = agentHour;
 	}
+	
+	public TimeKeepingBehavior getTime() {
+		return time;
+	}
 
+
+	public void setTime(TimeKeepingBehavior time) {
+		this.time = time;
+	}
+
+	public class TimeKeepingBehavior extends TickerBehaviour {
+		
+		private long localTime = 0;
+		
+		public TimeKeepingBehavior(Agent a) {
+			super(a, Simulation.Time/60);
+		}
+
+		public void setLocalTime(long localTime) {
+			this.localTime = localTime;
+		}
+
+		@Override
+		protected void onTick() {
+			localTime++;
+		}
+
+		public Time getTime() {
+			return new Time(localTime);
+		}
+
+	}
+	
+	private class TimeTellingBehaviour extends AchieveREResponder {
+
+		public TimeTellingBehaviour(Agent a) {
+			super(a,  MessageTemplate.and(MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
+					MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
+		}
+		
+		protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException {
+			say("OK I'll tell you time");
+			ACLMessage agree = request.createReply();
+			agree.setPerformative(ACLMessage.AGREE);
+			return agree;
+		}
+		
+		protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {
+				ACLMessage toRespond = time.getTime().toACL(ACLMessage.INFORM);
+				return toRespond;
+		}
+		
+	}
+	
 	private class DemandListeningBehaviour extends AchieveREResponder {
 
 		public DemandListeningBehaviour(Agent a) {
@@ -230,14 +295,23 @@ public class HomeAgent extends TradeAgent {
 
 	private class NegotiatingBehaviour extends TickerBehaviour {
 		
+		private AgentDailyNegotiationThread dailyThread = new AgentDailyNegotiationThread ();
 		
 		public NegotiatingBehaviour(Agent a) {
-			super(a, Simulation.Time);
+			super(a, Simulation.Time); 
 		}
 
 		@Override
 		public void onTick() {
 			addBehaviour(new RequestQuote(myAgent, null, retailers));
+		}
+
+		public AgentDailyNegotiationThread getDailyThread() {
+			return dailyThread;
+		}
+
+		public void setDailyThread(AgentDailyNegotiationThread dailyThread) {
+			this.dailyThread = dailyThread;
 		}
 	}
 
@@ -260,7 +334,7 @@ public class HomeAgent extends TradeAgent {
 			setupHomeNegotiators(activeAgents);
 			// add negotiations to dailyNegotiaition threads
 			for (Map.Entry<AID, HomeAgentNegotiator> entry : negotiators.entrySet()) {
-				dailyThread.addHourThread(getAgentHour(), entry.getKey(), entry.getValue().getNegotiationThread());
+				HomeAgent.this.negotiation.getDailyThread().addHourThread(getAgentHour(), entry.getKey(), entry.getValue().getNegotiationThread());
 			}
 		}
 
@@ -516,7 +590,7 @@ public class HomeAgent extends TradeAgent {
 
 		@Override
 		public int onEnd() {
-			// say(dailyThread.toString());
+			say(negotiation.dailyThread.toString());
 			// save history to file
 			myHistory.saveTransactionHistory();
 			goNextHour();

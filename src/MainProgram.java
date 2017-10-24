@@ -96,6 +96,7 @@ public class MainProgram {
 		say("Starting up a RetailerAgent...");
 		RetailerAgentDescriptor myRetailerAgent = new RetailerAgentDescriptor();
 		myRetailerAgent.setName("SimpleEnergy");
+
 		myRetailerAgent.setMaxNegotiationTime(6);
 		myRetailerAgent.setParamK(0.01);
 		myRetailerAgent.setParamBeta(0.5);

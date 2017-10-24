@@ -13,6 +13,7 @@ public class Offer {
 	private final String SPLITTER="/";
 	private final String DELIMETER=";";
 	private final String SEPERATOR="-";
+	
 	private Map<Strategy.Item,Double> offerValues;
 	private Demand demand;
 	private String owner="";
