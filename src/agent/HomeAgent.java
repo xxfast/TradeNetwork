@@ -229,6 +229,8 @@ public class HomeAgent extends TradeAgent {
 	}
 
 	private class NegotiatingBehaviour extends TickerBehaviour {
+		
+		
 		public NegotiatingBehaviour(Agent a) {
 			super(a, Simulation.Time);
 		}
