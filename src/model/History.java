@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -44,7 +45,7 @@ public class History {
 	}
 
 	private void loadTransactionHistory() {
-		String dir = BoundCalc.DEFAULT_LOAD_LOCATION + "history/";
+		String dir = BoundCalc.DEFAULT_LOAD_LOCATION + "history" + File.separator;
 		dir += this.id + ".txt";
 
 		String line = null;
