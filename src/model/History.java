@@ -21,22 +21,27 @@ public class History {
 	
 	public History(String id) {
 		this.id = id;
+		loadTransactionHistory();
 	}
 	
-	public void addTransaction (String client, int units, double rate) {
+	public void addTransaction (String client, int units, double rate,int rounds) {
 				
 		if (transactionHistory.containsKey(client)) {
-			transactionHistory.get(client).getTransactions().add(new Transaction(units, rate));
+			transactionHistory.get(client).getTransactions().add(new Transaction(units, rate,rounds));
 			
 		} else {
 			TransactionList TL = new TransactionList();
-			TL.getTransactions().add(new Transaction(units, rate));
+			TL.getTransactions().add(new Transaction(units, rate,rounds));
 			transactionHistory.put(client, TL);
 			
 		}
 	}
+	public void addTransaction(String client,Transaction transaction)
+	{
+		this.addTransaction(client, transaction.getUnits(), transaction.getRate(), transaction.getRounds());
+	}
 	
-	public void loadTransactionHistory () {
+	private void loadTransactionHistory () {
     	String dir = "src\\history\\";
     	dir += this.id + ".txt";
 		
@@ -48,7 +53,7 @@ public class History {
             BufferedReader bufferedReader = new BufferedReader(reader);
             
             int clientNum = Integer.parseInt(bufferedReader.readLine());
-            System.out.println("CN: " + clientNum);
+//            System.out.println("CN: " + clientNum);
 
             for (int i = 0; i < clientNum; i++) {
             	
@@ -57,7 +62,7 @@ public class History {
                 
                 for (int j = 0; j < transactionNum; j++) {
                 	String[] transaction = bufferedReader.readLine().split(",");   	
-                	this.addTransaction(client, Integer.parseInt(transaction[0]), Double.parseDouble(transaction[1]));
+                	this.addTransaction(client, Integer.parseInt(transaction[0]), Double.parseDouble(transaction[1]),Integer.parseInt(transaction[2]));
                 }
             }
                         
@@ -74,12 +79,14 @@ public class History {
 	
 	public void saveTransactionHistory () {
 		
+		
     	String dir = "src\\history\\";
     	dir += this.id + ".txt"; 	
     	
         try {
         	
             FileWriter fileWriter = new FileWriter(dir);
+            
             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
             
             String size = Integer.toString(transactionHistory.size());
@@ -98,7 +105,7 @@ public class History {
                 	
                 for (Transaction t: entry.getValue().getTransactions()) {
                 	
-                    bufferedWriter.write(String.format("%d,%f", t.getUnits(), t.getRate()));
+                    bufferedWriter.write(String.format("%d,%f,%d", t.getUnits(), t.getRate(),t.getRounds()));
                     bufferedWriter.newLine();
                 }
             }
@@ -131,5 +138,9 @@ public class History {
 		} else {
 			return 0;
 		}
+	}
+
+	public Map<String, TransactionList> getTransactionHistory() {
+		return transactionHistory;
 	}
 }

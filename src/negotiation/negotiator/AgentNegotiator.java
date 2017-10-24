@@ -17,6 +17,7 @@ import negotiation.tactic.BehaviourDependentTactic;
 import negotiation.tactic.Tactic;
 
 public abstract class AgentNegotiator {
+	public static final double REJECTRATE=-1;
 	//NOTES
 			//time is considered as number of iterations in a negotiation
 			//Negotiation
@@ -140,11 +141,11 @@ public abstract class AgentNegotiator {
 				{
 					//check if the offer is the same as my previous offer- this has to be done due to protocol limitations
 					// the retailer can only accept a proposal by proposing the last counter offer made
-					if(evalScore(offer)==evalScore(getLastOffer()))
-					{
-						//retailer has accepted counter offer, so ACCEPT this offer
-						return OfferStatus.ACCEPT;
-					}
+//					if(evalScore(offer)==evalScore(getLastOffer()))
+//					{
+//						//retailer has accepted counter offer, so ACCEPT this offer
+//						return OfferStatus.ACCEPT;
+//					}
 					//if it has then reject all offers, negotiation failed in time
 					
 					return OfferStatus.REJECT;
