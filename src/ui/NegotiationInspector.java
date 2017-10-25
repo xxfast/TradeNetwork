@@ -12,7 +12,7 @@ public class NegotiationInspector extends ApplicationFrame {
       super(applicationTitle);
       JFreeChart lineChart = ChartFactory.createLineChart(
          chartTitle,
-         "Years","Number of Schools",
+         "Iteration","Price",
          createDataset(),
          PlotOrientation.VERTICAL,
          true,true,false);
@@ -24,19 +24,19 @@ public class NegotiationInspector extends ApplicationFrame {
 
    private DefaultCategoryDataset createDataset( ) {
       DefaultCategoryDataset dataset = new DefaultCategoryDataset( );
-      dataset.addValue( 15 , "schools" , "1970" );
-      dataset.addValue( 30 , "schools" , "1980" );
-      dataset.addValue( 60 , "schools" ,  "1990" );
-      dataset.addValue( 120 , "schools" , "2000" );
-      dataset.addValue( 240 , "schools" , "2010" );
-      dataset.addValue( 300 , "schools" , "2014" );
+      dataset.addValue( 15 , "Price" , "1970" );
+      dataset.addValue( 30 , "Price" , "1980" );
+      dataset.addValue( 60 , "Price" ,  "1990" );
+      dataset.addValue( 120 , "Price" , "2000" );
+      dataset.addValue( 240 , "Price" , "2010" );
+      dataset.addValue( 300 , "Price" , "2014" );
       return dataset;
    }
    
    public static void main( String[ ] args ) {
       NegotiationInspector chart = new NegotiationInspector(
-         "School Vs Years" ,
-         "Numer of Schools vs years");
+         "Price Vs Iteration" ,
+         "Numer of Iterations");
 
       chart.pack( );
       RefineryUtilities.centerFrameOnScreen( chart );
