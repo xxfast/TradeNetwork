@@ -3,6 +3,8 @@ package agent;
 import java.util.Iterator;
 
 import descriptors.TradeAgentDescriptor;
+import interfaces.Object2HomeAgentInterface;
+import interfaces.Object2TradeAgentInterface;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.AMSService;
@@ -19,12 +21,16 @@ import negotiation.Strategy.Item;
 import negotiation.baserate.Transaction;
 import negotiation.negotiator.AgentNegotiator;
 
-public class TradeAgent extends Agent {
+public class TradeAgent extends Agent implements Object2TradeAgentInterface{
 	
 	private TradeAgentDescriptor descriptor;
 	protected History myHistory;
 	
 	private boolean muted;
+	
+	public TradeAgent() {
+		this.registerO2AInterface(Object2TradeAgentInterface.class, this);
+	}
 	
 	protected void setup() {
 		say("Initialising!");

@@ -24,6 +24,10 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 	private AID home;
 	private Demand startDemand; 
 	
+	public ApplianceAgent() {
+		this.registerO2AInterface(Object2ApplianceAgentInterface.class, this);
+	}
+	
 	/**
 	 *  Sets up the Appliance Agent
 	 *  Arguments provided, are assumed to follow the same order as defined in the ApplianceAgentDescriptor 

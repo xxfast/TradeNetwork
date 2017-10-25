@@ -1,45 +1,62 @@
-package ui;import org.jfree.chart.ChartPanel;
+package ui;
+
+import org.jfree.chart.ChartPanel;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.swing.JFrame;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RefineryUtilities;
+
+import jade.core.AID;
+import model.AgentDailyNegotiationThread;
+import model.AgentDailyNegotiationThread.Party;
+import model.Offer;
+import negotiation.NegotiationThread;
+import negotiation.Strategy;
+
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
 
 public class NegotiationInspector extends ApplicationFrame {
+	
+	private AgentDailyNegotiationThread toDisplay;
 
-   public NegotiationInspector( String applicationTitle , String chartTitle ) {
-      super(applicationTitle);
-      JFreeChart lineChart = ChartFactory.createLineChart(
-         chartTitle,
-         "Iteration","Price",
-         createDataset(),
-         PlotOrientation.VERTICAL,
-         true,true,false);
-         
-      ChartPanel chartPanel = new ChartPanel( lineChart );
-      chartPanel.setPreferredSize( new java.awt.Dimension( 560 , 367 ) );
-      setContentPane( chartPanel );
-   }
+	public NegotiationInspector(String applicationTitle, String chartTitle, AgentDailyNegotiationThread toDisplay) {
+		super(applicationTitle);
+		setToDisplay(toDisplay);
+		JFreeChart lineChart = ChartFactory.createLineChart(chartTitle, "Iteration", "Price", createDataset(),
+				PlotOrientation.VERTICAL, true, true, false);
 
-   private DefaultCategoryDataset createDataset( ) {
-      DefaultCategoryDataset dataset = new DefaultCategoryDataset( );
-      dataset.addValue( 15 , "Price" , "1970" );
-      dataset.addValue( 30 , "Price" , "1980" );
-      dataset.addValue( 60 , "Price" ,  "1990" );
-      dataset.addValue( 120 , "Price" , "2000" );
-      dataset.addValue( 240 , "Price" , "2010" );
-      dataset.addValue( 300 , "Price" , "2014" );
-      return dataset;
-   }
-   
-   public static void main( String[ ] args ) {
-      NegotiationInspector chart = new NegotiationInspector(
-         "Price Vs Iteration" ,
-         "Numer of Iterations");
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-      chart.pack( );
-      RefineryUtilities.centerFrameOnScreen( chart );
-      chart.setVisible( true );
-   }
+		ChartPanel chartPanel = new ChartPanel(lineChart);
+		chartPanel.setPreferredSize(new java.awt.Dimension(560, 367));
+		setContentPane(chartPanel);
+	}
+
+	private DefaultCategoryDataset createDataset() {
+		DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+		Map<AID, Map<Party,List<Offer>>> negotiations = getToDisplay().getNegotiationsForHour(0);
+		for(AID agent : negotiations.keySet()) {
+			for(Party p : negotiations.get(agent).keySet()) {
+				for(Offer o : negotiations.get(agent).get(p)) {
+					dataset.addValue(o.getOfferValue(Strategy.Item.PRICE), (p==Party.SELF)?"Me":agent.getLocalName(), negotiations.get(agent).get(p).indexOf(o)+"");
+				}
+			}
+		}
+		return dataset;
+	}
+
+	public AgentDailyNegotiationThread getToDisplay() {
+		return toDisplay;
+	}
+
+	public void setToDisplay(AgentDailyNegotiationThread agentDailyNegotiationThread) {
+		this.toDisplay = agentDailyNegotiationThread;
+	}
 }

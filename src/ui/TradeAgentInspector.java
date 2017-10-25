@@ -38,7 +38,6 @@ public class TradeAgentInspector extends JPanel {
 	public TradeAgentInspector() {
 		setBorder(new TitledBorder(null, "Agent Inspector", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-		setPreferredSize(new Dimension(250,100));
 		Clear();
 		add(shown);
 	}
@@ -66,8 +65,7 @@ public class TradeAgentInspector extends JPanel {
 		shown = new JTable(data,colomns);
 		shown.setBackground(this.getBackground());
 		add(shown);
-		shown.setPreferredSize(new Dimension(230,30 * (data.size()-1)));
-		this.setPreferredSize(new Dimension(240, 30 * data.size() ));
+		shown.setPreferredSize(shown.getPreferredSize());
 		this.revalidate();
 		this.repaint();
 	}
@@ -76,8 +74,8 @@ public class TradeAgentInspector extends JPanel {
 		for(Field f : type.getDeclaredFields()) {
 			/* Create the Array*/
 			Vector<Object> keyValues = new Vector<Object>();
-			data.addElement(keyValues);
 			if(f.isAnnotationPresent(Adjustable.class)) {
+				data.addElement(keyValues);
 				/* Get the type of the adjustable*/
 				Class<?> innerType = f.getType();
 				keyValues.add(f.getName());
@@ -112,9 +110,9 @@ public class TradeAgentInspector extends JPanel {
 	public void Clear() {
 		removeAll();
 		data = new Vector<Vector<Object>>();
-		JTextArea inspectText = new JTextArea("Please select an agent to inspect it's properties");
+		JTextArea inspectText = new JTextArea("No Agents selected");
 		inspectText.setBackground(this.getBackground());
-		inspectText.setBounds(0, 0, 230, 500);
+		inspectText.setPreferredSize(inspectText.getPreferredSize());
 		inspectText.setColumns(5);
 		inspectText.setWrapStyleWord(true);
 		inspectText.setLineWrap(true);

@@ -214,10 +214,13 @@ public class SimulationInspecter {
 				}
 			}
 		});
-		
 		sidebar.add(simulationCtrl);
+		
 		TradeAgentInspector inspector = new TradeAgentInspector();
 		sidebar.add(inspector);
+		
+		TradeAgentControls controller = new TradeAgentControls();
+		sidebar.add(controller);
 		
 		tree.addTreeSelectionListener(new TreeSelectionListener() {
 		    public void valueChanged(TreeSelectionEvent e) {
@@ -226,8 +229,11 @@ public class SimulationInspecter {
 			    if(node.getAgent()!=null) {
 			    		inspector.setSelectedAgent(node);
 			    		inspector.Update();
+			    		controller.setToControl(node.getAgent());
+			    		controller.Update();
 			    }else {
 			    		inspector.Clear();
+			    		controller.Clear();
 			    }
 		    }
 		});

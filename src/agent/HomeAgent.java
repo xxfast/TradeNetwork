@@ -72,6 +72,10 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 	
 	private NegotiatingBehaviour negotiation; 
 	private TimeKeepingBehavior time; 
+	
+	public HomeAgent() {
+		this.registerO2AInterface(Object2HomeAgentInterface.class, this);
+	}
 
 	protected void setup() {
 		
