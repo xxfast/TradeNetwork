@@ -79,7 +79,7 @@ public class History {
 	}
 
 	public void saveTransactionHistory() {
-		String dir = BoundCalc.DEFAULT_LOAD_LOCATION + "history/";
+		String dir = BoundCalc.DEFAULT_LOAD_LOCATION + "history"+File.separator;
 		dir += this.id + ".txt";
 		try {
 			FileWriter fileWriter = new FileWriter(dir);
