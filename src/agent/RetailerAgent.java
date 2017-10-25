@@ -132,7 +132,6 @@ public class RetailerAgent extends TradeAgent {
 	public void setupNegotiator()
 	{
 				
-		
 		//create TWfunction
 		TimeWeightedFunction poly = new TimeWeightedPolynomial(this.ParamK, this.ParamBeta, this.maxNegotiationTime);
 		//create RAFunction- for resource dep tactic
@@ -182,12 +181,9 @@ public class RetailerAgent extends TradeAgent {
 		this.negotiator= new RetailerAgentNegotiator( this.maxNegotiationTime, strats, scoreWeights,retailcalc);
 	}
 	
-
-	
 	private class RetailerCNRBehaviour extends SSIteratedContractNetResponder{
 		private EnergyUnit currentUnitRequest = null;		
 
-		
 		
 		RetailerCNRBehaviour(Agent a, ACLMessage initialMessage) {
 			super(a, initialMessage);

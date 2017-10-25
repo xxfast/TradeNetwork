@@ -8,6 +8,8 @@ import java.util.Random;
 import java.util.Vector;
 
 import annotations.Adjustable;
+import interfaces.Object2HomeAgentInterface;
+import interfaces.Object2TradeAgentInterface;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
@@ -41,7 +43,7 @@ import negotiation.tactic.timeFunction.TimeWeightedFunction;
 import negotiation.tactic.timeFunction.TimeWeightedPolynomial;
 import simulation.Simulation;
 
-public class HomeAgent extends TradeAgent {
+public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 	private final boolean INC = false;// customer mentality
 
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
@@ -103,7 +105,7 @@ public class HomeAgent extends TradeAgent {
 		negotiation = new NegotiatingBehaviour(this);
 		time = new TimeKeepingBehavior(this);
 		addBehaviour(new DemandListeningBehaviour(this));
-		addBehaviour(negotiation);
+		addBehaviour(getNegotiation());
 		addBehaviour(time);
 		addBehaviour(new TimeTellingBehaviour(this));
 	}
@@ -214,6 +216,10 @@ public class HomeAgent extends TradeAgent {
 		this.time = time;
 	}
 
+	public NegotiatingBehaviour getNegotiation() {
+		return negotiation;
+	}
+
 	public class TimeKeepingBehavior extends TickerBehaviour {
 		
 		private long localTime = 0;
@@ -293,7 +299,7 @@ public class HomeAgent extends TradeAgent {
 
 	}
 
-	private class NegotiatingBehaviour extends TickerBehaviour {
+	public class NegotiatingBehaviour extends TickerBehaviour {
 		
 		private AgentDailyNegotiationThread dailyThread = new AgentDailyNegotiationThread ();
 		
@@ -334,7 +340,7 @@ public class HomeAgent extends TradeAgent {
 			setupHomeNegotiators(activeAgents);
 			// add negotiations to dailyNegotiaition threads
 			for (Map.Entry<AID, HomeAgentNegotiator> entry : negotiators.entrySet()) {
-				HomeAgent.this.negotiation.getDailyThread().addHourThread(getAgentHour(), entry.getKey(), entry.getValue().getNegotiationThread());
+				HomeAgent.this.getNegotiation().getDailyThread().addHourThread(getAgentHour(), entry.getKey(), entry.getValue().getNegotiationThread());
 			}
 		}
 
@@ -590,7 +596,7 @@ public class HomeAgent extends TradeAgent {
 
 		@Override
 		public int onEnd() {
-			say(negotiation.dailyThread.toString());
+			say(getNegotiation().dailyThread.toString());
 			// save history to file
 			myHistory.saveTransactionHistory();
 			goNextHour();
