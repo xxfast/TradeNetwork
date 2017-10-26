@@ -29,6 +29,6 @@ public class Time {
 	}
 	
 	public short getHourOfDay() {
-		return (short)((this.time*60)%23);	
+		return (short)((this.time)%23);	
 	}
 }

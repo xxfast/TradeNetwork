@@ -94,16 +94,10 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 			this.ParamBeta=(Double)args[2];
 		else
 			this.ParamBeta=Double.valueOf((String) args[2]);	
-		retailers = new ArrayList<>();
-
-		// get agents with retailer service
-		DFAgentDescription[] agents = getServiceAgents("RetailerAgent");
-		for (DFAgentDescription agent : agents) {
-			retailers.add(agent.getName());
-		}
+		
 
 		negotiators = new HashMap<>();
-
+		discoverRetailers();
 		/*
 		 * Setting up 
 		 * 1) start listening to demands form home's appliances 
@@ -119,6 +113,16 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 		addBehaviour(new TimeTellingBehaviour(this));
 	}
 
+	public void discoverRetailers() {
+		say("Looking for retailers");
+		retailers = new ArrayList<>();
+		// get agents with retailer service
+		DFAgentDescription[] agents = getServiceAgents("RetailerAgent");
+		for (DFAgentDescription agent : agents) {
+			retailers.add(agent.getName());
+		}
+		say("retailers found = " +  retailers.size());
+	}
 
 	public Schedule getSchedule() {
 		return schedule;

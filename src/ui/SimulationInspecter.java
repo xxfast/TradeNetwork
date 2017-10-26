@@ -31,6 +31,7 @@ import javax.swing.tree.TreeSelectionModel;
 
 import controllers.TradeAgentController;
 import descriptors.ApplianceAgentDescriptor;
+import descriptors.HeaterAgentDescriptor;
 import descriptors.HomeAgentDescriptor;
 import descriptors.RetailerAgentDescriptor;
 import jade.wrapper.StaleProxyException;
@@ -88,7 +89,11 @@ public class SimulationInspecter {
 		JMenu mnCreate = new JMenu("Create");
 		mnEdit.add(mnCreate);
 		
-		JMenuItem mntmApplianceAgent = new JMenuItem("Appliance Agent");
+		JMenu mnAppliances = new JMenu("Appliances");
+		mnCreate.add(mnAppliances);
+		
+		JMenuItem mntmApplianceAgent = new JMenuItem("Generic Appliance Agent");
+		mnAppliances.add(mntmApplianceAgent);
 		mntmApplianceAgent.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -111,7 +116,31 @@ public class SimulationInspecter {
 				dialog.setVisible(true);
 			}
 		});
-		mnCreate.add(mntmApplianceAgent);
+		
+		JMenuItem mntmHeaterApplianceAgent = new JMenuItem("Heater Appliance Agent");
+		mnAppliances.add(mntmHeaterApplianceAgent);
+		mntmHeaterApplianceAgent.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				TradeAgentCreator dialog = null;
+				try {
+					dialog = new TradeAgentCreator(HeaterAgentDescriptor.class);
+					dialog.setSimulation(toInspect);
+					dialog.Build();
+					dialog.addWindowListener(new WindowAdapter() {
+					    @Override
+					    public void windowClosed(WindowEvent e) {
+					    		UpdateModel();
+					    }
+					});
+				} catch (InstantiationException e1) {
+					e1.printStackTrace();
+				} catch (IllegalAccessException e1) {
+					e1.printStackTrace();
+				}
+				dialog.setVisible(true);
+			}
+		});
 		
 		JMenuItem mntmHomeAgent = new JMenuItem("Home Agent");
 		mntmHomeAgent.addActionListener(new ActionListener() {

@@ -35,4 +35,15 @@ public class HomeAgentController extends TradeAgentController {
 			e.printStackTrace();
 		}
 	}
+	
+	public void DiscoverRetailers() {
+		try {
+			AgentController ac = this.getInnerController();
+			Object2HomeAgentInterface O2AInterface = ac.getO2AInterface(Object2HomeAgentInterface.class);
+			O2AInterface.discoverRetailers();
+		} catch (StaleProxyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }

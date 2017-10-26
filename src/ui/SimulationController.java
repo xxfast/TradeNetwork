@@ -20,7 +20,7 @@ public class SimulationController extends JPanel {
 	
 	public SimulationController(Simulation toControl) {
 		this.toControl = toControl;
-		setBorder(new TitledBorder(null, "Controls", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		setBorder(new TitledBorder(null, "Simulation Controls", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
 		playBtn = new Button("Play");
 		add(playBtn);
