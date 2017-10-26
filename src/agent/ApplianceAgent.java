@@ -34,9 +34,16 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 	 */
 	protected void setup() {
 		super.setup();
+		this.setMuted(true);
 		Object[] args = getArguments();
-		setHome((AID)args[0]);
-		setStartDemand((Demand) args[1]);
+		if( args[0] instanceof AID)
+			setHome((AID)args[0]);
+		else
+			setHome(new AID((String)args[0],AID.ISLOCALNAME));
+		if( args[1] instanceof Demand)
+			setStartDemand((Demand)args[1]);
+		else
+			setStartDemand(new Demand(Integer.valueOf((String) args[1])));
 		if( getHome() != null) 
 			StartDemanding();
 		addBehaviour(new TimeAskingBehaviour(this));
