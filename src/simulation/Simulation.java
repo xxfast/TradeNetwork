@@ -14,12 +14,15 @@ import agent.ApplianceAgent;
 import agent.HomeAgent;
 import agent.RetailerAgent;
 import agent.SchedulingAgent;
+import agent.appliances.HeaterAgent;
 import controllers.ApplianceAgentController;
+import controllers.HeaterAgentController;
 import controllers.HomeAgentController;
 import controllers.RetailerAgentController;
 import controllers.SchedulingAgentController;
 import controllers.TradeAgentController;
 import descriptors.ApplianceAgentDescriptor;
+import descriptors.HeaterAgentDescriptor;
 import descriptors.HomeAgentDescriptor;
 import descriptors.RetailerAgentDescriptor;
 import descriptors.SchedulingAgentDescriptor;
@@ -63,6 +66,9 @@ public class Simulation implements Serializable {
 		}else if(descriptor instanceof RetailerAgentDescriptor) {
 			tradeAgent = new RetailerAgentController();
 			toCreate = RetailerAgent.class;
+		}else if(descriptor instanceof HeaterAgentDescriptor) {
+			tradeAgent = new HeaterAgentController();
+			toCreate = HeaterAgent.class;
 		}
 		tradeAgent.setDescriptor(descriptor);
 		createdAgent = container.createNewAgent(descriptor.getName(), toCreate.getName(), descriptor.toArray());
