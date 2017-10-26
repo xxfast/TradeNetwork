@@ -57,6 +57,9 @@ public class Simulation implements Serializable {
 		if(descriptor instanceof SchedulingAgentDescriptor) {
 			tradeAgent = new SchedulingAgentController();
 			toCreate = SchedulingAgent.class;
+		}else if(descriptor instanceof HeaterAgentDescriptor) {
+			tradeAgent = new HeaterAgentController();
+			toCreate = HeaterAgent.class;
 		}else if(descriptor instanceof ApplianceAgentDescriptor) {
 			tradeAgent = new ApplianceAgentController();
 			toCreate = ApplianceAgent.class;
@@ -101,7 +104,17 @@ public class Simulation implements Serializable {
 	}
 
 	public void Start() throws StaleProxyException{
-		StartNode((TradeAgentNode) agents.getRoot());
+		List<TradeAgentController> controllers = getAgentsAsList((TradeAgentNode) agents.getRoot());
+		for(TradeAgentController ta  : controllers) {
+			if(!(ta instanceof HomeAgentController)) {
+				ta.start();
+			}
+		}
+		for(TradeAgentController ta  : controllers) {
+			if(ta instanceof HomeAgentController) {
+				ta.start();
+			}
+		}
 	}
 	
 	private void StartNode(TradeAgentNode toStart) throws StaleProxyException {
@@ -121,6 +134,15 @@ public class Simulation implements Serializable {
 		for(int i=0;i<toStart.getChildCount();i++) {
 			KillNode((TradeAgentNode) toStart.getChildAt(i));
 		}
+	}
+	
+	public List<TradeAgentController> getAgentsAsList(TradeAgentNode toStart){
+		List<TradeAgentController> agents = new ArrayList<TradeAgentController>();
+		if(toStart.getAgent()!=null) agents.add(toStart.getAgent());
+		for(int i=0;i<toStart.getChildCount();i++) {
+			agents.addAll(getAgentsAsList((TradeAgentNode) toStart.getChildAt(i)));
+		}
+		return agents;
 	}
 	
 	public TreeModel getAgents() {

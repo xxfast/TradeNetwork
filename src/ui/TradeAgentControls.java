@@ -37,6 +37,7 @@ public class TradeAgentControls extends JPanel {
 		revalidate();
 		repaint();
 		Dimension d = getPreferredSize();
+		d.width = 200;
 		d.height = 100;
 		setPreferredSize(d);
 	}
