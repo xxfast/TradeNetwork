@@ -12,7 +12,6 @@ public class Time {
 	@Override
 	public String toString() {
 		return String.valueOf(time);
-		
 	}
 	
 	public Time(ACLMessage toParse) {
@@ -23,5 +22,13 @@ public class Time {
 		ACLMessage toReturn = new ACLMessage(performative);
 		toReturn.setContent(String.valueOf(time));
 		return toReturn;
+	}
+	
+	public long getTime() {
+		return this.time;
+	}
+	
+	public short getHourOfDay() {
+		return (short)((this.time*60)%23);	
 	}
 }
