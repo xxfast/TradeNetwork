@@ -24,4 +24,12 @@ public class Time {
 		toReturn.setContent(String.valueOf(time));
 		return toReturn;
 	}
+	
+	public long getTime() {
+		return this.time;
+	}
+	
+	public short getHourOfDay() {
+		return (short)((this.time*60)%23);	
+	}
 }
