@@ -29,7 +29,7 @@ import negotiation.Strategy;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
 
-public class NegotiationInspector extends ApplicationFrame {
+public class NegotiationInspector extends JFrame {
 	
 	private AgentDailyNegotiationThread toDisplay;
 
@@ -39,7 +39,7 @@ public class NegotiationInspector extends ApplicationFrame {
 		JFreeChart lineChart = ChartFactory.createLineChart(chartTitle, "Iteration", "Price", createDataset(0),
 				PlotOrientation.VERTICAL, true, true, false);
 
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
 		ChartPanel chartPanel = new ChartPanel(lineChart);
 		chartPanel.setPreferredSize(new java.awt.Dimension(560, 367));

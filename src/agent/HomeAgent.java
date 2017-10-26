@@ -107,11 +107,9 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 		 * 4) start telling time
 		 */
 		negotiation = new NegotiatingBehaviour(this);
-		time = new TimeKeepingBehavior(this);
+		addBehaviour(new TimeTellingBehaviour(this));
 		addBehaviour(new DemandListeningBehaviour(this));
 		addBehaviour(getNegotiation());
-		addBehaviour(time);
-		addBehaviour(new TimeTellingBehaviour(this));
 	}
 
 	public void discoverRetailers() {

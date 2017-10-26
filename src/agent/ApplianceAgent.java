@@ -45,9 +45,11 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 			setStartDemand((Demand)args[1]);
 		else
 			setStartDemand(new Demand(Integer.valueOf((String) args[1])));
-		if( getHome() != null) 
+
+		if( getHome() != null) {
+			addBehaviour(new TimeAskingBehaviour(this));
 			StartDemanding();
-		addBehaviour(new TimeAskingBehaviour(this));
+		}
 	}
 	
 	/**
