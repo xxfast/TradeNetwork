@@ -34,9 +34,11 @@ public class TradeAgentControls extends JPanel {
 		removeAll();
 		Class<?> type = toControl.getClass();
 		CreateControls(type, toControl);
-		setPreferredSize(getPreferredSize());
 		revalidate();
 		repaint();
+		Dimension d = getPreferredSize();
+		d.height = 100;
+		setPreferredSize(d);
 	}
 	
 	private void CreateControls(Class<?> type, Object instance) {
