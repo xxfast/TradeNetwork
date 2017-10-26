@@ -66,7 +66,6 @@ public class Demand implements Serializable{
 
 		setDuration( Integer.valueOf(messageBits[2]));
 
-
 		setTime( Short.valueOf(messageBits[1]));
 	}
 
