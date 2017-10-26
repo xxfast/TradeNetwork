@@ -29,7 +29,7 @@ import negotiation.Strategy;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
 
-public class NegotiationInspector extends ApplicationFrame {
+public class NegotiationInspector extends JFrame {
 	
 	private AgentDailyNegotiationThread toDisplay;
 
@@ -39,24 +39,27 @@ public class NegotiationInspector extends ApplicationFrame {
 		JFreeChart lineChart = ChartFactory.createLineChart(chartTitle, "Iteration", "Price", createDataset(0),
 				PlotOrientation.VERTICAL, true, true, false);
 
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
 		ChartPanel chartPanel = new ChartPanel(lineChart);
 		chartPanel.setPreferredSize(new java.awt.Dimension(560, 367));
 		//setContentPane(chartPanel);
 		add(chartPanel);
+		JLabel label = new JLabel("0");
 		final JSlider slider = new JSlider(0, 23);
 		slider.setValue(0);
         slider.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
             		lineChart.getCategoryPlot().setDataset(createDataset(slider.getValue()));
+            		label.setText(slider.getValue()+"");
             		NegotiationInspector.this.validate();
             }
         });
         Box p = new Box(BoxLayout.X_AXIS);
         p.add(new JLabel("Time:"));
         p.add(slider);
+        p.add(label);
         this.getContentPane().add(p, BorderLayout.SOUTH);
 	}
 

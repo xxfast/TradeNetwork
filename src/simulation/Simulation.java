@@ -15,17 +15,23 @@ import agent.HomeAgent;
 import agent.RetailerAgent;
 import agent.SchedulingAgent;
 import agent.appliances.HeaterAgent;
+import agent.appliances.RefrigeratorAgent;
+import agent.appliances.TelevisionAgent;
 import controllers.ApplianceAgentController;
 import controllers.HeaterAgentController;
 import controllers.HomeAgentController;
+import controllers.RefrigeratorAgentController;
 import controllers.RetailerAgentController;
 import controllers.SchedulingAgentController;
+import controllers.TelevisionAgentController;
 import controllers.TradeAgentController;
 import descriptors.ApplianceAgentDescriptor;
 import descriptors.HeaterAgentDescriptor;
 import descriptors.HomeAgentDescriptor;
+import descriptors.RefrigeratorAgentDescriptor;
 import descriptors.RetailerAgentDescriptor;
 import descriptors.SchedulingAgentDescriptor;
+import descriptors.TelevisionAgentDescriptor;
 import descriptors.TradeAgentDescriptor;
 import interfaces.IOwnable;
 import jade.core.AID;
@@ -46,6 +52,8 @@ public class Simulation implements Serializable {
 	
 	private transient ContainerController container;
 	
+	private String output;
+	
 	public Simulation() {
 		agents = new DefaultTreeModel(new TradeAgentNode("Simulation"));
 	}
@@ -60,6 +68,12 @@ public class Simulation implements Serializable {
 		}else if(descriptor instanceof HeaterAgentDescriptor) {
 			tradeAgent = new HeaterAgentController();
 			toCreate = HeaterAgent.class;
+		}else if(descriptor instanceof RefrigeratorAgentDescriptor) {
+			tradeAgent = new RefrigeratorAgentController();
+			toCreate = RefrigeratorAgent.class;
+		}else if(descriptor instanceof TelevisionAgentDescriptor) {
+			tradeAgent = new TelevisionAgentController();
+			toCreate = TelevisionAgent.class;
 		}else if(descriptor instanceof ApplianceAgentDescriptor) {
 			tradeAgent = new ApplianceAgentController();
 			toCreate = ApplianceAgent.class;
@@ -177,6 +191,14 @@ public class Simulation implements Serializable {
 		this.container = container;
 	}
 	
+	public String getOutput() {
+		return output;
+	}
+
+	public void setOutput(String output) {
+		this.output = output;
+	}
+
 	public enum State{ Running, Paused, Stopped }
 	
 }

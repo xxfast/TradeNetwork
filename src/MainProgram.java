@@ -85,13 +85,13 @@ public class MainProgram {
 		myHomeAgent.setParamBeta(0.5);
 		test.CreateTradeAgent(myHomeAgent);
 		
-		//Create a agent of class ApplianceAgent 
-		say("Starting up a ApplianceAgent...");
-		ApplianceAgentDescriptor myApplianceAgent = new ApplianceAgentDescriptor();
-		myApplianceAgent.setName("Lights");
-		myApplianceAgent.setOwner(new AID(myHomeAgent.getName(), AID.ISLOCALNAME));
-		myApplianceAgent.setStartingDemand(new Demand(1));
-		test.CreateTradeAgent(myApplianceAgent);
+//		//Create a agent of class ApplianceAgent 
+//		say("Starting up a ApplianceAgent...");
+//		ApplianceAgentDescriptor myApplianceAgent = new ApplianceAgentDescriptor();
+//		myApplianceAgent.setName("Lights");
+//		myApplianceAgent.setOwner(new AID(myHomeAgent.getName(), AID.ISLOCALNAME));
+//		myApplianceAgent.setStartingDemand(new Demand(1));
+//		test.CreateTradeAgent(myApplianceAgent);
 		
 		//Create a agent of class ApplianceAgent 
 		say("Starting up a HeaterApplianceAgent...");

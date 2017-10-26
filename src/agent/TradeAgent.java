@@ -28,6 +28,7 @@ import model.Offer;
 import negotiation.Strategy.Item;
 import negotiation.baserate.Transaction;
 import negotiation.negotiator.AgentNegotiator;
+import simulation.Simulation;
 
 public class TradeAgent extends Agent implements Object2TradeAgentInterface{
 	

@@ -115,6 +115,7 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 		okButton.addActionListener(this);
 
 		/* Disabled by default because not all fields are filled in  */
+		
 		AllowSave(false);
 		
 		buttonPane.add(okButton);
@@ -197,6 +198,7 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 						inputs.add(input);
 					}
 					/* add a focus listener to validate on focus lost */
+					Validate(instance, type, f, input);
 					input.addFocusListener(new FocusListener() {
 						@Override
 						public void focusGained(FocusEvent e) { }
