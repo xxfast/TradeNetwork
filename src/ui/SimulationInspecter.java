@@ -33,7 +33,9 @@ import controllers.TradeAgentController;
 import descriptors.ApplianceAgentDescriptor;
 import descriptors.HeaterAgentDescriptor;
 import descriptors.HomeAgentDescriptor;
+import descriptors.RefrigeratorAgentDescriptor;
 import descriptors.RetailerAgentDescriptor;
+import descriptors.TelevisionAgentDescriptor;
 import jade.wrapper.StaleProxyException;
 import model.TradeAgentNode;
 import simulation.Simulation;
@@ -141,6 +143,59 @@ public class SimulationInspecter {
 				dialog.setVisible(true);
 			}
 		});
+		
+
+		JMenuItem mntmTelevisionApplianceAgent = new JMenuItem("Television Appliance Agent");
+		mnAppliances.add(mntmTelevisionApplianceAgent);
+		mntmTelevisionApplianceAgent.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				TradeAgentCreator dialog = null;
+				try {
+					dialog = new TradeAgentCreator(TelevisionAgentDescriptor.class);
+					dialog.setSimulation(toInspect);
+					dialog.Build();
+					dialog.addWindowListener(new WindowAdapter() {
+					    @Override
+					    public void windowClosed(WindowEvent e) {
+					    		UpdateModel();
+					    }
+					});
+				} catch (InstantiationException e1) {
+					e1.printStackTrace();
+				} catch (IllegalAccessException e1) {
+					e1.printStackTrace();
+				}
+				dialog.setVisible(true);
+			}
+		});
+		
+
+		JMenuItem mntmRefrigeratorApplianceAgent = new JMenuItem("Refrigerator Appliance Agent");
+		mnAppliances.add(mntmRefrigeratorApplianceAgent);
+		mntmRefrigeratorApplianceAgent.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				TradeAgentCreator dialog = null;
+				try {
+					dialog = new TradeAgentCreator(RefrigeratorAgentDescriptor.class);
+					dialog.setSimulation(toInspect);
+					dialog.Build();
+					dialog.addWindowListener(new WindowAdapter() {
+					    @Override
+					    public void windowClosed(WindowEvent e) {
+					    		UpdateModel();
+					    }
+					});
+				} catch (InstantiationException e1) {
+					e1.printStackTrace();
+				} catch (IllegalAccessException e1) {
+					e1.printStackTrace();
+				}
+				dialog.setVisible(true);
+			}
+		});
+		
 		
 		JMenuItem mntmHomeAgent = new JMenuItem("Home Agent");
 		mntmHomeAgent.addActionListener(new ActionListener() {
