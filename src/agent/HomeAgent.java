@@ -27,6 +27,7 @@ import model.Demand;
 import model.Offer;
 import model.Schedule;
 import model.Time;
+import negotiation.NegotiationThread;
 import negotiation.Strategy;
 import negotiation.Strategy.Item;
 import negotiation.baserate.HomeBound;
@@ -272,7 +273,8 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 		}
 		
 		protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {
-				ACLMessage toRespond = time.getTime().toACL(ACLMessage.INFORM);
+				ACLMessage toRespond = new ACLMessage(ACLMessage.INFORM);// time.getTime().toACL(ACLMessage.INFORM);
+				toRespond.setContent(agentHour+"");
 				return toRespond;
 		}
 		
@@ -546,9 +548,8 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 				ACLMessage msg = (ACLMessage) notification;
 				say("Inform recieved from " + msg.getSender().getLocalName());
 				say("Msg is " + msg.getContent());
-				// NegotiationThread t =
-				// negotiators.get(msg.getSender()).getNegotiationThread();
-				// say(t.toString());
+				NegotiationThread t = negotiators.get(msg.getSender()).getNegotiationThread();
+				say(t.toString());
 			}
 
 		}
