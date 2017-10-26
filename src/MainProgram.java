@@ -10,6 +10,7 @@ import agent.ApplianceAgent;
 import agent.HomeAgent;
 import controllers.TradeAgentController;
 import descriptors.ApplianceAgentDescriptor;
+import descriptors.HeaterAgentDescriptor;
 import descriptors.HomeAgentDescriptor;
 import descriptors.RetailerAgentDescriptor;
 import descriptors.SchedulingAgentDescriptor;
@@ -91,6 +92,14 @@ public class MainProgram {
 		myApplianceAgent.setOwner(new AID(myHomeAgent.getName(), AID.ISLOCALNAME));
 		myApplianceAgent.setStartingDemand(new Demand(1));
 		test.CreateTradeAgent(myApplianceAgent);
+		
+		//Create a agent of class ApplianceAgent 
+		say("Starting up a HeaterApplianceAgent...");
+		HeaterAgentDescriptor myHeaterAgent = new HeaterAgentDescriptor();
+		myHeaterAgent.setName("Heater");
+		myHeaterAgent.setOwner(new AID(myHomeAgent.getName(), AID.ISLOCALNAME));
+		myHeaterAgent.setStartingDemand(new Demand(1));
+		test.CreateTradeAgent(myHeaterAgent);
 		
 		// Create a agent of class RetailerAgent 
 		say("Starting up a RetailerAgent...");
