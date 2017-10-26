@@ -45,18 +45,21 @@ public class NegotiationInspector extends ApplicationFrame {
 		chartPanel.setPreferredSize(new java.awt.Dimension(560, 367));
 		//setContentPane(chartPanel);
 		add(chartPanel);
+		JLabel label = new JLabel("0");
 		final JSlider slider = new JSlider(0, 23);
 		slider.setValue(0);
         slider.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
             		lineChart.getCategoryPlot().setDataset(createDataset(slider.getValue()));
+            		label.setText(slider.getValue()+"");
             		NegotiationInspector.this.validate();
             }
         });
         Box p = new Box(BoxLayout.X_AXIS);
         p.add(new JLabel("Time:"));
         p.add(slider);
+        p.add(label);
         this.getContentPane().add(p, BorderLayout.SOUTH);
 	}
 

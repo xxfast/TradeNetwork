@@ -291,10 +291,10 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 
 		protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException {
 			recievedDemand = new Demand(request);
-//			say("DEMAND received demand from " + request.getSender().getName() + ". Demand is "
-//					+ recievedDemand.getUnits() + " unit(s) from " + recievedDemand.getTime() + "h for "
-//					+ recievedDemand.getDuration() + " Hrs");
-//			say("OK ");
+			say("DEMAND received demand from " + request.getSender().getName() + ". Demand is "
+					+ recievedDemand.getUnits() + " unit(s) from " + recievedDemand.getTime() + "h for "
+					+ recievedDemand.getDuration() + " Hrs");
+			say("OK ");
 			ACLMessage agree = request.createReply();
 			agree.setPerformative(ACLMessage.AGREE);
 			return agree;
@@ -303,7 +303,7 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 		protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response)
 				throws FailureException {
 			if (schedule(recievedDemand.getUnits(), recievedDemand.getTime(), recievedDemand.getDuration())) {
-//				say("YES Scehduled the demand succesfully");
+				say("YES Scehduled the demand succesfully");
 				ACLMessage inform = request.createReply();
 				inform.setPerformative(ACLMessage.INFORM);
 				return inform;
