@@ -80,6 +80,13 @@ public class History {
 
 	public void saveTransactionHistory() {
 		String dir = BoundCalc.DEFAULT_LOAD_LOCATION + "history"+File.separator;
+		//check if dir exists, if not create
+		File directory = new File(dir);
+	    if (! directory.exists()){
+	        directory.mkdirs();
+	        // If you require it to make the entire directory path including parents,
+	        // use directory.mkdirs(); here instead.
+	    }
 		dir += this.id + ".txt";
 		try {
 			FileWriter fileWriter = new FileWriter(dir);

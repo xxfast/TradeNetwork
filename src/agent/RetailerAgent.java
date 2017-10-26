@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Vector;
 
 import annotations.Adjustable;
+import jade.core.AID;
 // Used to make the agent a ContractNetResponder Agent
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -100,10 +101,21 @@ public class RetailerAgent extends TradeAgent {
 
 		Object[] args = this.getArguments();
 		//set negotiation time from arguments
-		this.maxNegotiationTime=((Double) args[0]);
+		if( args[0] instanceof Double)
+			this.maxNegotiationTime=(Double)args[0];
+		else
+			this.maxNegotiationTime=Double.valueOf((String) args[0]);
+		
 		//retrieve K and Beta from args
-		this.ParamK=((Double)args[1]);
-		this.ParamBeta=((Double)args[2]);
+		if( args[1] instanceof Double)
+			this.ParamK=(Double)args[1];
+		else
+			this.ParamK=Double.valueOf((String) args[1]);
+		
+		if( args[2] instanceof Double)
+			this.ParamBeta=(Double)args[2];
+		else
+			this.ParamBeta=Double.valueOf((String) args[2]);		
 		
 		//Describes the agent as a retail agent
 		setupServiceProviderComponent();
@@ -200,8 +212,8 @@ public class RetailerAgent extends TradeAgent {
 			dailyThread.addHourThread(demand.getTime(), initialMessage.getSender(), negotiator.getNegotiationThread());
 			//setup initial issue 
 			negotiator.setInitialIssue(off);
-			System.out.println("intial issue for "+initialMessage.getSender().getLocalName()+" issue "+negotiator.getItemIssue().get(Item.PRICE));
-			say("Creating new SSICNR behaviour");
+			say("intial issue for "+initialMessage.getSender().getLocalName()+" issue "+negotiator.getItemIssue().get(Item.PRICE));
+
 		}
 		
 		@Override
