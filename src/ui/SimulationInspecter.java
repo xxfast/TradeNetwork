@@ -194,6 +194,12 @@ public class SimulationInspecter {
 		
 		JMenuItem mntmRemove = new JMenuItem("Remove Selected");
 		mnEdit.add(mntmRemove);
+		mntmRemove.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+			}
+		});
 		
 		JMenu mnControl = new JMenu("Control");
 		menuBar.add(mnControl);

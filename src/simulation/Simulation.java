@@ -46,6 +46,8 @@ public class Simulation implements Serializable {
 	
 	private transient ContainerController container;
 	
+	private String output;
+	
 	public Simulation() {
 		agents = new DefaultTreeModel(new TradeAgentNode("Simulation"));
 	}
@@ -177,6 +179,14 @@ public class Simulation implements Serializable {
 		this.container = container;
 	}
 	
+	public String getOutput() {
+		return output;
+	}
+
+	public void setOutput(String output) {
+		this.output = output;
+	}
+
 	public enum State{ Running, Paused, Stopped }
 	
 }
