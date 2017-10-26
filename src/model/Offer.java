@@ -13,6 +13,7 @@ public class Offer {
 	private final String SPLITTER="/";
 	private final String DELIMETER=";";
 	private final String SEPERATOR="-";
+	
 	private Map<Strategy.Item,Double> offerValues;
 	private Demand demand;
 	private String owner="";
@@ -47,7 +48,8 @@ public class Offer {
 		offerValues= new HashMap<Strategy.Item, Double>();
 		demand= new Demand();
 		setContent(message.getContent());
-		owner=message.getSender().getLocalName();
+		if(message.getSender()!=null)
+			owner=message.getSender().getLocalName();
 	}
 	
 	public String getContent(){

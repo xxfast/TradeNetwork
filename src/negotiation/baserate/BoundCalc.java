@@ -1,6 +1,7 @@
 package negotiation.baserate;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -10,18 +11,20 @@ import model.History;
 import java.util.*;
 
 public abstract class BoundCalc {
+	
+	public final static String DEFAULT_LOAD_LOCATION = System.getProperty("user.dir") + File.separator +"resources"+ File.separator +"data" + File.separator; 
 		
 	private double[] stdRate = new double[24]; 
 	protected History hist;
 	// Constructor
 	public BoundCalc(String baseRateDir,History hist) {
-		loadBaseRate(baseRateDir);
+		loadBaseRate(baseRateDir );
 		this.hist=hist;
 	}
 	
 	// Default constructor
 	public BoundCalc(History history) {
-		this("src\\negotiation\\baserate\\baserate.txt", history);
+		this(DEFAULT_LOAD_LOCATION + "baserate.txt", history);
 	}
 	
 	// Prints the base rate array in easily readable config

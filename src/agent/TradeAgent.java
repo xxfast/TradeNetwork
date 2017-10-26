@@ -1,5 +1,7 @@
 package agent;
 
+import java.util.Iterator;
+
 import descriptors.TradeAgentDescriptor;
 import jade.core.AID;
 import jade.core.Agent;
@@ -10,13 +12,23 @@ import jade.domain.FIPAAgentManagement.AMSAgentDescription;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.lang.acl.ACLMessage;
+import model.History;
+import model.Offer;
+import negotiation.Strategy.Item;
+import negotiation.baserate.Transaction;
+import negotiation.negotiator.AgentNegotiator;
 
 public class TradeAgent extends Agent {
 	
 	private TradeAgentDescriptor descriptor;
+	protected History myHistory;
+	
+	private boolean muted;
 	
 	protected void setup() {
 		say("Initialising!");
+		myHistory= new History(this.getLocalName());
 	}
 	
 	public String getDescription(){
@@ -60,9 +72,32 @@ public class TradeAgent extends Agent {
 		return null;
 
 	}
+	public void addToHistory(AgentNegotiator neg,ACLMessage result,boolean success,AID client)
+	{
+		Transaction trans=neg.getNegotiationThread().getAsTransaction();
+		if(!success)
+		{
+			trans.setRate(AgentNegotiator.REJECTRATE);
+		}
+		else
+		{
+//			System.out.println("reply "+result.toString());
+			Offer off =new Offer(result);
+			double finalPrice=off.getOfferValue(Item.PRICE);
+			trans.setRate(finalPrice);
+		}
+		
+		myHistory.addTransaction(client.getLocalName(), trans);
+	}
+	public AID getfirstReciever(ACLMessage msg)
+	{
+		Iterator it=msg.getAllReceiver();
+		AID rec=(AID) it.next();
+		return rec;
+	}
 	
 	public void say(String message){
-		System.out.println(this.getLocalName() +": "+ message);
+		if(!muted) System.out.println(this.getLocalName() +": "+ message);
 	}
 
 	public TradeAgentDescriptor getDescriptor() {
@@ -71,6 +106,14 @@ public class TradeAgent extends Agent {
 
 	public void setDescriptor(TradeAgentDescriptor descriptor) {
 		this.descriptor = descriptor;
+	}
+
+	public boolean isMuted() {
+		return muted;
+	}
+
+	public void setMuted(boolean muted) {
+		this.muted = muted;
 	}
 
 }

@@ -73,11 +73,11 @@ public class AgentDailyNegotiationThread {
 		{
 			
 			int hour =hourly.getKey();
-			build.append("hour "+ hour+"\n");
+			
 			Map<AID,Map<Party,List<Offer>>> hourThread=this.getNegotiationsForHour(hour);
 			if(hourThread.size()>0)
 			{
-				System.out.println("hour size"+hourThread.size());
+				build.append("hour "+ hour+"\n");
 				for(Map.Entry<AID, Map<Party,List<Offer>>> entry:hourThread.entrySet())
 				{
 					build.append("Agent Negotiating with "+entry.getKey().getLocalName()+"\n");

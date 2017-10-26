@@ -23,8 +23,11 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JTextPane;
 import javax.swing.JTree;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeSelectionModel;
 
 import controllers.TradeAgentController;
 import descriptors.ApplianceAgentDescriptor;
@@ -54,7 +57,7 @@ public class SimulationInspecter {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
-		setFrame(new JFrame());
+		setFrame(new JFrame("TradeNetwork"));
 		getFrame().setBounds(100, 100, 500, 350);
 		getFrame().setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
@@ -191,6 +194,8 @@ public class SimulationInspecter {
 		view.add(console, BorderLayout.SOUTH);
 		
 		tree = new JTree();
+		tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+		
 		view.add(tree, BorderLayout.CENTER);
 		
 		Panel sidebar = new Panel();
@@ -211,14 +216,26 @@ public class SimulationInspecter {
 		});
 		
 		sidebar.add(simulationCtrl);
-		sidebar.add(new TradeAgentInspector());
+		TradeAgentInspector inspector = new TradeAgentInspector();
+		sidebar.add(inspector);
 		
-		
+		tree.addTreeSelectionListener(new TreeSelectionListener() {
+		    public void valueChanged(TreeSelectionEvent e) {
+		    		TradeAgentNode node = (TradeAgentNode) tree.getLastSelectedPathComponent();
+			    if (node == null) return;
+			    if(node.getAgent()!=null) {
+			    		inspector.setSelectedAgent(node);
+			    		inspector.Update();
+			    }else {
+			    		inspector.Clear();
+			    }
+		    }
+		});
 	}
 	
 	public void UpdateModel() {
 		tree.setModel(getToInspect().getAgents());
-        tree.setCellRenderer(new TradeAgentNode.TradeAgentNodeRenderer());
+        tree.setCellRenderer(new TradeAgentNodeRenderer());
 		tree.updateUI();
 	}
 	

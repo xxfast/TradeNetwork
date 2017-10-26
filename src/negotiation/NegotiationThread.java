@@ -1,10 +1,10 @@
 package negotiation;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import model.Offer;
+import negotiation.baserate.Transaction;
 //object which mantains a list of all offers and counter offers with an agent
 //the order is- receivedOff,CounterOff,receivedOff,CounterOff......
 public class NegotiationThread {
@@ -65,6 +65,19 @@ public class NegotiationThread {
 			str+=off.toString()+"\n";
 		}
 		return str;
+	}
+	
+	public Transaction getAsTransaction()
+	{
+		Transaction trans = new Transaction();
+		List<Offer> other=this.getOpponentOffers();
+		Offer selfLast=other.get(other.size()-1);
+		//get last offer units bargained on
+		int units =selfLast.getDemand().getUnits();
+		int rounds=other.size();
+		trans.setRounds(rounds);
+		trans.setUnits(units);
+		return trans;
 	}
 	
 	

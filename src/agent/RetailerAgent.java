@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Vector;
 
 import annotations.Adjustable;
+import jade.core.AID;
 // Used to make the agent a ContractNetResponder Agent
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -76,6 +77,8 @@ public class RetailerAgent extends TradeAgent {
 	private double tacticResourceWeight=0.6;
 	private double tacticBehaviourWeight=0.3;
 	private int behaviourRange=2;
+	
+	
 
 	private Vector<EnergyUnit> energyUnitSchedule = new Vector<EnergyUnit>();
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
@@ -90,7 +93,7 @@ public class RetailerAgent extends TradeAgent {
 	private int energyStored = 0;
 	
 	protected void setup() {
-		
+		super.setup();
 		//boundCalculator.calcBounds(AID id, int units, int time, History hist)
 		//history.addTransaction(AID client, int units, double rate);
 		
@@ -98,10 +101,21 @@ public class RetailerAgent extends TradeAgent {
 
 		Object[] args = this.getArguments();
 		//set negotiation time from arguments
-		this.maxNegotiationTime=((Double) args[0]);
+		if( args[0] instanceof Double)
+			this.maxNegotiationTime=(Double)args[0];
+		else
+			this.maxNegotiationTime=Double.valueOf((String) args[0]);
+		
 		//retrieve K and Beta from args
-		this.ParamK=((Double)args[1]);
-		this.ParamBeta=((Double)args[2]);
+		if( args[1] instanceof Double)
+			this.ParamK=(Double)args[1];
+		else
+			this.ParamK=Double.valueOf((String) args[1]);
+		
+		if( args[2] instanceof Double)
+			this.ParamBeta=(Double)args[2];
+		else
+			this.ParamBeta=Double.valueOf((String) args[2]);		
 		
 		//Describes the agent as a retail agent
 		setupServiceProviderComponent();
@@ -171,9 +185,9 @@ public class RetailerAgent extends TradeAgent {
 		scoreWeights.put(Item.PRICE, new Double(1));
 		
 		//get my history object-simply creating new history, TODO object shud handle loading agent history, maybe pass in AID
-		History history = new History(this.getLocalName());
+	
 		//create bound calc for price
-		RetailerBound retailcalc= new RetailerBound(history);
+		RetailerBound retailcalc= new RetailerBound(myHistory);
 		
 		
 		//create negotiator with params
@@ -189,19 +203,17 @@ public class RetailerAgent extends TradeAgent {
 		
 		RetailerCNRBehaviour(Agent a, ACLMessage initialMessage) {
 			super(a, initialMessage);
-			
 			setupNegotiator();
-			
 			//get demand from initial Message
 			Offer off = new Offer(initialMessage);
 			Demand demand=off.getDemand();
-			System.out.println("demand "+demand.getContent());
-//			add negotiator to daily thread
+			say("recieved demand "+demand.getContent());
+			//add negotiator to daily thread
 			dailyThread.addHourThread(demand.getTime(), initialMessage.getSender(), negotiator.getNegotiationThread());
 			//setup initial issue 
 			negotiator.setInitialIssue(off);
-			System.out.println("intial issue for "+initialMessage.getSender().getLocalName()+" issue "+negotiator.getItemIssue().get(Item.PRICE));
-			say("Creating new SSICNR behaviour");
+			say("intial issue for "+initialMessage.getSender().getLocalName()+" issue "+negotiator.getItemIssue().get(Item.PRICE));
+
 		}
 		
 		@Override
@@ -214,6 +226,8 @@ public class RetailerAgent extends TradeAgent {
 			OfferStatus stat=negotiator.interpretOffer(offer);
 			if(stat.equals(OfferStatus.REJECT))
 			{
+				//update history
+				addToHistory(negotiator, cfp, false, cfp.getSender());
 				//reject proposal by throwing a refuse
 				throw new RefuseException("Times up ");
 			}
@@ -223,6 +237,10 @@ public class RetailerAgent extends TradeAgent {
 			{
 				//responder cant accept cfps so sending same offer received from cfp as proposal	
 				reply.setContent(cfp.getContent());
+				//add it as counter offer to negotiation thread
+				//this is due to protocol limitations, otherwise handled correctly
+				addToHistory(negotiator, cfp, true, cfp.getSender());
+				negotiator.getNegotiationThread().addOffer(offer);
 			}			
 			if(stat.equals(OfferStatus.COUNTER))
 			{
@@ -248,22 +266,23 @@ public class RetailerAgent extends TradeAgent {
 		}
 
 		protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
+			
 			say("Proposal rejected "+reject.getContent());
+			//add to history
+			addToHistory(negotiator, propose, false, reject.getSender());
 		}
-
+		
 		@Override
 		public int onEnd() {
 			// TODO Auto-generated method stub
-			 System.out.println(dailyThread.toString());
+//			 System.out.println(dailyThread.toString());
+			 myHistory.saveTransactionHistory();
 			return super.onEnd();
 		}
 		
+		
 	}
-	
-	private boolean performAction() {
-		// For later, actually reduce energy stores for this agent and base price off that
-		return true;
-	}
+
 	
 	
 	// Temporary method until the method of setting rate is determined

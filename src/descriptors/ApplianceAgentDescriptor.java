@@ -27,7 +27,7 @@ public class ApplianceAgentDescriptor extends TradeAgentDescriptor implements IO
 	}
 	
 	public String getDescription() {
-		return String.format("[ApplianceAgent: "+super.getName()+"-> ["+getOwner()+"] ,\n \t Starting Demand: "+getStartingDemand().getContent()+"]");
+		return String.format("[ApplianceAgent: "+super.getName()+"-> ["+getOwner().getLocalName()+"] ,\n \t Starting Demand: "+getStartingDemand().getContent()+"]");
 	}
 	
 	@Override

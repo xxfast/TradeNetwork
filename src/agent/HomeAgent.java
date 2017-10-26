@@ -7,34 +7,24 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Vector;
 
-import FIPA.DateTime;
 import annotations.Adjustable;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.ParallelBehaviour;
 import jade.core.behaviours.TickerBehaviour;
-import jade.domain.DFService;
-import jade.domain.FIPAException;
 import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.FailureException;
 import jade.domain.FIPAAgentManagement.NotUnderstoodException;
-import jade.domain.FIPAAgentManagement.RefuseException;
-import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.proto.AchieveREInitiator;
 import jade.proto.AchieveREResponder;
 import jade.proto.ContractNetInitiator;
 import jade.util.Logger;
 import model.AgentDailyNegotiationThread;
 import model.Demand;
-import model.History;
 import model.Offer;
 import model.Schedule;
-import negotiation.Issue;
-import model.AgentDailyNegotiationThread.Party;
-import negotiation.NegotiationThread;
+import model.Time;
 import negotiation.Strategy;
 import negotiation.Strategy.Item;
 import negotiation.baserate.HomeBound;
@@ -49,10 +39,7 @@ import negotiation.tactic.behaviour.AverageTitForTat;
 import negotiation.tactic.timeFunction.ResourceAgentsFunction;
 import negotiation.tactic.timeFunction.TimeWeightedFunction;
 import negotiation.tactic.timeFunction.TimeWeightedPolynomial;
-import negotiation.baserate.BoundCalc;
-import negotiation.baserate.HomeBound;
 import simulation.Simulation;
-import model.History;
 
 public class HomeAgent extends TradeAgent {
 	private final boolean INC = false;// customer mentality
@@ -60,7 +47,6 @@ public class HomeAgent extends TradeAgent {
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
 	private Random rand;
 	private Map<AID, HomeAgentNegotiator> negotiators;
-	private AgentDailyNegotiationThread dailyThread;
 
 	private ArrayList<Demand> messages = new ArrayList<>();
 	private List<AID> retailers;
@@ -81,21 +67,36 @@ public class HomeAgent extends TradeAgent {
 	private int behaviourRange = 2;
 
 	private Schedule schedule = new Schedule();
+	
+	private NegotiatingBehaviour negotiation; 
+	private TimeKeepingBehavior time; 
 
 	protected void setup() {
+		
 		super.setup();
-		agentHour = 0;
+		setAgentHour(0);
 		rand = new Random();
-		dailyThread = new AgentDailyNegotiationThread();
+
 		
-		Object[] args = getArguments();
-		// retrieve max time from args
-		this.maxNegotiationTime = (double) (args[0]);
-		// retrieve K and Beta from args
-		this.ParamK = ((Double) args[1]);
-		this.ParamBeta = ((Double) args[2]);
+		Object[] args = this.getArguments();
+		//set negotiation time from arguments
+		if( args[0] instanceof Double)
+			this.maxNegotiationTime=(Double)args[0];
+		else
+			this.maxNegotiationTime=Double.valueOf((String) args[0]);
+		
+		//retrieve K and Beta from args
+		if( args[1] instanceof Double)
+			this.ParamK=(Double)args[1];
+		else
+			this.ParamK=Double.valueOf((String) args[1]);
+		
+		if( args[2] instanceof Double)
+			this.ParamBeta=(Double)args[2];
+		else
+			this.ParamBeta=Double.valueOf((String) args[2]);	
 		retailers = new ArrayList<>();
-		
+
 		// get agents with retailer service
 		DFAgentDescription[] agents = getServiceAgents("RetailerAgent");
 		for (DFAgentDescription agent : agents) {
@@ -105,66 +106,50 @@ public class HomeAgent extends TradeAgent {
 		negotiators = new HashMap<>();
 
 		/*
-		 * Setting up 1) start listening to demands form home's appliances 2) start
-		 * negotiating with the retailers
+		 * Setting up 
+		 * 1) start listening to demands form home's appliances 
+		 * 2) start negotiating with the retailers
+		 * 3) start keeping time
+		 * 4) start telling time
 		 */
-
+		negotiation = new NegotiatingBehaviour(this);
+		time = new TimeKeepingBehavior(this);
 		addBehaviour(new DemandListeningBehaviour(this));
-		addBehaviour(new NegotiatingBehaviour(this));
+		addBehaviour(negotiation);
+		addBehaviour(time);
+		addBehaviour(new TimeTellingBehaviour(this));
 	}
 
-	private class DemandListeningBehaviour extends AchieveREResponder {
 
-		public DemandListeningBehaviour(Agent a) {
-			super(a, MessageTemplate.and(MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
-					MessageTemplate.MatchPerformative(ACLMessage.INFORM)));
-		}
-
-		private Demand recievedDemand;
-
-		protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException {
-			recievedDemand = new Demand(request);
-			say("DEMAND received demand from " + request.getSender().getName() + ". Demand is "
-					+ recievedDemand.getUnits() + " unit(s) from " + recievedDemand.getTime() + "h for "
-					+ recievedDemand.getDuration() + " Hrs");
-			say("OK ");
-			ACLMessage agree = request.createReply();
-			agree.setPerformative(ACLMessage.AGREE);
-			return agree;
-		}
-
-		protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response)
-				throws FailureException {
-			if (schedule(recievedDemand.getUnits(), recievedDemand.getTime(), recievedDemand.getDuration())) {
-				say("YES Scehduled the demand succesfully");
-				ACLMessage inform = request.createReply();
-				inform.setPerformative(ACLMessage.INFORM);
-				return inform;
-			} else {
-				say("Action failed, informing initiator");
-				throw new FailureException("unexpected-error");
-			}
-		}
-
+	public Schedule getSchedule() {
+		return schedule;
 	}
 
-	private class NegotiatingBehaviour extends TickerBehaviour {
-		public NegotiatingBehaviour(Agent a) {
-			super(a, Simulation.Time);
-		}
-
-		@Override
-		public void onTick() {
-			addBehaviour(new RequestQuote(myAgent, null, retailers));
-		}
+	public boolean schedule(int amount, Short time, int duration) {
+		schedule.getTime().get(time).add(amount);
+		return true;
 	}
 
+	public Demand calculateDemandForHour(Short time) {
+		Demand inform = new Demand(time);
+		List<Integer> demands = getSchedule().getTime().get(time);
+		int total = 0;
+		for (Integer demand : demands) {
+			total += demand;
+		}
+		inform.setUnits(total);
+		return inform;
+	}
+	
 	protected Random getRandomizer() {
 		return rand;
 	}
 
 	public void goNextHour() {
-		++agentHour;
+		if(getAgentHour()==23)
+			setAgentHour(0);
+		else
+			setAgentHour(getAgentHour()+1);
 	}
 
 	protected void setupHomeNegotiators(Integer activeAgents) {
@@ -212,16 +197,134 @@ public class HomeAgent extends TradeAgent {
 		// add only price item
 		scoreWeights.put(Item.PRICE, new Double(1));
 
-		// get my history object-simply creating new history, TODO object shud handle
-		// loading agent history
-		History history = new History(this.getLocalName());
 		// create bound calc for price
-		HomeBound homecacl = new HomeBound(history);
+		HomeBound homecacl = new HomeBound(myHistory);
 
 		// create negotiators with params for each retailer
 		for (AID agent : retailers) {
+			say("ret"+agent.getLocalName());
 			this.negotiators.put(agent,
 					new HomeAgentNegotiator(this.maxNegotiationTime, strats, scoreWeights, homecacl));
+		}
+
+	}
+	
+	private int getAgentHour() {
+		return agentHour;
+	}
+
+
+	private void setAgentHour(int agentHour) {
+		this.agentHour = agentHour;
+	}
+	
+	public TimeKeepingBehavior getTime() {
+		return time;
+	}
+
+
+	public void setTime(TimeKeepingBehavior time) {
+		this.time = time;
+	}
+
+	public class TimeKeepingBehavior extends TickerBehaviour {
+		
+		private long localTime = 0;
+		
+		public TimeKeepingBehavior(Agent a) {
+			super(a, Simulation.Time/60);
+		}
+
+		public void setLocalTime(long localTime) {
+			this.localTime = localTime;
+		}
+
+		@Override
+		protected void onTick() {
+			localTime++;
+		}
+
+		public Time getTime() {
+			return new Time(localTime);
+		}
+
+	}
+	
+	private class TimeTellingBehaviour extends AchieveREResponder {
+
+		public TimeTellingBehaviour(Agent a) {
+			super(a,  MessageTemplate.and(MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
+					MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
+		}
+		
+		protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException {
+//			say("OK I'll tell you time");
+			ACLMessage agree = request.createReply();
+			agree.setPerformative(ACLMessage.AGREE);
+			return agree;
+		}
+		
+		protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {
+				ACLMessage toRespond = time.getTime().toACL(ACLMessage.INFORM);
+				return toRespond;
+		}
+		
+	}
+	
+	private class DemandListeningBehaviour extends AchieveREResponder {
+
+		public DemandListeningBehaviour(Agent a) {
+			super(a, MessageTemplate.and(MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
+					MessageTemplate.MatchPerformative(ACLMessage.INFORM)));
+		}
+
+		private Demand recievedDemand;
+
+		protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException {
+			recievedDemand = new Demand(request);
+//			say("DEMAND received demand from " + request.getSender().getName() + ". Demand is "
+//					+ recievedDemand.getUnits() + " unit(s) from " + recievedDemand.getTime() + "h for "
+//					+ recievedDemand.getDuration() + " Hrs");
+//			say("OK ");
+			ACLMessage agree = request.createReply();
+			agree.setPerformative(ACLMessage.AGREE);
+			return agree;
+		}
+
+		protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response)
+				throws FailureException {
+			if (schedule(recievedDemand.getUnits(), recievedDemand.getTime(), recievedDemand.getDuration())) {
+//				say("YES Scehduled the demand succesfully");
+				ACLMessage inform = request.createReply();
+				inform.setPerformative(ACLMessage.INFORM);
+				return inform;
+			} else {
+				say("Action failed, informing initiator");
+				throw new FailureException("unexpected-error");
+			}
+		}
+
+	}
+
+	private class NegotiatingBehaviour extends TickerBehaviour {
+		
+		private AgentDailyNegotiationThread dailyThread = new AgentDailyNegotiationThread ();
+		
+		public NegotiatingBehaviour(Agent a) {
+			super(a, Simulation.Time); 
+		}
+
+		@Override
+		public void onTick() {
+			addBehaviour(new RequestQuote(myAgent, null, retailers));
+		}
+
+		public AgentDailyNegotiationThread getDailyThread() {
+			return dailyThread;
+		}
+
+		public void setDailyThread(AgentDailyNegotiationThread dailyThread) {
+			this.dailyThread = dailyThread;
 		}
 	}
 
@@ -244,22 +347,30 @@ public class HomeAgent extends TradeAgent {
 			setupHomeNegotiators(activeAgents);
 			// add negotiations to dailyNegotiaition threads
 			for (Map.Entry<AID, HomeAgentNegotiator> entry : negotiators.entrySet()) {
-				dailyThread.addHourThread(agentHour, entry.getKey(), entry.getValue().getNegotiationThread());
+				HomeAgent.this.negotiation.getDailyThread().addHourThread(getAgentHour(), entry.getKey(), entry.getValue().getNegotiationThread());
 			}
 		}
 
 		@Override
 		protected Vector prepareCfps(ACLMessage msg) {
 			// retrieve demand
-			Demand demandMsg = calculateDemandForHour((short) 0);
+			short value = (short) getAgentHour();
+			Demand demandMsg = calculateDemandForHour(new Short(value));
 			say("Gonna make call for proposal for " + demandMsg.getTime() + "h which was " + demandMsg.getUnits()
 					+ " units");
 
 			ACLMessage quoteRequest = null;
 			Vector<ACLMessage> cfps = new Vector<>();
 			if (demandMsg != null) {
+
 				// construct quote request to send to retailers
 				schedDemand = demandMsg;
+				// terminate if units required is 0
+				if (schedDemand.getUnits() == 0) {
+					forceTransitionTo(DUMMY_FINAL);
+					return cfps;
+				}
+
 				// TODO- ask negotiators to set intital issues
 				for (Map.Entry<AID, HomeAgentNegotiator> entry : negotiators.entrySet()) {
 					// create offer objects to set initial issue
@@ -267,7 +378,7 @@ public class HomeAgent extends TradeAgent {
 					off.setOwner(entry.getKey().getLocalName());
 					off.setDemand(schedDemand);
 					entry.getValue().setInitialIssue(off);
-					System.out.println("intial issue for " + entry.getKey().getLocalName() + " issue "
+					say("intial issue for " + entry.getKey().getLocalName() + " issue "
 							+ entry.getValue().getItemIssue().get(Item.PRICE));
 				}
 
@@ -307,7 +418,7 @@ public class HomeAgent extends TradeAgent {
 			if (status.equals(OfferStatus.REJECT)) {
 				// reject proposal
 				reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
-				reply.setContent("Times up");
+				reply.setContent(propose.getContent());
 				say("Times up -Rejected " + propose.getSender().getLocalName() + " offer " + propose.getContent());
 				// decrement activeagents
 				--activeAgents;
@@ -334,8 +445,12 @@ public class HomeAgent extends TradeAgent {
 		@Override
 		protected void handleRefuse(ACLMessage refuse) {
 			// TODO add logic to refuse, decrement activeagents
-			activeAgents--;
 			say("Rejected from " + refuse.getSender().getLocalName());
+			// TODO add logic to refuse, decrement activeagents, update history
+			activeAgents--;
+			// get negotiator
+			HomeAgentNegotiator neg = negotiators.get(refuse.getSender());
+			addToHistory(neg, refuse, false, refuse.getSender());
 			super.handleRefuse(refuse);
 		}
 
@@ -348,7 +463,7 @@ public class HomeAgent extends TradeAgent {
 			// handle accepted offers
 			if (acceptedScores.size() > 0) {
 				// select one with best score
-				double bestscore = 0;
+				double bestscore = Double.NEGATIVE_INFINITY;;
 				ACLMessage bestproposal = null;
 				for (Map.Entry<ACLMessage, Double> entry : acceptedScores.entrySet()) {
 					if (entry.getValue() > bestscore) {
@@ -366,10 +481,11 @@ public class HomeAgent extends TradeAgent {
 						msg.setPerformative(ACLMessage.REJECT_PROPOSAL);
 					}
 				}
-				// create rejections for accepted
+				// create rejections for other accepted
 				for (Map.Entry<ACLMessage, Double> entry : acceptedScores.entrySet()) {
 					ACLMessage reply = entry.getKey().createReply();
 					reply.setContent(entry.getKey().getContent());
+
 					if (entry.getKey().getSender().equals(bestproposal.getSender())) {
 						reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
 					} else
@@ -380,14 +496,15 @@ public class HomeAgent extends TradeAgent {
 
 			}
 			// check if all rejected- we select best offer we cn get
-			boolean allRej = true;
+			boolean allRej = false;
 			for (Object obj : acceptances) {
 				ACLMessage msg = (ACLMessage) obj;
 				// check if all rejected
 				if (msg.getPerformative() != ACLMessage.REJECT_PROPOSAL) {
-					allRej = false;
-					break;
+					allRej = false;					
 				}
+				else
+					allRej=true;
 
 			}
 			if (allRej) {
@@ -404,6 +521,10 @@ public class HomeAgent extends TradeAgent {
 				}
 
 			}
+			// update history with result of negotiations- done only for any accepted or
+			// rejected
+			updateHistory(acceptances);
+
 			if (isNextIter)
 				newIteration(acceptances);
 
@@ -416,8 +537,8 @@ public class HomeAgent extends TradeAgent {
 		protected void handleAllResultNotifications(Vector resultNotifications) {
 			for (Object notification : resultNotifications) {
 				ACLMessage msg = (ACLMessage) notification;
-				System.out.println("Inform recieved from " + msg.getSender().getLocalName());
-				System.out.println("Msg is " + msg.getContent());
+				say("Inform recieved from " + msg.getSender().getLocalName());
+				say("Msg is " + msg.getContent());
 				// NegotiationThread t =
 				// negotiators.get(msg.getSender()).getNegotiationThread();
 				// say(t.toString());
@@ -425,9 +546,38 @@ public class HomeAgent extends TradeAgent {
 
 		}
 
+		public void updateHistory(Vector acceptances) {
+			// go through acceptances and keep track of accepted and rejected
+			// get accepted proposal
+			List<ACLMessage> accProps = new ArrayList<>();
+			List<ACLMessage> rejProps = new ArrayList<>();
+			for (Object obj : acceptances) {
+				ACLMessage msg = (ACLMessage) obj;
+				if (msg.getPerformative() == ACLMessage.ACCEPT_PROPOSAL) {
+					accProps.add(msg);
+
+				} else if (msg.getPerformative() == ACLMessage.REJECT_PROPOSAL) {
+					rejProps.add(msg);
+				}
+			}
+			// update history for accepted proposals
+			for (ACLMessage msg : accProps) {
+				AID client = getfirstReciever(msg);
+				AgentNegotiator neg = negotiators.get(client);
+				addToHistory(neg, msg, true, client);
+			}
+			// update history for rejected proposals
+			for (ACLMessage msg : rejProps) {
+				AID client = getfirstReciever(msg);
+				AgentNegotiator neg = negotiators.get(client);
+				addToHistory(neg, msg, false, client);
+			}
+
+		}
+
 		public void handleAllRejections(Vector acceptances) {
 			// select one with best score
-			double bestscore = 0;
+			double bestscore = Double.NEGATIVE_INFINITY;
 			ACLMessage bestproposal = null;
 			for (Map.Entry<ACLMessage, Double> entry : proposalScores.entrySet()) {
 				if (entry.getValue() > bestscore) {
@@ -436,7 +586,7 @@ public class HomeAgent extends TradeAgent {
 				}
 
 			}
-			System.out.println("Accepting " + bestproposal.getSender().getLocalName() + " since best of all offers");
+			say("Accepting " + bestproposal.getSender().getLocalName() + " since best of all offers");
 			// accept best proposal and reject rest
 			// clear acceptances
 			acceptances.clear();
@@ -454,8 +604,9 @@ public class HomeAgent extends TradeAgent {
 
 		@Override
 		public int onEnd() {
-			// TODO Auto-generated method stub
-			// System.out.println(dailyThread.toString());
+//			say(negotiation.dailyThread.toString());
+			// save history to file
+			myHistory.saveTransactionHistory();
 			goNextHour();
 			return super.onEnd();
 		}
@@ -475,23 +626,4 @@ public class HomeAgent extends TradeAgent {
 
 	}
 
-	public Schedule getSchedule() {
-		return schedule;
-	}
-
-	public boolean schedule(int amount, Short time, int duration) {
-		schedule.getTime().get(time).add(amount);
-		return true;
-	}
-
-	public Demand calculateDemandForHour(Short time) {
-		Demand inform = new Demand(time);
-		List<Integer> demands = getSchedule().getTime().get(time);
-		int total = 0;
-		for (Integer demand : demands) {
-			total += demand;
-		}
-		inform.setUnits(total);
-		return inform;
-	}
 }

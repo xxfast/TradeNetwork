@@ -44,54 +44,5 @@ public class TradeAgentNode extends DefaultMutableTreeNode {
 		this.iconResource = icon;
 	}
 
-	public static class TradeAgentNodeRenderer implements TreeCellRenderer {
-
-		public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded,
-				boolean leaf, int row, boolean hasFocus) {
-			JLabel label;
-			label = new JLabel();
-			Object o = ((DefaultMutableTreeNode) value);
-			if (o instanceof TradeAgentNode) {
-				TradeAgentNode agent = (TradeAgentNode) o;
-				if (agent.getAgent() != null) {
-					label.setText(agent.getAgent().getDescriptor().getName());
-					URL imageUrl = null;
-					try {
-						imageUrl = new URL(
-								ProcessNameToURL(agent.getAgent().getDescriptor().getClass().getSimpleName()));
-					} catch (MalformedURLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					if (imageUrl != null) {
-						label.setIcon(new ImageIcon(imageUrl));
-					}
-				} else {
-					label.setText("Simulation");
-					URL imageUrl = null;
-					try {
-						imageUrl = new URL(ProcessNameToURL("SimulationAgent"));
-					} catch (MalformedURLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					if (imageUrl != null) {
-						label.setIcon(new ImageIcon(imageUrl));
-					}
-				}
-
-			} else {
-				label.setIcon(null);
-				label.setText("" + value);
-			}
-			return label;
-		}
-
-		public static String ProcessNameToURL(String toProcess) throws MalformedURLException {
-			URL toLocate = new File(
-					System.getProperty("user.dir") + "/resources/icons/" + toProcess.split("Agent")[0] + ".png").toURI()
-							.toURL();
-			return toLocate.toString();
-		}
-	}
+	
 }

@@ -14,7 +14,7 @@ public class Schedule implements Serializable{
 	private Map<Short, ArrayList<Integer>> time = new HashMap<Short, ArrayList<Integer>>();
 	
 	public Schedule(){
-		this(7);
+		this(24);
 	}
 	
 	public Schedule(int hours){
