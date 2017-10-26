@@ -77,12 +77,24 @@ public class HomeAgent extends TradeAgent {
 		setAgentHour(0);
 		rand = new Random();
 
-		Object[] args = getArguments();
-		// retrieve max time from args
-		this.maxNegotiationTime = (double) (args[0]);
-		// retrieve K and Beta from args
-		this.ParamK = ((Double) args[1]);
-		this.ParamBeta = ((Double) args[2]);
+		
+		Object[] args = this.getArguments();
+		//set negotiation time from arguments
+		if( args[0] instanceof Double)
+			this.maxNegotiationTime=(Double)args[0];
+		else
+			this.maxNegotiationTime=Double.valueOf((String) args[0]);
+		
+		//retrieve K and Beta from args
+		if( args[1] instanceof Double)
+			this.ParamK=(Double)args[1];
+		else
+			this.ParamK=Double.valueOf((String) args[1]);
+		
+		if( args[2] instanceof Double)
+			this.ParamBeta=(Double)args[2];
+		else
+			this.ParamBeta=Double.valueOf((String) args[2]);	
 		retailers = new ArrayList<>();
 
 		// get agents with retailer service
@@ -190,6 +202,7 @@ public class HomeAgent extends TradeAgent {
 
 		// create negotiators with params for each retailer
 		for (AID agent : retailers) {
+			say("ret"+agent.getLocalName());
 			this.negotiators.put(agent,
 					new HomeAgentNegotiator(this.maxNegotiationTime, strats, scoreWeights, homecacl));
 		}
@@ -245,7 +258,7 @@ public class HomeAgent extends TradeAgent {
 		}
 		
 		protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException {
-			say("OK I'll tell you time");
+//			say("OK I'll tell you time");
 			ACLMessage agree = request.createReply();
 			agree.setPerformative(ACLMessage.AGREE);
 			return agree;
@@ -269,10 +282,10 @@ public class HomeAgent extends TradeAgent {
 
 		protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException {
 			recievedDemand = new Demand(request);
-			say("DEMAND received demand from " + request.getSender().getName() + ". Demand is "
-					+ recievedDemand.getUnits() + " unit(s) from " + recievedDemand.getTime() + "h for "
-					+ recievedDemand.getDuration() + " Hrs");
-			say("OK ");
+//			say("DEMAND received demand from " + request.getSender().getName() + ". Demand is "
+//					+ recievedDemand.getUnits() + " unit(s) from " + recievedDemand.getTime() + "h for "
+//					+ recievedDemand.getDuration() + " Hrs");
+//			say("OK ");
 			ACLMessage agree = request.createReply();
 			agree.setPerformative(ACLMessage.AGREE);
 			return agree;
@@ -281,7 +294,7 @@ public class HomeAgent extends TradeAgent {
 		protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response)
 				throws FailureException {
 			if (schedule(recievedDemand.getUnits(), recievedDemand.getTime(), recievedDemand.getDuration())) {
-				say("YES Scehduled the demand succesfully");
+//				say("YES Scehduled the demand succesfully");
 				ACLMessage inform = request.createReply();
 				inform.setPerformative(ACLMessage.INFORM);
 				return inform;
@@ -405,7 +418,7 @@ public class HomeAgent extends TradeAgent {
 			if (status.equals(OfferStatus.REJECT)) {
 				// reject proposal
 				reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
-				reply.setContent("Times up");
+				reply.setContent(propose.getContent());
 				say("Times up -Rejected " + propose.getSender().getLocalName() + " offer " + propose.getContent());
 				// decrement activeagents
 				--activeAgents;
@@ -450,7 +463,7 @@ public class HomeAgent extends TradeAgent {
 			// handle accepted offers
 			if (acceptedScores.size() > 0) {
 				// select one with best score
-				double bestscore = 0;
+				double bestscore = Double.NEGATIVE_INFINITY;;
 				ACLMessage bestproposal = null;
 				for (Map.Entry<ACLMessage, Double> entry : acceptedScores.entrySet()) {
 					if (entry.getValue() > bestscore) {
@@ -483,14 +496,15 @@ public class HomeAgent extends TradeAgent {
 
 			}
 			// check if all rejected- we select best offer we cn get
-			boolean allRej = true;
+			boolean allRej = false;
 			for (Object obj : acceptances) {
 				ACLMessage msg = (ACLMessage) obj;
 				// check if all rejected
 				if (msg.getPerformative() != ACLMessage.REJECT_PROPOSAL) {
-					allRej = false;
-					break;
+					allRej = false;					
 				}
+				else
+					allRej=true;
 
 			}
 			if (allRej) {
@@ -563,7 +577,7 @@ public class HomeAgent extends TradeAgent {
 
 		public void handleAllRejections(Vector acceptances) {
 			// select one with best score
-			double bestscore = 0;
+			double bestscore = Double.NEGATIVE_INFINITY;
 			ACLMessage bestproposal = null;
 			for (Map.Entry<ACLMessage, Double> entry : proposalScores.entrySet()) {
 				if (entry.getValue() > bestscore) {
@@ -572,7 +586,7 @@ public class HomeAgent extends TradeAgent {
 				}
 
 			}
-			say("Accepting " + getfirstReciever(bestproposal).getLocalName() + " since best of all offers");
+			say("Accepting " + bestproposal.getSender().getLocalName() + " since best of all offers");
 			// accept best proposal and reject rest
 			// clear acceptances
 			acceptances.clear();
@@ -590,7 +604,7 @@ public class HomeAgent extends TradeAgent {
 
 		@Override
 		public int onEnd() {
-			say(negotiation.dailyThread.toString());
+//			say(negotiation.dailyThread.toString());
 			// save history to file
 			myHistory.saveTransactionHistory();
 			goNextHour();
