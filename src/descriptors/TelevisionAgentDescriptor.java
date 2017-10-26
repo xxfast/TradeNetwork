@@ -2,7 +2,7 @@ package descriptors;
 
 import annotations.Adjustable;
 
-public class TelevisionAgent extends ApplianceAgentDescriptor {
+public class TelevisionAgentDescriptor extends ApplianceAgentDescriptor {
 	@Adjustable private int energyUsage = 2;
 
 	
