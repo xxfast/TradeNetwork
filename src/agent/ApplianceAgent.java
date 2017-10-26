@@ -23,6 +23,7 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 	
 	private AID home;
 	private Demand startDemand; 
+	protected Time selfTime;
 	
 	public ApplianceAgent() {
 		this.registerO2AInterface(Object2ApplianceAgentInterface.class, this);
@@ -71,11 +72,11 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 			myAgent.addBehaviour( new AchieveREInitiator(myAgent,msg){
 				protected void handleInform(ACLMessage inform) {
 					Time time = new Time(inform);
+					ApplianceAgent.this.selfTime = time;
 					ApplianceAgent.this.say(time.toString());
 				}
 			});
 		}
-
 	}
 
 	
