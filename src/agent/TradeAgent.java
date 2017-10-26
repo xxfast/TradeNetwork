@@ -1,7 +1,15 @@
 package agent;
 
+import java.awt.Color;
+import java.beans.IntrospectionException;
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Iterator;
+import java.util.List;
 
+import annotations.Adjustable;
 import descriptors.TradeAgentDescriptor;
 import interfaces.Object2HomeAgentInterface;
 import interfaces.Object2TradeAgentInterface;
@@ -35,10 +43,24 @@ public class TradeAgent extends Agent implements Object2TradeAgentInterface{
 	protected void setup() {
 		say("Initialising!");
 		myHistory= new History(this.getLocalName());
+		
 	}
 	
-	public String getDescription(){
-		return getLocalName();
+	public void ExtractFromDesctiptor(Object[] descriptions) {
+		Class<?> selfType = this.getClass();
+		Field[] fields = selfType.getDeclaredFields();
+		for(int i =0; i< fields.length; i++) {
+			Field f = fields[i];
+			if(f.isAnnotationPresent(Adjustable.class)) {
+				try {
+					PropertyDescriptor pd = new PropertyDescriptor(f.getName(), selfType);
+					Method setter = pd.getWriteMethod();
+					Object fd = setter.invoke(this, descriptions[i]);
+				}catch (InvocationTargetException |  IntrospectionException | IllegalAccessException e) {
+					e.printStackTrace(System.out);
+				} 
+			}
+		}
 	}
 	
 	public AID getAgentFromAMS(String localname)
@@ -78,6 +100,7 @@ public class TradeAgent extends Agent implements Object2TradeAgentInterface{
 		return null;
 
 	}
+	
 	public void addToHistory(AgentNegotiator neg,ACLMessage result,boolean success,AID client)
 	{
 		Transaction trans=neg.getNegotiationThread().getAsTransaction();
@@ -95,8 +118,8 @@ public class TradeAgent extends Agent implements Object2TradeAgentInterface{
 		
 		myHistory.addTransaction(client.getLocalName(), trans);
 	}
-	public AID getfirstReciever(ACLMessage msg)
-	{
+	
+	public AID getfirstReciever(ACLMessage msg){
 		Iterator it=msg.getAllReceiver();
 		AID rec=(AID) it.next();
 		return rec;

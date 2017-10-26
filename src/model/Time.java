@@ -12,7 +12,6 @@ public class Time {
 	@Override
 	public String toString() {
 		return String.valueOf(time);
-		
 	}
 	
 	public Time(ACLMessage toParse) {

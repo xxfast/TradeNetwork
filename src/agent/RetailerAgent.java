@@ -58,27 +58,21 @@ public class RetailerAgent extends TradeAgent {
 		private int time;
 		private int units;
 		private int cost;
-		
 	}	
 	
 	private AgentDailyNegotiationThread dailyThread;
 	
 	//params needed to setup negotiators
 	//coming from args
-	@Adjustable(label="Max Iterations")
-	private double maxNegotiationTime=10;
-	@Adjustable(label="Parameter K")
-	private double ParamK=0.01;
-	@Adjustable(label="Parameter Beta")
-	private double ParamBeta=0.5;
+	@Adjustable private double maxNegotiationTime=10;
+	@Adjustable private double ParamK=0.01;
+	@Adjustable private double ParamBeta=0.5;
 	
 	private double tacticTimeWeight=0.4;
 	private double tacticResourceWeight=0.6;
 	private double tacticBehaviourWeight=0.3;
 	private int behaviourRange=2;
 	
-	
-
 	private Vector<EnergyUnit> energyUnitSchedule = new Vector<EnergyUnit>();
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
 	

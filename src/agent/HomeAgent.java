@@ -45,28 +45,22 @@ import simulation.Simulation;
 
 public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 	private final boolean INC = false;// customer mentality
-
-	private Logger myLogger = Logger.getMyLogger(getClass().getName());
-	private Random rand;
-	private Map<AID, HomeAgentNegotiator> negotiators;
-
-	private ArrayList<Demand> messages = new ArrayList<>();
-	private List<AID> retailers;
-
-	private int agentHour;
-	// params needed to setup negotiators
-	// coming from args
-	@Adjustable(label = "Max Iterations")
-	private double maxNegotiationTime = 8;
-	@Adjustable(label = "Parameter K")
-	private double ParamK = 0.01;
-	@Adjustable(label = "Parameter Beta")
-	private double ParamBeta = 0.5;
+	
+	@Adjustable private double maxNegotiationTime = 8;
+	@Adjustable private double ParamK = 0.01;
+	@Adjustable private double ParamBeta = 0.5;
 
 	private double tacticTimeWeight = 0.6;
 	private double tacticResourceWeight = 0.2;
 	private double tacticBehaviourWeight = 0.2;
 	private int behaviourRange = 2;
+
+	private Logger myLogger = Logger.getMyLogger(getClass().getName());
+	private Random rand;
+	private Map<AID, HomeAgentNegotiator> negotiators;
+	private ArrayList<Demand> messages = new ArrayList<>();
+	private List<AID> retailers;
+	private int agentHour;
 
 	private Schedule schedule = new Schedule();
 	
@@ -78,7 +72,6 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 	}
 
 	protected void setup() {
-		
 		super.setup();
 		setAgentHour(0);
 		rand = new Random();
