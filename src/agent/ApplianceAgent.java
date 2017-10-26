@@ -23,7 +23,7 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 	
 	private AID home;
 	private Demand startDemand; 
-	protected Time selfTime;
+	protected Time selfTime = new Time(0);
 	
 	public ApplianceAgent() {
 		this.registerO2AInterface(Object2ApplianceAgentInterface.class, this);
@@ -60,7 +60,7 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 	private class TimeAskingBehaviour extends TickerBehaviour{
 		
 		public TimeAskingBehaviour (Agent a) {
-			super(a, Simulation.Time / 5);
+			super(a, Simulation.Time);
 		}
 		
 		@Override
@@ -71,9 +71,9 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 			msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 			myAgent.addBehaviour( new AchieveREInitiator(myAgent,msg){
 				protected void handleInform(ACLMessage inform) {
-					Time time = new Time(inform);
-					ApplianceAgent.this.selfTime = time;
-					ApplianceAgent.this.say(time.toString());
+					//Time time = new Time(inform);
+					ApplianceAgent.this.selfTime = new Time( Long.parseLong(inform.getContent()));
+					ApplianceAgent.this.say(inform.getContent());
 				}
 			});
 		}
@@ -87,7 +87,7 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 	private class DemandingBehaviour extends TickerBehaviour{
 		
 		public DemandingBehaviour (Agent a) {
-			super(a, Simulation.Time / 5);
+			super(a, Simulation.Time);
 		}
 		
 		@Override
