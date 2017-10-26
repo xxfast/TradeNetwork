@@ -9,7 +9,7 @@ import model.Demand;
 public class ApplianceAgentDescriptor extends TradeAgentDescriptor implements IOwnable {
 	
 	@Adjustable private AID owner;
-	@Adjustable(label = "Starting Demand")private Demand startingDemand;
+	@Adjustable private Demand startingDemand;
 
 	public Demand getStartingDemand() {
 		return startingDemand;
