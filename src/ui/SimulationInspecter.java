@@ -252,7 +252,8 @@ public class SimulationInspecter {
 		mntmRemove.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
+				TradeAgentNode tn =  (TradeAgentNode)tree.getSelectionPath().getLastPathComponent();
+				toInspect.Remove(tn);
 			}
 		});
 		
