@@ -159,6 +159,11 @@ public class Simulation implements Serializable {
 		return agents;
 	}
 	
+
+	public void Remove(TradeAgentNode tn) {
+		// TODO Auto-generated method stub
+	}
+	
 	public TreeModel getAgents() {
 		return agents;
 	}
@@ -200,5 +205,6 @@ public class Simulation implements Serializable {
 	}
 
 	public enum State{ Running, Paused, Stopped }
+
 	
 }

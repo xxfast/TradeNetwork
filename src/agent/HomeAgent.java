@@ -323,6 +323,7 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 
 		@Override
 		public void onTick() {
+			discoverRetailers();
 			addBehaviour(new RequestQuote(myAgent, null, retailers));
 		}
 
