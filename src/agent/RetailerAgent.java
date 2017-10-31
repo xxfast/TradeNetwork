@@ -40,6 +40,7 @@ import negotiation.tactic.BehaviourDependentTactic;
 import negotiation.tactic.ResourceDependentTactic;
 import negotiation.tactic.Tactic;
 import negotiation.tactic.TimeDependentTactic;
+import negotiation.tactic.Tactic.Type;
 import negotiation.tactic.behaviour.AverageTitForTat;
 import negotiation.tactic.timeFunction.ResourceAgentsFunction;
 import negotiation.tactic.timeFunction.ResourceTimeFunction;
@@ -68,9 +69,10 @@ public class RetailerAgent extends TradeAgent {
 	@Adjustable private double maxNegotiationTime=10;
 	@Adjustable private double ParamK=0.01;
 	@Adjustable private double ParamBeta=0.5;
+	@Adjustable private Tactic.Type tacticType;
 	
 	private double tacticTimeWeight=0.4;
-	private double tacticResourceWeight=0.6;
+	private double tacticResourceWeight=0.3;
 	private double tacticBehaviourWeight=0.3;
 	private int behaviourRange=2;
 	
@@ -109,7 +111,14 @@ public class RetailerAgent extends TradeAgent {
 		if( args[2] instanceof Double)
 			this.ParamBeta=(Double)args[2];
 		else
-			this.ParamBeta=Double.valueOf((String) args[2]);		
+			this.ParamBeta=Double.valueOf((String) args[2]);
+		
+		//retrieve tactic to use
+		if( args[3] instanceof Tactic.Type)
+			this.tacticType=(Tactic.Type)args[3];
+		else
+			this.tacticType=Tactic.Type.valueOf(((String) args[3]).toUpperCase());	
+		
 		
 		//Describes the agent as a retail agent
 		setupServiceProviderComponent();
@@ -147,18 +156,39 @@ public class RetailerAgent extends TradeAgent {
 		AverageTitForTat tft = new AverageTitForTat(Item.PRICE);
 		
 		//create tactics
-		TimeDependentTactic tactic1= new TimeDependentTactic(poly, this.INC);
-		ResourceDependentTactic tactic2= new ResourceDependentTactic(rsrcFunc, this.INC);
-		BehaviourDependentTactic tactic3= new BehaviourDependentTactic(tft, this.behaviourRange);
+		Map<Tactic, Double> tactics = new HashMap<Tactic, Double>();
 		
+		if(tacticType.equals(Type.BEHAVIOURDEPENDENT))
+		{
+			BehaviourDependentTactic tactic3 = new BehaviourDependentTactic(tft, this.behaviourRange);
+			tactics.put(tactic3, new Double(1));
+		}
+		else if(tacticType.equals(Type.RESOURCEDEPENDENT))
+		{
+			//time is the resource
+			ResourceDependentTactic tactic2 = new ResourceDependentTactic(rsrcFunc, this.INC);
+			tactics.put(tactic2, new Double(1));
+		}
+		else if(tacticType.equals(Type.TIMEDEPENDENT))
+		{
+			TimeDependentTactic tactic1 = new TimeDependentTactic(poly, this.INC);
+			tactics.put(tactic1, new Double(1));
+		}
+		else
+		{
+			TimeDependentTactic tactic1 = new TimeDependentTactic(poly, this.INC);
+			ResourceDependentTactic tactic2 = new ResourceDependentTactic(rsrcFunc, this.INC);
+			BehaviourDependentTactic tactic3 = new BehaviourDependentTactic(tft, this.behaviourRange);
+			tactics.put(tactic1, new Double(this.tacticTimeWeight));
+			tactics.put(tactic2, new Double(this.tacticResourceWeight));
+			tactics.put(tactic3, new Double(this.tacticBehaviourWeight));
+		}
+//		say("Tactic is "+tacticType);
 		//create strategy and add tactics with weights
 		Strategy priceStrat= new Strategy(Strategy.Item.PRICE);
-		;//changes as new tactics added
+		//changes as new tactics added
 		
-		Map<Tactic,Double> tactics = new HashMap<Tactic,Double>();
-		tactics.put(tactic1, new Double(tacticTimeWeight));
-		tactics.put(tactic2, new Double(tacticResourceWeight));
-//		tactics.put(tactic3, new Double(tacticBehaviourWeight));
+	
 		try {
 			priceStrat.setTactics(tactics);
 		} catch (Exception e) {
