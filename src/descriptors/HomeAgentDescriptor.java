@@ -2,12 +2,14 @@ package descriptors;
 
 import annotations.Adjustable;
 import jade.core.AID;
+import negotiation.tactic.Tactic;
 
 @Adjustable(label = "An agent representing a single home")
 public class HomeAgentDescriptor extends TradeAgentDescriptor {
 	@Adjustable private double maxNegotiationTime; // must be non-zero
 	@Adjustable private double paramK;
 	@Adjustable private double paramBeta;
+	@Adjustable private Tactic.Type tacticType;
 	
 	public double getMaxNegotiationTime() {
 		return maxNegotiationTime;
@@ -33,12 +35,20 @@ public class HomeAgentDescriptor extends TradeAgentDescriptor {
 		this.paramBeta = paramBeta;
 	}
 
+	public Tactic.Type getTacticType() {
+		return tacticType;
+	}
+
+	public void setTacticType(Tactic.Type tacticType) {
+		this.tacticType = tacticType;
+	}
+
 	public String getDescription() {
-		return String.format("[HomeAgent: "+getMaxNegotiationTime()+","+getParamK()+","+getParamBeta()+"]");
+		return String.format("[HomeAgent: "+getMaxNegotiationTime()+","+getParamK()+","+getParamBeta()+","+getTacticType()+"]");
 	}
 	
 	public Object[] toArray() {
-		Object[] toReturn = new Object[]{getMaxNegotiationTime(),getParamK(),getParamBeta()};
+		Object[] toReturn = new Object[]{getMaxNegotiationTime(),getParamK(),getParamBeta(),getTacticType()};
 		return toReturn;
 	}
 	
