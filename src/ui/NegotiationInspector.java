@@ -69,7 +69,7 @@ public class NegotiationInspector extends JFrame {
 		for(AID agent : negotiations.keySet()) {
 			for(Party p : negotiations.get(agent).keySet()) {
 				for(Offer o : negotiations.get(agent).get(p)) {
-					dataset.addValue(o.getOfferValue(Strategy.Item.PRICE), (p==Party.SELF)?"Me":agent.getLocalName(), negotiations.get(agent).get(p).indexOf(o)+"");
+					dataset.addValue(o.getOfferValue(Strategy.Item.PRICE), (p==Party.SELF)?"Me"+agent.getLocalName():agent.getLocalName(), negotiations.get(agent).get(p).indexOf(o)+"");
 				}
 			}
 		}
