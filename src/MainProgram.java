@@ -22,6 +22,7 @@ import jade.wrapper.AgentContainer;
 import jade.wrapper.AgentController;
 import jade.wrapper.StaleProxyException;
 import model.Demand;
+import negotiation.tactic.Tactic;
 import simulation.Simulation;
 import ui.SimulationInspecter;
 
@@ -83,6 +84,7 @@ public class MainProgram {
 		myHomeAgent.setMaxNegotiationTime(6);
 		myHomeAgent.setParamK(0.01);
 		myHomeAgent.setParamBeta(0.5);
+		myHomeAgent.setTacticType(Tactic.Type.TIMEDEPENDENT);
 		test.CreateTradeAgent(myHomeAgent);
 		
 //		//Create a agent of class ApplianceAgent 
@@ -109,6 +111,7 @@ public class MainProgram {
 		myRetailerAgent.setMaxNegotiationTime(6);
 		myRetailerAgent.setParamK(0.01);
 		myRetailerAgent.setParamBeta(0.5);
+		myRetailerAgent.setTacticType(Tactic.Type.TIMEDEPENDENT);
 		test.CreateTradeAgent(myRetailerAgent);
 		
 		return test;

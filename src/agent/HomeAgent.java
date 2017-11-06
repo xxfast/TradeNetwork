@@ -12,6 +12,9 @@ import interfaces.Object2HomeAgentInterface;
 import interfaces.Object2TradeAgentInterface;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.FSMBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.ParallelBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -46,6 +49,9 @@ import negotiation.tactic.timeFunction.TimeWeightedPolynomial;
 import simulation.Simulation;
 
 public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
+	
+	private static final String LISTENING = "A";
+	private static final String NEGOTIATING = "B";
 	private final boolean INC = false;// customer mentality
 	
 	@Adjustable private double maxNegotiationTime = 8;
@@ -79,7 +85,6 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 		setAgentHour(0);
 		rand = new Random();
 
-		
 		Object[] args = this.getArguments();
 		//set negotiation time from arguments
 		if( args[0] instanceof Double)
@@ -102,7 +107,6 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 			this.tacticType=(Tactic.Type)args[3];
 		else
 			this.tacticType=Tactic.Type.valueOf(((String) args[3]).toUpperCase());	
-		
 
 		negotiators = new HashMap<>();
 		discoverRetailers();
@@ -113,10 +117,52 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 		 * 3) start keeping time
 		 * 4) start telling time
 		 */
-		negotiation = new NegotiatingBehaviour(this);
-		addBehaviour(new TimeTellingBehaviour(this));
-		addBehaviour(new DemandListeningBehaviour(this));
-		addBehaviour(getNegotiation());
+//		addBehaviour(new TimeTellingBehaviour(this));
+//		addBehaviour(new DemandListeningBehaviour(this));
+//		addBehaviour(getNegotiation());
+		
+		FSMBehaviour fsm = new FSMBehaviour(this) {
+			public int onEnd() {
+				say("Life cycle terminated");
+				return super.onEnd();
+			}
+		};
+
+		fsm.registerFirstState(new ListeningBehaviour(this), LISTENING); 
+		negotiation = new NegotiatingBehaviour(this, fsm);
+		fsm.registerState(negotiation, NEGOTIATING);
+		fsm.registerDefaultTransition(LISTENING, NEGOTIATING);
+		fsm.registerDefaultTransition(NEGOTIATING, LISTENING);
+		
+		addBehaviour(fsm);
+	}
+	
+	public class ListeningBehaviour extends ParallelBehaviour{
+		public ListeningBehaviour(Agent owner) {
+			super(owner, ParallelBehaviour.WHEN_ANY);
+			say("Starting to listen");
+			addSubBehaviour(new TimeTellingBehaviour(owner));
+			addSubBehaviour(new DemandListeningBehaviour(owner));
+			addSubBehaviour(new TimeKeepingBehavior(owner));
+		}
+	}
+	
+	public class TimeKeepingBehavior extends TickerBehaviour{
+
+		public TimeKeepingBehavior(Agent a) {
+			super(a, Simulation.Time);
+		}
+
+		@Override
+		protected void onTick() {
+			stop();
+			onEnd();
+		}
+		
+		public int onEnd() {
+			return 0;
+		}
+		
 	}
 
 	public void discoverRetailers() {
@@ -263,29 +309,6 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 	public NegotiatingBehaviour getNegotiation() {
 		return negotiation;
 	}
-
-	public class TimeKeepingBehavior extends TickerBehaviour {
-		
-		private long localTime = 0;
-		
-		public TimeKeepingBehavior(Agent a) {
-			super(a, Simulation.Time/60);
-		}
-
-		public void setLocalTime(long localTime) {
-			this.localTime = localTime;
-		}
-
-		@Override
-		protected void onTick() {
-			localTime++;
-		}
-
-		public Time getTime() {
-			return new Time(localTime);
-		}
-
-	}
 	
 	private class TimeTellingBehaviour extends AchieveREResponder {
 
@@ -344,18 +367,17 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 
 	}
 
-	public class NegotiatingBehaviour extends TickerBehaviour {
+	public class NegotiatingBehaviour extends ParallelBehaviour {
 		
-		private AgentDailyNegotiationThread dailyThread = new AgentDailyNegotiationThread ();
-		
-		public NegotiatingBehaviour(Agent a) {
-			super(a, Simulation.Time); 
-		}
+		private AgentDailyNegotiationThread dailyThread;
+		private FSMBehaviour owner;
 
-		@Override
-		public void onTick() {
-			discoverRetailers();
-			addBehaviour(new RequestQuote(myAgent, null, retailers));
+		public NegotiatingBehaviour(HomeAgent homeAgent, FSMBehaviour owner) {
+			super(ParallelBehaviour.WHEN_ANY);
+			this.owner = owner;
+			say("Starting to negotiate");
+			dailyThread = new AgentDailyNegotiationThread ();
+			owner.registerState(new RequestQuote(myAgent, null, retailers, this), NEGOTIATING);
 		}
 
 		public AgentDailyNegotiationThread getDailyThread() {
@@ -374,19 +396,22 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 		private Integer activeAgents;
 		private Map<ACLMessage, Double> acceptedScores;
 		private Map<ACLMessage, Double> proposalScores;
+		
+		private NegotiatingBehaviour owner;
 
-		public RequestQuote(Agent a, ACLMessage msg, List<AID> retailers) {
+		public RequestQuote(Agent a, ACLMessage msg, List<AID> retailers, NegotiatingBehaviour own) {
 			super(a, msg);
 			retailAgents = retailers;
 			activeAgents = new Integer(retailers.size());
 			acceptedScores = new HashMap<>();
 			proposalScores = new HashMap<>();
+			owner = own;
 
 			// setup home negotiators
 			setupHomeNegotiators(activeAgents);
 			// add negotiations to dailyNegotiaition threads
 			for (Map.Entry<AID, HomeAgentNegotiator> entry : negotiators.entrySet()) {
-				HomeAgent.this.getNegotiation().getDailyThread().addHourThread(getAgentHour(), entry.getKey(), entry.getValue().getNegotiationThread());
+				owner.getDailyThread().addHourThread(getAgentHour(), entry.getKey(), entry.getValue().getNegotiationThread());
 			}
 		}
 
@@ -407,6 +432,7 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 				// terminate if units required is 0
 				if (schedDemand.getUnits() == 0) {
 					forceTransitionTo(DUMMY_FINAL);
+					//this.onEnd();
 					return cfps;
 				}
 
@@ -642,7 +668,7 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 
 		@Override
 		public int onEnd() {
-//			say(negotiation.dailyThread.toString());
+			say(owner.dailyThread.toString());
 			// save history to file
 			myHistory.saveTransactionHistory();
 			goNextHour();
