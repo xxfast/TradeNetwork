@@ -41,20 +41,24 @@ public class MainProgram {
 	
 	public static Simulation toRun;
 	
-	public static void main(String[] args) throws StaleProxyException, InterruptedException {
+	public static void main(String[] args)  {
 		// Get a hold to the JADE runtime
 		Runtime rt = Runtime.instance();
 		
 		// Launch the Main Container (with the administration GUI on top) listening on port 8888
 		say(": Launching the platform Main Container...");
 		Profile pMain = new ProfileImpl(null, 8888, null); 
-		pMain.setParameter(Profile.GUI, "true");
+		pMain.setParameter(Profile.GUI, "false");
 		
 		// Get the Agent container
 		container = rt.createMainContainer(pMain);
 		
+		try {
 		// Set a default simulation
 		toRun = CreateDefaultSimulation();
+		}catch(StaleProxyException e) {
+			
+		}
 		
 		// Start the main UI
 		EventQueue.invokeLater(new Runnable() {

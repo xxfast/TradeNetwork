@@ -57,4 +57,4 @@ APDescription.txt
 MTPs-Main-Container.txt
 resources/data/history/*
 
-dist/
+dist/*
