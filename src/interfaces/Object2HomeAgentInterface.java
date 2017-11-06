@@ -1,8 +1,8 @@
 package interfaces;
 
-import agent.HomeAgent.NegotiatingBehaviour;
+import model.AgentDailyNegotiationThread;
 
 public interface Object2HomeAgentInterface extends Object2TradeAgentInterface {
-	 NegotiatingBehaviour getNegotiation();
-	 void discoverRetailers();
+	AgentDailyNegotiationThread getDailyThread();
+	void discoverRetailers();
 }

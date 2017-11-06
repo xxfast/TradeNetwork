@@ -12,6 +12,7 @@ import controllers.TradeAgentController;
 import descriptors.ApplianceAgentDescriptor;
 import descriptors.HeaterAgentDescriptor;
 import descriptors.HomeAgentDescriptor;
+import descriptors.RefrigeratorAgentDescriptor;
 import descriptors.RetailerAgentDescriptor;
 import descriptors.SchedulingAgentDescriptor;
 import jade.core.AID;
@@ -100,12 +101,13 @@ public class MainProgram {
 //		test.CreateTradeAgent(myApplianceAgent);
 		
 		//Create a agent of class ApplianceAgent 
-		say("Starting up a HeaterApplianceAgent...");
-		HeaterAgentDescriptor myHeaterAgent = new HeaterAgentDescriptor();
-		myHeaterAgent.setName("Heater");
-		myHeaterAgent.setOwner(new AID(myHomeAgent.getName(), AID.ISLOCALNAME));
-		myHeaterAgent.setStartingDemand(new Demand(1));
-		test.CreateTradeAgent(myHeaterAgent);
+		say("Starting up a FridgeApplianceAgent...");
+		RefrigeratorAgentDescriptor myFridgeAgent = new RefrigeratorAgentDescriptor();
+		myFridgeAgent.setName("Fridge");
+		myFridgeAgent.setOwner(new AID(myHomeAgent.getName(), AID.ISLOCALNAME));
+		myFridgeAgent.setStartingDemand(new Demand(1));
+		myFridgeAgent.setEnergyUsage(1);
+		test.CreateTradeAgent(myFridgeAgent);
 		
 		// Create a agent of class RetailerAgent 
 		say("Starting up a RetailerAgent...");
