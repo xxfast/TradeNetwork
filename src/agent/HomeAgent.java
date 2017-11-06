@@ -75,7 +75,6 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 	private Schedule schedule = new Schedule();
 	private AgentDailyNegotiationThread dailyThread;
 	
-	private TimeKeepingBehavior time; 
 	private FSMBehaviour lifecycle;
 	private RequestQuote lastQuote;
 	
@@ -133,7 +132,7 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 	}
 	
 	public void RegisterLifeCycle(FSMBehaviour fsm) {
-		this.removeBehaviour(fsm);
+		removeBehaviour(fsm);
 		fsm.registerFirstState(new TimeKeepingBehavior(this), IDLE); 
 		fsm.registerState( new NegotiatingBehavior(this), NEGOTIATING);
 		fsm.registerTransition(IDLE, NEGOTIATING, 0);
@@ -309,14 +308,6 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 		this.agentHour = agentHour;
 	}
 	
-	public TimeKeepingBehavior getTime() {
-		return time;
-	}
-
-	public void setTime(TimeKeepingBehavior time) {
-		this.time = time;
-	}
-
 	public AgentDailyNegotiationThread getDailyThread() {
 		return dailyThread;
 	}
