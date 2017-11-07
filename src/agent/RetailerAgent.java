@@ -43,6 +43,7 @@ import negotiation.tactic.TimeDependentTactic;
 import negotiation.tactic.Tactic.Type;
 import negotiation.tactic.behaviour.AverageTitForTat;
 import negotiation.tactic.timeFunction.ResourceAgentsFunction;
+import negotiation.tactic.timeFunction.ResourceEnergyStoreFunction;
 import negotiation.tactic.timeFunction.ResourceTimeFunction;
 import negotiation.tactic.timeFunction.TimeWeightedFunction;
 import negotiation.tactic.timeFunction.TimeWeightedPolynomial;
@@ -79,14 +80,10 @@ public class RetailerAgent extends TradeAgent {
 	private Vector<EnergyUnit> energyUnitSchedule = new Vector<EnergyUnit>();
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
 	
-	// The agent's cost per unit requested by the home agent
-	private int energyRate;
 	
-	// Max units the agent can provide in one transaction
-	private int energyThreshold;
 	
 	// [install later] Amount of energy the retailer agent has, determines rate and threshold
-	private int energyStored = 0;
+	private Double energyStored = 100.00;
 	
 	protected void setup() {
 		super.setup();
@@ -119,13 +116,18 @@ public class RetailerAgent extends TradeAgent {
 		else
 			this.tacticType=Tactic.Type.valueOf(((String) args[3]).toUpperCase());	
 		
+		if( args[4] instanceof Double)
+			this.energyStored=(Double)args[4];
+		else
+			this.energyStored=Double.valueOf(((String) args[4]));	
+		
 		
 		//Describes the agent as a retail agent
 		setupServiceProviderComponent();
 
 		dailyThread= new AgentDailyNegotiationThread();
 
-		say("Retailer "+this.getName());
+		say("Retailer "+this.getName()+" with energy stored "+this.energyStored);
 
 
 		
@@ -149,8 +151,11 @@ public class RetailerAgent extends TradeAgent {
 				
 		//create TWfunction
 		TimeWeightedFunction poly = new TimeWeightedPolynomial(this.ParamK, this.ParamBeta, this.maxNegotiationTime);
-		//create RAFunction- for resource dep tactic
+		//create RAFunction- for resource dep tactic- no lnger using
 		ResourceTimeFunction rsrcFunc= new ResourceTimeFunction(this.ParamK, this.maxNegotiationTime);
+		
+		//create RAFunction- EnergyStore Func
+		ResourceEnergyStoreFunction rsrcEnFunc= new ResourceEnergyStoreFunction(this.ParamK, this.energyStored);
 		
 		//create behTFT- for behaviour dep tactic
 		AverageTitForTat tft = new AverageTitForTat(Item.PRICE);
@@ -166,7 +171,7 @@ public class RetailerAgent extends TradeAgent {
 		else if(tacticType.equals(Type.RESOURCEDEPENDENT))
 		{
 			//time is the resource
-			ResourceDependentTactic tactic2 = new ResourceDependentTactic(rsrcFunc, this.INC);
+			ResourceDependentTactic tactic2 = new ResourceDependentTactic(rsrcEnFunc, this.INC);
 			tactics.put(tactic2, new Double(1));
 		}
 		else if(tacticType.equals(Type.TIMEDEPENDENT))
@@ -177,7 +182,7 @@ public class RetailerAgent extends TradeAgent {
 		else
 		{
 			TimeDependentTactic tactic1 = new TimeDependentTactic(poly, this.INC);
-			ResourceDependentTactic tactic2 = new ResourceDependentTactic(rsrcFunc, this.INC);
+			ResourceDependentTactic tactic2 = new ResourceDependentTactic(rsrcEnFunc, this.INC);
 			BehaviourDependentTactic tactic3 = new BehaviourDependentTactic(tft, this.behaviourRange);
 			tactics.put(tactic1, new Double(this.tacticTimeWeight));
 			tactics.put(tactic2, new Double(this.tacticResourceWeight));
@@ -275,10 +280,15 @@ public class RetailerAgent extends TradeAgent {
 		
 		@Override
 		protected ACLMessage handleAcceptProposal(ACLMessage cfp, ACLMessage propose, ACLMessage accept) throws FailureException {
-			say("yay my offer accepted");
+			say("yay offer accepted");
 			ACLMessage resp=accept.createReply();
 			say("Accepted"+propose.getContent());
-			resp.setContent("Accepted"+propose.getContent());
+			Offer off= new Offer(propose);
+			//reduce energy stored- i.e. delivering energy to home
+			int deliverUnits=off.getDemand().getUnits();
+			RetailerAgent.this.energyStored-=deliverUnits;
+			resp.setContent("Accepted "+propose.getContent()+"\n Units delivered "+deliverUnits);
+			say("Energy Remaining "+RetailerAgent.this.energyStored);
 			resp.setPerformative(ACLMessage.INFORM);
 			return resp;
 			
@@ -346,11 +356,4 @@ public class RetailerAgent extends TradeAgent {
 		return value;
 	}
 
-	public int getEnergyStored() {
-		return energyStored;
-	}
-
-	public void setEnergyStored(int energyStored) {
-		this.energyStored = energyStored;
-	}
 }
