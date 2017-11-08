@@ -15,6 +15,7 @@ import jade.core.Agent;
 import jade.core.behaviours.FSMBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.ParallelBehaviour;
+import jade.core.behaviours.SequentialBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.core.behaviours.WakerBehaviour;
 import jade.domain.FIPANames;
@@ -75,7 +76,7 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 	private Schedule schedule = new Schedule();
 	private AgentDailyNegotiationThread dailyThread;
 	
-	private FSMBehaviour lifecycle;
+	private SequentialBehaviour lifecycle;
 	private RequestQuote lastQuote;
 	
 	public HomeAgent() {
@@ -84,6 +85,7 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 
 	protected void setup() {
 		super.setup();
+//		this.setMuted(true);
 		setAgentHour(0);
 		rand = new Random();
 		setDailyThread(new AgentDailyNegotiationThread ());
@@ -121,58 +123,24 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 		 */
 		addBehaviour(new TimeTellingBehaviour(this));
 		addBehaviour(new DemandListeningBehaviour(this));
-		setLifecycle(new FSMBehaviour(this) {
-			public int onEnd() {
-				say("Life cycle terminated");
-				return super.onEnd();
-			}
-		});
-		RegisterLifeCycle(getLifecycle());
+		addBehaviour(new LifecycleBehaviour(this));
 		
 	}
 	
-	public void RegisterLifeCycle(FSMBehaviour fsm) {
-		removeBehaviour(fsm);
-		fsm.registerFirstState(new TimeKeepingBehavior(this), IDLE); 
-		fsm.registerState( new NegotiatingBehavior(this), NEGOTIATING);
-		fsm.registerTransition(IDLE, NEGOTIATING, 0);
-		fsm.registerDefaultTransition(NEGOTIATING, IDLE);
-		addBehaviour(fsm);
-	}
-	
-	public class NegotiatingBehavior extends WakerBehaviour{
-		public NegotiatingBehavior(Agent a) {
+	private class LifecycleBehaviour extends TickerBehaviour{
+
+		public LifecycleBehaviour(Agent a) {
 			super(a, Simulation.Time);
 		}
-		
-		public void onWake() {
-			say("Giving time to finsh negotiating");
+
+		@Override
+		protected void onTick() {
 			if(lastQuote!=null) {
 				say("Remove previous behaviour");
 				myAgent.removeBehaviour(lastQuote);
 			}
 			lastQuote = new RequestQuote((HomeAgent) myAgent, null, retailers);
 			myAgent.addBehaviour(lastQuote);
-		}
-
-		public int onEnd() {
-			return 0;
-		}
-		
-	}
-	
-	public class TimeKeepingBehavior extends WakerBehaviour{
-
-		public TimeKeepingBehavior(Agent a) {
-			super(a, Simulation.Time);
-		}
-
-		protected void onWake() { 
-			say("Enough waiting around, starting to negotiate");
-		}
-		
-		public int onEnd() {
-			return 0;
 		}
 		
 	}
@@ -316,13 +284,6 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 		this.dailyThread = dailyThread;
 	}
 
-	private FSMBehaviour getLifecycle() {
-		return lifecycle;
-	}
-
-	private void setLifecycle(FSMBehaviour lifecycle) {
-		this.lifecycle = lifecycle;
-	}
 
 	private class TimeTellingBehaviour extends AchieveREResponder {
 
@@ -663,7 +624,6 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 			// save history to file
 			myHistory.saveTransactionHistory();
 			goNextHour();
-			((HomeAgent)myAgent).RegisterLifeCycle(getLifecycle());
 			return super.onEnd();
 		}
 
