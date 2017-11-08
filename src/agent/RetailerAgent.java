@@ -227,7 +227,7 @@ public class RetailerAgent extends TradeAgent {
 			//get demand from initial Message
 			Offer off = new Offer(initialMessage);
 			Demand demand=off.getDemand();
-			say("recieved demand "+demand.getContent());
+			say("recieved demand "+demand.getContent() + " from " + initialMessage.getSender().getLocalName());
 			//add negotiator to daily thread
 			dailyThread.addHourThread(demand.getTime(), initialMessage.getSender(), negotiator.getNegotiationThread());
 			//setup initial issue 

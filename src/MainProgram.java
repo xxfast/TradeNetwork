@@ -12,6 +12,7 @@ import controllers.TradeAgentController;
 import descriptors.ApplianceAgentDescriptor;
 import descriptors.HeaterAgentDescriptor;
 import descriptors.HomeAgentDescriptor;
+import descriptors.RefrigeratorAgentDescriptor;
 import descriptors.RetailerAgentDescriptor;
 import descriptors.SchedulingAgentDescriptor;
 import jade.core.AID;
@@ -22,6 +23,7 @@ import jade.wrapper.AgentContainer;
 import jade.wrapper.AgentController;
 import jade.wrapper.StaleProxyException;
 import model.Demand;
+import negotiation.tactic.Tactic;
 import simulation.Simulation;
 import ui.SimulationInspecter;
 
@@ -82,38 +84,64 @@ public class MainProgram {
 		
 		// Create a agent of class HomeAgent 
 		say("Starting up a HomeAgent...");
-		HomeAgentDescriptor myHomeAgent = new HomeAgentDescriptor();
-		myHomeAgent.setName("Home");
-		myHomeAgent.setMaxNegotiationTime(6);
-		myHomeAgent.setParamK(0.01);
-		myHomeAgent.setParamBeta(0.5);
-		test.CreateTradeAgent(myHomeAgent);
+		HomeAgentDescriptor myHome1Agent = new HomeAgentDescriptor();
+		myHome1Agent.setName("Home1");
+		myHome1Agent.setMaxNegotiationTime(6);
+		myHome1Agent.setParamK(0.01);
+		myHome1Agent.setParamBeta(0.5);
+		myHome1Agent.setTacticType(Tactic.Type.TIMEDEPENDENT);
+		test.CreateTradeAgent(myHome1Agent);
 		
-//		//Create a agent of class ApplianceAgent 
-//		say("Starting up a ApplianceAgent...");
-//		ApplianceAgentDescriptor myApplianceAgent = new ApplianceAgentDescriptor();
-//		myApplianceAgent.setName("Lights");
-//		myApplianceAgent.setOwner(new AID(myHomeAgent.getName(), AID.ISLOCALNAME));
-//		myApplianceAgent.setStartingDemand(new Demand(1));
-//		test.CreateTradeAgent(myApplianceAgent);
+//		// Create a agent of class HomeAgent 
+//		say("Starting up a Home2Agent...");
+//		HomeAgentDescriptor myHome2Agent = new HomeAgentDescriptor();
+//		myHome2Agent.setName("Home2");
+//		myHome2Agent.setMaxNegotiationTime(6);
+//		myHome2Agent.setParamK(0.01);
+//		myHome2Agent.setParamBeta(0.9);
+//		myHome2Agent.setTacticType(Tactic.Type.TIMEDEPENDENT);
+//		test.CreateTradeAgent(myHome2Agent);
 		
 		//Create a agent of class ApplianceAgent 
-		say("Starting up a HeaterApplianceAgent...");
-		HeaterAgentDescriptor myHeaterAgent = new HeaterAgentDescriptor();
-		myHeaterAgent.setName("Heater");
-		myHeaterAgent.setOwner(new AID(myHomeAgent.getName(), AID.ISLOCALNAME));
-		myHeaterAgent.setStartingDemand(new Demand(1));
-		test.CreateTradeAgent(myHeaterAgent);
+		say("Starting up a FridgeApplianceAgent...");
+		RefrigeratorAgentDescriptor myFridge1Agent = new RefrigeratorAgentDescriptor();
+		myFridge1Agent.setName("Fridge1");
+		myFridge1Agent.setOwner(new AID(myHome1Agent.getName(), AID.ISLOCALNAME));
+		myFridge1Agent.setStartingDemand(new Demand(1));
+		myFridge1Agent.setEnergyUsage(1);
+		test.CreateTradeAgent(myFridge1Agent);
+		
+//		//Create a agent of class ApplianceAgent 
+//		say("Starting up a FridgeApplianceAgent...");
+//		RefrigeratorAgentDescriptor myFridge2Agent = new RefrigeratorAgentDescriptor();
+//		myFridge2Agent.setName("Fridge2");
+//		myFridge2Agent.setOwner(new AID(myHome2Agent.getName(), AID.ISLOCALNAME));
+//		myFridge2Agent.setStartingDemand(new Demand(1));
+//		myFridge2Agent.setEnergyUsage(1);
+//		test.CreateTradeAgent(myFridge2Agent);
 		
 		// Create a agent of class RetailerAgent 
 		say("Starting up a RetailerAgent...");
 		RetailerAgentDescriptor myRetailerAgent = new RetailerAgentDescriptor();
 		myRetailerAgent.setName("SimpleEnergy");
 
-		myRetailerAgent.setMaxNegotiationTime(6);
+		myRetailerAgent.setMaxNegotiationTime(10);
 		myRetailerAgent.setParamK(0.01);
 		myRetailerAgent.setParamBeta(0.5);
+		myRetailerAgent.setTacticType(Tactic.Type.COMBINATION);
 		test.CreateTradeAgent(myRetailerAgent);
+		
+
+		// Create a agent of class RetailerAgent 
+		say("Starting up a Retailer2Agent...");
+		RetailerAgentDescriptor myRetailer2Agent = new RetailerAgentDescriptor();
+		myRetailer2Agent.setName("AGL");
+
+		myRetailer2Agent.setMaxNegotiationTime(9);
+		myRetailer2Agent.setParamK(0.6);
+		myRetailer2Agent.setParamBeta(0.1);
+		myRetailer2Agent.setTacticType(Tactic.Type.COMBINATION);
+		test.CreateTradeAgent(myRetailer2Agent);
 		
 		return test;
 	}

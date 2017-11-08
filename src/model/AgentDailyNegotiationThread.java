@@ -4,10 +4,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import jade.core.AID;
 import model.AgentDailyNegotiationThread.Party;
 import negotiation.NegotiationThread;
+import negotiation.Strategy;
 
 public class AgentDailyNegotiationThread {
 	public enum Party{
@@ -65,6 +67,40 @@ public class AgentDailyNegotiationThread {
 		}
 		else return null;
 	}
+	
+	public List<AID> getAgents(){
+		List<AID> toReturn = new ArrayList<AID>();
+		for(Map.Entry<Integer, Map<AID,NegotiationThread>> hourly: dailyThreads.entrySet()) {
+			for(AID id : hourly.getValue().keySet()) {
+				if(!toReturn.contains(id)) {
+					toReturn.add(id);
+				}
+			}
+		}
+		return toReturn;
+	}
+	
+	public double[] getMaxMinPrice(){
+		double max = 0;
+		double min = Double.MAX_VALUE;
+		for(Map.Entry<Integer, Map<AID,NegotiationThread>> hour: dailyThreads.entrySet()) {
+			Map<AID, Map<Party,List<Offer>>> negotiations = getNegotiationsForHour(hour.getKey());
+			for(AID agent : negotiations.keySet()) {
+				for(Party p : negotiations.get(agent).keySet()) {
+					for(Offer o : negotiations.get(agent).get(p)) {
+						if(max < o.getOfferValue(Strategy.Item.PRICE)) {
+							max =  o.getOfferValue(Strategy.Item.PRICE);
+						}
+						if(min > o.getOfferValue(Strategy.Item.PRICE)) {
+							min =  o.getOfferValue(Strategy.Item.PRICE);
+						}
+					}
+				}
+			}
+		}
+		return new double[]{min,max};
+	}
+	
 	@Override
 	public String toString()
 	{

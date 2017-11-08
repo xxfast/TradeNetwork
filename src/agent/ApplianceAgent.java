@@ -3,10 +3,11 @@ package agent;
 import java.util.Date;
 
 import FIPA.DateTime;
-import agent.HomeAgent.TimeKeepingBehavior;
 import interfaces.Object2ApplianceAgentInterface;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.SequentialBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
@@ -24,6 +25,8 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 	private AID home;
 	private Demand startDemand; 
 	protected Time selfTime = new Time(0);
+	
+	private SequentialBehaviour lifecycle;
 	
 	public ApplianceAgent() {
 		this.registerO2AInterface(Object2ApplianceAgentInterface.class, this);
@@ -47,26 +50,18 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 			setStartDemand(new Demand(Integer.valueOf((String) args[1])));
 
 		if( getHome() != null) {
-			addBehaviour(new TimeAskingBehaviour(this));
-			StartDemanding();
+			addBehaviour(new DemandingBehaviour(this));
 		}
 	}
 	
-	/**
-	 * Start the demanding behavior of the appliance based off the starting demand
-	 */
-	public void StartDemanding() {
-		addBehaviour(new DemandingBehaviour(this));
-	}
-	
-	private class TimeAskingBehaviour extends TickerBehaviour{
+	private class TimeAskingBehaviour extends OneShotBehaviour{
 		
 		public TimeAskingBehaviour (Agent a) {
-			super(a, Simulation.Time);
+			super(a);
 		}
 		
 		@Override
-		protected void onTick() {
+		public void action() {
 			say("Asking my home agent for the time");
 			ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
 			msg.addReceiver(home);
@@ -74,7 +69,6 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 			myAgent.addBehaviour( new AchieveREInitiator(myAgent,msg){
 				protected void handleInform(ACLMessage inform) {
 					//Time time = new Time(inform);
-					ApplianceAgent.this.selfTime = new Time( Long.parseLong(inform.getContent()));
 					ApplianceAgent.this.say(inform.getContent());
 				}
 			});
@@ -93,7 +87,7 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 		}
 		
 		@Override
-		protected void onTick() {
+		public void onTick() {
 			Demand myDemand = getCurrentDemand();
 			say("Making a demand to the scheduler DEMAND=("+ myDemand.getContent()+")");
 			ACLMessage msg = myDemand.createACLMessage(ACLMessage.INFORM);
@@ -107,6 +101,7 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 				
 				protected void handleInform(ACLMessage inform) {
 					say(inform.getSender().getName() + " successfully scheduled my Demand");
+					ApplianceAgent.this.selfTime.Increment();
 				}
 			});
 		}
