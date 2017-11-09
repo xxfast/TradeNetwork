@@ -2,20 +2,23 @@ package negotiation.tactic.timeFunction;
 
 public class ResourceEnergyStoreFunction extends ResourceFunction{
 
-	//basic function is- lower the energy remaining the higher the cost, thus want to sell at reservation val
+	public final double K=4.00;
 	private Double currentEnergy;
-	private Double fixedMaintanenceCost;
+	private double max_energy;
+	
 	public ResourceEnergyStoreFunction(double k, Double energy) {
 		super(k);
 		this.currentEnergy=energy;
-		this.fixedMaintanenceCost=25.00;
+		max_energy=energy.doubleValue();
+		
 		// TODO Auto-generated constructor stub
 	}
 
 	@Override
 	protected double calculateResource(double time) {
 		// TODO Auto-generated method stub
-		return currentEnergy/fixedMaintanenceCost;
+		//returning normalized value btw 0-4
+		return currentEnergy*(K/max_energy);
 	}
 
 }

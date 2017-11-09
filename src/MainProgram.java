@@ -128,7 +128,8 @@ public class MainProgram {
 		myRetailerAgent.setMaxNegotiationTime(10);
 		myRetailerAgent.setParamK(0.01);
 		myRetailerAgent.setParamBeta(0.5);
-		myRetailerAgent.setTacticType(Tactic.Type.COMBINATION);
+		myRetailerAgent.setTacticType(Tactic.Type.RESOURCEDEPENDENT);
+		myRetailerAgent.setEnergyStored(20);
 		test.CreateTradeAgent(myRetailerAgent);
 		
 
@@ -141,6 +142,7 @@ public class MainProgram {
 		myRetailer2Agent.setParamK(0.6);
 		myRetailer2Agent.setParamBeta(0.1);
 		myRetailer2Agent.setTacticType(Tactic.Type.COMBINATION);
+		myRetailer2Agent.setEnergyStored(50);
 		test.CreateTradeAgent(myRetailer2Agent);
 		
 		return test;
