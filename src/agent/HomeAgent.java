@@ -12,7 +12,12 @@ import interfaces.Object2HomeAgentInterface;
 import interfaces.Object2TradeAgentInterface;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.FSMBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.ParallelBehaviour;
+import jade.core.behaviours.SequentialBehaviour;
 import jade.core.behaviours.TickerBehaviour;
+import jade.core.behaviours.WakerBehaviour;
 import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.FailureException;
@@ -46,6 +51,9 @@ import negotiation.tactic.timeFunction.TimeWeightedPolynomial;
 import simulation.Simulation;
 
 public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
+	
+	private static final String IDLE = "Dummy-final";
+	private static final String NEGOTIATING = "B";
 	private final boolean INC = false;// customer mentality
 	
 	@Adjustable private double maxNegotiationTime = 8;
@@ -66,9 +74,10 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 	private int agentHour;
 
 	private Schedule schedule = new Schedule();
+	private AgentDailyNegotiationThread dailyThread;
 	
-	private NegotiatingBehaviour negotiation; 
-	private TimeKeepingBehavior time; 
+	private SequentialBehaviour lifecycle;
+	private RequestQuote lastQuote;
 	
 	public HomeAgent() {
 		this.registerO2AInterface(Object2HomeAgentInterface.class, this);
@@ -76,9 +85,10 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 
 	protected void setup() {
 		super.setup();
+//		this.setMuted(true);
 		setAgentHour(0);
 		rand = new Random();
-
+		setDailyThread(new AgentDailyNegotiationThread ());
 		
 		Object[] args = this.getArguments();
 		//set negotiation time from arguments
@@ -102,21 +112,37 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 			this.tacticType=(Tactic.Type)args[3];
 		else
 			this.tacticType=Tactic.Type.valueOf(((String) args[3]).toUpperCase());	
-		
 
 		negotiators = new HashMap<>();
 		discoverRetailers();
 		/*
 		 * Setting up 
 		 * 1) start listening to demands form home's appliances 
-		 * 2) start negotiating with the retailers
-		 * 3) start keeping time
-		 * 4) start telling time
+		 * 2) start keeping time
+		 * 3) start telling time
 		 */
-		negotiation = new NegotiatingBehaviour(this);
 		addBehaviour(new TimeTellingBehaviour(this));
 		addBehaviour(new DemandListeningBehaviour(this));
-		addBehaviour(getNegotiation());
+		addBehaviour(new LifecycleBehaviour(this));
+		
+	}
+	
+	private class LifecycleBehaviour extends TickerBehaviour{
+
+		public LifecycleBehaviour(Agent a) {
+			super(a, Simulation.Time);
+		}
+
+		@Override
+		protected void onTick() {
+			if(lastQuote!=null) {
+				say("Remove previous behaviour");
+				myAgent.removeBehaviour(lastQuote);
+			}
+			lastQuote = new RequestQuote((HomeAgent) myAgent, null, retailers);
+			myAgent.addBehaviour(lastQuote);
+		}
+		
 	}
 
 	public void discoverRetailers() {
@@ -246,47 +272,19 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 		return agentHour;
 	}
 
-
 	private void setAgentHour(int agentHour) {
 		this.agentHour = agentHour;
 	}
 	
-	public TimeKeepingBehavior getTime() {
-		return time;
+	public AgentDailyNegotiationThread getDailyThread() {
+		return dailyThread;
+	}
+
+	public void setDailyThread(AgentDailyNegotiationThread dailyThread) {
+		this.dailyThread = dailyThread;
 	}
 
 
-	public void setTime(TimeKeepingBehavior time) {
-		this.time = time;
-	}
-
-	public NegotiatingBehaviour getNegotiation() {
-		return negotiation;
-	}
-
-	public class TimeKeepingBehavior extends TickerBehaviour {
-		
-		private long localTime = 0;
-		
-		public TimeKeepingBehavior(Agent a) {
-			super(a, Simulation.Time/60);
-		}
-
-		public void setLocalTime(long localTime) {
-			this.localTime = localTime;
-		}
-
-		@Override
-		protected void onTick() {
-			localTime++;
-		}
-
-		public Time getTime() {
-			return new Time(localTime);
-		}
-
-	}
-	
 	private class TimeTellingBehaviour extends AchieveREResponder {
 
 		public TimeTellingBehaviour(Agent a) {
@@ -344,29 +342,6 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 
 	}
 
-	public class NegotiatingBehaviour extends TickerBehaviour {
-		
-		private AgentDailyNegotiationThread dailyThread = new AgentDailyNegotiationThread ();
-		
-		public NegotiatingBehaviour(Agent a) {
-			super(a, Simulation.Time); 
-		}
-
-		@Override
-		public void onTick() {
-			discoverRetailers();
-			addBehaviour(new RequestQuote(myAgent, null, retailers));
-		}
-
-		public AgentDailyNegotiationThread getDailyThread() {
-			return dailyThread;
-		}
-
-		public void setDailyThread(AgentDailyNegotiationThread dailyThread) {
-			this.dailyThread = dailyThread;
-		}
-	}
-
 	public class RequestQuote extends ContractNetInitiator {
 		private List<AID> retailAgents;
 		private int myPrice;
@@ -374,9 +349,11 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 		private Integer activeAgents;
 		private Map<ACLMessage, Double> acceptedScores;
 		private Map<ACLMessage, Double> proposalScores;
+		private HomeAgent owner;
 
-		public RequestQuote(Agent a, ACLMessage msg, List<AID> retailers) {
+		public RequestQuote(HomeAgent a, ACLMessage msg, List<AID> retailers) {
 			super(a, msg);
+			owner = a;
 			retailAgents = retailers;
 			activeAgents = new Integer(retailers.size());
 			acceptedScores = new HashMap<>();
@@ -386,7 +363,7 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 			setupHomeNegotiators(activeAgents);
 			// add negotiations to dailyNegotiaition threads
 			for (Map.Entry<AID, HomeAgentNegotiator> entry : negotiators.entrySet()) {
-				HomeAgent.this.getNegotiation().getDailyThread().addHourThread(getAgentHour(), entry.getKey(), entry.getValue().getNegotiationThread());
+				a.getDailyThread().addHourThread(getAgentHour(), entry.getKey(), entry.getValue().getNegotiationThread());
 			}
 		}
 
@@ -407,6 +384,7 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 				// terminate if units required is 0
 				if (schedDemand.getUnits() == 0) {
 					forceTransitionTo(DUMMY_FINAL);
+					//this.onEnd();
 					return cfps;
 				}
 
@@ -642,7 +620,7 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 
 		@Override
 		public int onEnd() {
-//			say(negotiation.dailyThread.toString());
+			//say(owner.dailyThread.toString());
 			// save history to file
 			myHistory.saveTransactionHistory();
 			goNextHour();

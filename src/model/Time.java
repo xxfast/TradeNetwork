@@ -24,6 +24,10 @@ public class Time {
 		return toReturn;
 	}
 	
+	public void Increment() {
+		time++;
+	}
+	
 	public long getTime() {
 		return this.time;
 	}

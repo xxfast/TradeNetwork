@@ -4,7 +4,6 @@ import javax.swing.JOptionPane;
 
 import org.jfree.ui.RefineryUtilities;
 
-import agent.HomeAgent.NegotiatingBehaviour;
 import annotations.Callable;
 import interfaces.Object2ApplianceAgentInterface;
 import interfaces.Object2HomeAgentInterface;
@@ -20,10 +19,10 @@ public class HomeAgentController extends TradeAgentController {
 		try {
 			AgentController ac = this.getInnerController();
 			Object2HomeAgentInterface O2AInterface = ac.getO2AInterface(Object2HomeAgentInterface.class);
-			NegotiatingBehaviour nb = O2AInterface.getNegotiation();
-			if(nb!=null) {
-				String title = nb.getAgent().getLocalName() + "'s Negotiations";
-				NegotiationInspector chart = new NegotiationInspector(title,  title,nb.getDailyThread());
+			AgentDailyNegotiationThread dnt = O2AInterface.getDailyThread();
+			if(dnt!=null) {
+				String title = this.getDescriptor().getName() + "'s Negotiations";
+				NegotiationInspector chart = new NegotiationInspector(title,  title,dnt);
 				chart.pack();
 				RefineryUtilities.centerFrameOnScreen(chart);
 				chart.setVisible(true);
