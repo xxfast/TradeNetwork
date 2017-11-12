@@ -9,6 +9,7 @@ public class RetailerAgentDescriptor extends TradeAgentDescriptor {
 	@Adjustable private double paramK;
 	@Adjustable private double paramBeta;
 	@Adjustable private Tactic.Type tacticType;
+	@Adjustable private double energyStored;
 	public double getMaxNegotiationTime() {
 		return maxNegotiationTime;
 	}
@@ -41,8 +42,16 @@ public class RetailerAgentDescriptor extends TradeAgentDescriptor {
 		this.tacticType = tacticType;
 	}
 
+	public double getEnergyStored() {
+		return energyStored;
+	}
+
+	public void setEnergyStored(double energyStored) {
+		this.energyStored = energyStored;
+	}
+
 	public String getDescription() {
-		return String.format("[RetailerAgent: "+super.getName() +",\n \t Max Negotiation time: "+ getMaxNegotiationTime()+",\n \t Param K: "+ getParamK() +",\n \t Param Beta: "+ getParamBeta()+",\n \t"+",\n \t Tactic: "+ getTacticType()+",\n \t ]");
+		return String.format("[RetailerAgent: "+super.getName() +",\n \t Max Negotiation time: "+ getMaxNegotiationTime()+",\n \t Param K: "+ getParamK() +",\n \t Param Beta: "+ getParamBeta()+",\n \t"+",\n \t Tactic: "+ getTacticType()+",\n \t EnergyStored"+ getEnergyStored()+",\n \t ]");
 	}
 	
 	@Override
@@ -51,7 +60,7 @@ public class RetailerAgentDescriptor extends TradeAgentDescriptor {
 	}
 	
 	public Object[] toArray() {
-		Object[] toReturn = new Object[]{getMaxNegotiationTime(),getParamK(),getParamBeta(),getTacticType()};
+		Object[] toReturn = new Object[]{getMaxNegotiationTime(),getParamK(),getParamBeta(),getTacticType(),getEnergyStored()};
 		return toReturn;
 	}
 	
