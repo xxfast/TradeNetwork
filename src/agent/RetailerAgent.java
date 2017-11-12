@@ -244,7 +244,13 @@ public class RetailerAgent extends TradeAgent {
 		@Override
 		protected ACLMessage handleCfp(ACLMessage cfp) throws NotUnderstoodException, RefuseException {
 			
-			
+			//check if we have energy remaining if not dnt negotiate- maybe remove from df not selling anymore
+			if(energyStored<=0)
+			{
+				say("No energy to sell good bye nigga");
+				throw new RefuseException("No energy to sell");
+			}
+				
 			//get offer received
 			Offer offer= new Offer(cfp);
 			//interprete offer
@@ -287,7 +293,7 @@ public class RetailerAgent extends TradeAgent {
 			//reduce energy stored- i.e. delivering energy to home
 			int deliverUnits=off.getDemand().getUnits();
 			RetailerAgent.this.energyStored-=deliverUnits;
-			resp.setContent("Accepted "+propose.getContent()+"\n Units delivered "+deliverUnits);
+			resp.setContent("Accepted "+propose.getContent()+" and Units delivered "+deliverUnits);
 			say("Energy Remaining "+RetailerAgent.this.energyStored);
 			resp.setPerformative(ACLMessage.INFORM);
 			return resp;

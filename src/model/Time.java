@@ -33,6 +33,6 @@ public class Time {
 	}
 	
 	public short getHourOfDay() {
-		return (short)((this.time)%23);	
+		return (short)((this.time)%24);	
 	}
 }

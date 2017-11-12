@@ -97,11 +97,13 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 			myAgent.addBehaviour( new AchieveREInitiator(myAgent,msg){
 				protected void handleAgree(ACLMessage agree) {
 					say(agree.getSender().getName() + " has agreed to the request");
+					
+					ApplianceAgent.this.selfTime.Increment();
 				}
 				
 				protected void handleInform(ACLMessage inform) {
 					say(inform.getSender().getName() + " successfully scheduled my Demand");
-					ApplianceAgent.this.selfTime.Increment();
+					
 				}
 			});
 		}
