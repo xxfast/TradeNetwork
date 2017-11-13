@@ -104,6 +104,7 @@ public class TradeAgent extends Agent implements Object2TradeAgentInterface{
 	
 	public void addToHistory(AgentNegotiator neg,ACLMessage result,boolean success,AID client)
 	{
+		//check if any negotiation has happend
 		Transaction trans=neg.getNegotiationThread().getAsTransaction();
 		if(!success)
 		{
