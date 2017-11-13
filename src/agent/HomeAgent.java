@@ -9,15 +9,10 @@ import java.util.Vector;
 
 import annotations.Adjustable;
 import interfaces.Object2HomeAgentInterface;
-import interfaces.Object2TradeAgentInterface;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.FSMBehaviour;
-import jade.core.behaviours.OneShotBehaviour;
-import jade.core.behaviours.ParallelBehaviour;
 import jade.core.behaviours.SequentialBehaviour;
 import jade.core.behaviours.TickerBehaviour;
-import jade.core.behaviours.WakerBehaviour;
 import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.FailureException;
@@ -31,7 +26,7 @@ import model.AgentDailyNegotiationThread;
 import model.Demand;
 import model.Offer;
 import model.Schedule;
-import model.Time;
+import negotiation.Issue;
 import negotiation.NegotiationThread;
 import negotiation.Strategy;
 import negotiation.Strategy.Item;
@@ -467,7 +462,10 @@ public class HomeAgent extends TradeAgent implements Object2HomeAgentInterface {
 			activeAgents--;
 			// get negotiator
 			HomeAgentNegotiator neg = negotiators.get(refuse.getSender());
-			addToHistory(neg, refuse, false, refuse.getSender());
+			Issue issue=neg.getItemIssue().get(Item.PRICE);
+			if(issue.getIteration()>1)
+				addToHistory(neg, refuse, false, refuse.getSender());
+			
 			super.handleRefuse(refuse);
 		}
 
