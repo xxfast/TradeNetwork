@@ -124,6 +124,14 @@ public class Simulation implements Serializable {
 				ta.start();
 			}
 		}
+		
+		try {
+			Thread.sleep(500);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		for(TradeAgentController ta  : controllers) {
 			if(ta instanceof HomeAgentController) {
 				ta.start();
