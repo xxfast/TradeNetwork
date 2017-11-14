@@ -49,15 +49,6 @@ public class RetailerAgentDescriptor extends TradeAgentDescriptor {
 	public void setEnergyStored(double energyStored) {
 		this.energyStored = energyStored;
 	}
-
-	public String getDescription() {
-		return String.format("[RetailerAgent: "+super.getName() +",\n \t Max Negotiation time: "+ getMaxNegotiationTime()+",\n \t Param K: "+ getParamK() +",\n \t Param Beta: "+ getParamBeta()+",\n \t"+",\n \t Tactic: "+ getTacticType()+",\n \t EnergyStored"+ getEnergyStored()+",\n \t ]");
-	}
-	
-	@Override
-	public String toString() {
-		return getDescription();
-	}
 	
 	public Object[] toArray() {
 		Object[] toReturn = new Object[]{getMaxNegotiationTime(),getParamK(),getParamBeta(),getTacticType(),getEnergyStored()};

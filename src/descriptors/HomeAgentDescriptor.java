@@ -42,10 +42,6 @@ public class HomeAgentDescriptor extends TradeAgentDescriptor {
 	public void setTacticType(Tactic.Type tacticType) {
 		this.tacticType = tacticType;
 	}
-
-	public String getDescription() {
-		return String.format("[HomeAgent: "+getMaxNegotiationTime()+","+getParamK()+","+getParamBeta()+","+getTacticType()+"]");
-	}
 	
 	public Object[] toArray() {
 		Object[] toReturn = new Object[]{getMaxNegotiationTime(),getParamK(),getParamBeta(),getTacticType()};

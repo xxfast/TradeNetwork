@@ -17,5 +17,7 @@
 	<classpathentry kind="lib" path="lib/org.eclipse.jdt.annotation_2.1.100.v20170511-1408.jar"/>
 	<classpathentry kind="lib" path="lib/jcommon-1.0.23.jar"/>
 	<classpathentry kind="lib" path="lib/jfreechart-1.0.19.jar"/>
+	<classpathentry kind="lib" path="lib/gson-2.8.2-javadoc.jar"/>
+	<classpathentry kind="lib" path="lib/gson-2.8.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

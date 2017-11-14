@@ -13,14 +13,17 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeCellRenderer;
 
 import controllers.TradeAgentController;
+import simulation.Simulation;
 
 public class TradeAgentNode extends DefaultMutableTreeNode {
 
 	private String iconResource;
 	private TradeAgentController agent;
+	private Simulation owner;
 
-	public TradeAgentNode(String name) {
+	public TradeAgentNode(String name, Simulation ownr) {
 		super(name);
+		setOwner(ownr);
 	}
 
 	public TradeAgentNode(TradeAgentController agent) {
@@ -42,6 +45,14 @@ public class TradeAgentNode extends DefaultMutableTreeNode {
 
 	public void setIconResource(String icon) {
 		this.iconResource = icon;
+	}
+
+	public Simulation getOwner() {
+		return owner;
+	}
+
+	public void setOwner(Simulation owner) {
+		this.owner = owner;
 	}
 
 	

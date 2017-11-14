@@ -204,7 +204,7 @@ public class TradeAgentCreator extends JDialog implements ActionListener {
 						inputs.add(input);
 					} else {
 						/* if the type refers to another Agent, create a list of other agents */
-						input = new TrageAgentSelector(simulation.getAgents());
+						input = new TrageAgentSelector(simulation.getAgentTree());
 						if (!f.isAnnotationPresent(Nullable.class)) {
 							try {
 								PropertyDescriptor pd = new PropertyDescriptor(f.getName(), type);
