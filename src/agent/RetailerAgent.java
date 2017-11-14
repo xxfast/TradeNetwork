@@ -171,7 +171,7 @@ public class RetailerAgent extends TradeAgent {
 		else if(tacticType.equals(Type.RESOURCEDEPENDENT))
 		{
 			//time is the resource
-			ResourceDependentTactic tactic2 = new ResourceDependentTactic(rsrcEnFunc, this.INC);
+			ResourceDependentTactic tactic2 = new ResourceDependentTactic(rsrcFunc, this.INC);
 			tactics.put(tactic2, new Double(1));
 		}
 		else if(tacticType.equals(Type.TIMEDEPENDENT))
@@ -182,7 +182,7 @@ public class RetailerAgent extends TradeAgent {
 		else
 		{
 			TimeDependentTactic tactic1 = new TimeDependentTactic(poly, this.INC);
-			ResourceDependentTactic tactic2 = new ResourceDependentTactic(rsrcEnFunc, this.INC);
+			ResourceDependentTactic tactic2 = new ResourceDependentTactic(rsrcFunc, this.INC);
 			BehaviourDependentTactic tactic3 = new BehaviourDependentTactic(tft, this.behaviourRange);
 			tactics.put(tactic1, new Double(this.tacticTimeWeight));
 			tactics.put(tactic2, new Double(this.tacticResourceWeight));

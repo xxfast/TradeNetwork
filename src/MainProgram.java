@@ -86,7 +86,7 @@ public class MainProgram {
 		say("Starting up a HomeAgent...");
 		HomeAgentDescriptor myHome1Agent = new HomeAgentDescriptor();
 		myHome1Agent.setName("Home1");
-		myHome1Agent.setMaxNegotiationTime(6);
+		myHome1Agent.setMaxNegotiationTime(15);
 		myHome1Agent.setParamK(0.01);
 		myHome1Agent.setParamBeta(0.5);
 		myHome1Agent.setTacticType(Tactic.Type.TIMEDEPENDENT);
@@ -121,29 +121,52 @@ public class MainProgram {
 //		test.CreateTradeAgent(myFridge2Agent);
 		
 		// Create a agent of class RetailerAgent 
-		say("Starting up a RetailerAgent...");
-		RetailerAgentDescriptor myRetailerAgent = new RetailerAgentDescriptor();
-		myRetailerAgent.setName("SimpleEnergy");
-
-		myRetailerAgent.setMaxNegotiationTime(10);
-		myRetailerAgent.setParamK(0.01);
-		myRetailerAgent.setParamBeta(0.5);
-		myRetailerAgent.setTacticType(Tactic.Type.RESOURCEDEPENDENT);
-		myRetailerAgent.setEnergyStored(20);
-		test.CreateTradeAgent(myRetailerAgent);
+//		say("Starting up a RetailerAgent...");
+//		RetailerAgentDescriptor myRetailerAgent = new RetailerAgentDescriptor();
+//		myRetailerAgent.setName("SimpleEnergy");
+//
+//		myRetailerAgent.setMaxNegotiationTime(10);
+//		myRetailerAgent.setParamK(0.1);
+//		myRetailerAgent.setParamBeta(0.5);
+//		myRetailerAgent.setTacticType(Tactic.Type.RESOURCEDEPENDENT);
+//		myRetailerAgent.setEnergyStored(500);
+//		test.CreateTradeAgent(myRetailerAgent);
 		
-
 		// Create a agent of class RetailerAgent 
 		say("Starting up a Retailer2Agent...");
 		RetailerAgentDescriptor myRetailer2Agent = new RetailerAgentDescriptor();
-		myRetailer2Agent.setName("AGL");
+		myRetailer2Agent.setName("United");
 
-		myRetailer2Agent.setMaxNegotiationTime(9);
-		myRetailer2Agent.setParamK(0.6);
-		myRetailer2Agent.setParamBeta(0.1);
-		myRetailer2Agent.setTacticType(Tactic.Type.COMBINATION);
-		myRetailer2Agent.setEnergyStored(50);
+		myRetailer2Agent.setMaxNegotiationTime(20);
+		myRetailer2Agent.setParamK(0.1);
+		myRetailer2Agent.setParamBeta(0.5);
+		myRetailer2Agent.setTacticType(Tactic.Type.TIMEDEPENDENT);
+		myRetailer2Agent.setEnergyStored(10);
 		test.CreateTradeAgent(myRetailer2Agent);
+
+		// Create a agent of class RetailerAgent 
+//		say("Starting up a Retailer3Agent...");
+//		RetailerAgentDescriptor myRetailer3Agent = new RetailerAgentDescriptor();
+//		myRetailer3Agent.setName("BP");
+//
+//		myRetailer3Agent.setMaxNegotiationTime(20);
+//		myRetailer3Agent.setParamK(0.1);
+//		myRetailer3Agent.setParamBeta(0.5);
+//		myRetailer3Agent.setTacticType(Tactic.Type.BEHAVIOURDEPENDENT);
+//		myRetailer3Agent.setEnergyStored(50);
+//		test.CreateTradeAgent(myRetailer3Agent);
+		
+//		// Create a agent of class RetailerAgent 
+//		say("Starting up a Retailer4Agent...");
+//		RetailerAgentDescriptor myRetailer4Agent = new RetailerAgentDescriptor();
+//		myRetailer4Agent.setName("AGL");
+//
+//		myRetailer4Agent.setMaxNegotiationTime(20);
+//		myRetailer4Agent.setParamK(0.1);
+//		myRetailer4Agent.setParamBeta(0.5);
+//		myRetailer4Agent.setTacticType(Tactic.Type.COMBINATION);
+//		myRetailer4Agent.setEnergyStored(10);
+//		test.CreateTradeAgent(myRetailer4Agent);
 		
 		return test;
 	}
