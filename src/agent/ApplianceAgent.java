@@ -38,7 +38,7 @@ public class ApplianceAgent extends TradeAgent implements Object2ApplianceAgentI
 	 */
 	protected void setup() {
 		super.setup();
-		this.setMuted(true);
+		this.setMuted(false);
 		Object[] args = getArguments();
 		if( args[0] instanceof AID)
 			setHome((AID)args[0]);

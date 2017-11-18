@@ -31,11 +31,6 @@ public class HeaterAgentDescriptor extends ApplianceAgentDescriptor {
 	public void setCurrentTemp(int currentTemp) {
 		this.currentTemp = currentTemp;
 	}
-
-	@Override
-	public String toString() {
-		return getDescription();
-	}
 	
 	public Object[] toArray() {
 		super.toArray();
