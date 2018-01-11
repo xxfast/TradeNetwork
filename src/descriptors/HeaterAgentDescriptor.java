@@ -31,15 +31,6 @@ public class HeaterAgentDescriptor extends ApplianceAgentDescriptor {
 	public void setCurrentTemp(int currentTemp) {
 		this.currentTemp = currentTemp;
 	}
-
-	public String getDescription() {
-		return String.format("[HeaterAgent: "+super.getName()+"-> ["+getOwner().getLocalName()+"] ,\n \t Starting Demand: "+getStartingDemand().getContent() + "\n \t Current condition: " + getCurrentMode()+"]");
-	}
-	
-	@Override
-	public String toString() {
-		return getDescription();
-	}
 	
 	public Object[] toArray() {
 		super.toArray();

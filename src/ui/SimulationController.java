@@ -17,6 +17,7 @@ public class SimulationController extends JPanel {
 	
 	private Simulation toControl;
 	public Button playBtn;
+	public Button stopBtn;
 	
 	public SimulationController(Simulation toControl) {
 		this.toControl = toControl;
@@ -25,7 +26,7 @@ public class SimulationController extends JPanel {
 		playBtn = new Button("Play");
 		add(playBtn);
 		
-		Button stopBtn = new Button("Stop");
+		stopBtn = new Button("Stop");
 		add(stopBtn);
 	}
 	

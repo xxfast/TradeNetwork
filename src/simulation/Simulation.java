@@ -10,6 +10,9 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import agent.ApplianceAgent;
 import agent.HomeAgent;
 import agent.RetailerAgent;
@@ -34,28 +37,55 @@ import descriptors.SchedulingAgentDescriptor;
 import descriptors.TelevisionAgentDescriptor;
 import descriptors.TradeAgentDescriptor;
 import interfaces.IOwnable;
+import interfaces.ISavable;
 import jade.core.AID;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
 import model.TradeAgentNode;
 
-public class Simulation implements Serializable {
+public class Simulation implements Serializable, ISavable{
 	
 	public static int Time = 1000;
 	
-	private String name;
+	private String name = "default";
 	private String description;
 	private State state;
 	
-	private TreeModel agents;
+	private transient TreeModel agentTree;
+	private List<TradeAgentController> agents;
 	
 	private transient ContainerController container;
 	
 	private String output;
 	
 	public Simulation() {
-		agents = new DefaultTreeModel(new TradeAgentNode("Simulation"));
+		agentTree = new DefaultTreeModel(new TradeAgentNode("Simulation", this));
+		agents = new ArrayList<TradeAgentController>();
+	}
+	
+	public Simulation(String name) {
+		this.name = name;
+		agentTree = new DefaultTreeModel(new TradeAgentNode(name, this));
+		agents = new ArrayList<TradeAgentController>();
+	}
+	
+	public void ExpandTree(){
+		agentTree = new DefaultTreeModel(new TradeAgentNode(name, this));
+		if(agents!=null && !agents.isEmpty()) {
+			for(TradeAgentController nd : agents) {
+				try {
+					CreateTradeAgent(nd.getDescriptor());
+				} catch (StaleProxyException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	public void FlattenTree() throws StaleProxyException {
+		agents = this.getAgentsAsList((TradeAgentNode) agentTree.getRoot());
 	}
 	
 	public TradeAgentController CreateTradeAgent(TradeAgentDescriptor descriptor) throws StaleProxyException {
@@ -92,9 +122,9 @@ public class Simulation implements Serializable {
 		tradeAgent.setInnerController(createdAgent);
 		if(descriptor instanceof IOwnable) {
 			IOwnable ownable = (IOwnable) descriptor;
-			GetRootForIn(ownable.getOwner(),(DefaultMutableTreeNode)agents.getRoot()).add(new TradeAgentNode(tradeAgent));
+			GetRootForIn(ownable.getOwner(),(DefaultMutableTreeNode)agentTree.getRoot()).add(new TradeAgentNode(tradeAgent));
 		}else {
-			((DefaultMutableTreeNode)agents.getRoot()).add(new TradeAgentNode(tradeAgent));
+			((DefaultMutableTreeNode)agentTree.getRoot()).add(new TradeAgentNode(tradeAgent));
 		}
 		return tradeAgent;
 	}
@@ -118,7 +148,7 @@ public class Simulation implements Serializable {
 	}
 
 	public void Start() throws StaleProxyException{
-		List<TradeAgentController> controllers = getAgentsAsList((TradeAgentNode) agents.getRoot());
+		List<TradeAgentController> controllers = getAgentsAsList((TradeAgentNode) agentTree.getRoot());
 		for(TradeAgentController ta  : controllers) {
 			if(!(ta instanceof HomeAgentController)) {
 				ta.start();
@@ -148,13 +178,14 @@ public class Simulation implements Serializable {
 	}
 	
 	public void Stop() throws StaleProxyException {
-		KillNode((TradeAgentNode) agents.getRoot());
+		KillNode((TradeAgentNode) agentTree.getRoot());
 	}
 	
-	private void KillNode(TradeAgentNode toStart) throws StaleProxyException {
-		toStart.getAgent().kill();
-		for(int i=0;i<toStart.getChildCount();i++) {
-			KillNode((TradeAgentNode) toStart.getChildAt(i));
+	private void KillNode(TradeAgentNode toKill) throws StaleProxyException {
+		if(toKill.getAgent()!=null && toKill.getAgent().getInnerController()!=null) 
+			toKill.getAgent().kill();
+		for(int i=0;i<toKill.getChildCount();i++) {
+			KillNode((TradeAgentNode) toKill.getChildAt(i));
 		}
 	}
 	
@@ -167,17 +198,23 @@ public class Simulation implements Serializable {
 		return agents;
 	}
 	
+	@Override
+	public String toString() {
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		return gson.toJson(this);
+	}
+	
 
 	public void Remove(TradeAgentNode tn) {
 		// TODO Auto-generated method stub
 	}
 	
-	public TreeModel getAgents() {
-		return agents;
+	public TreeModel getAgentTree() {
+		return agentTree;
 	}
 
-	public void setAgents(TreeModel agents) {
-		this.agents = agents;
+	public void setAgentTree(TreeModel agents) {
+		this.agentTree = agents;
 	}
 
 	public String getDescription() {
@@ -214,5 +251,16 @@ public class Simulation implements Serializable {
 
 	public enum State{ Running, Paused, Stopped }
 
+	public void say(String toSay) {
+		System.out.println(this.getName() +":" + toSay);
+	}
+
+	public State getState() {
+		return state;
+	}
+
+	public void setState(State state) {
+		this.state = state;
+	}
 	
 }

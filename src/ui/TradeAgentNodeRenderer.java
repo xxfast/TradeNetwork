@@ -37,7 +37,7 @@ public class TradeAgentNodeRenderer implements TreeCellRenderer {
 					label.setIcon(new ImageIcon(imageUrl));
 				}
 			} else {
-				label.setText("Simulation");
+				label.setText(agent.getOwner().getName());
 				URL imageUrl = null;
 				try {
 					imageUrl = new URL(ProcessNameToURL("SimulationAgent"));

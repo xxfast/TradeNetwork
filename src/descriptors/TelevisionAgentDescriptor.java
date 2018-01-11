@@ -14,15 +14,6 @@ public class TelevisionAgentDescriptor extends ApplianceAgentDescriptor {
 		this.energyUsage = energyUsage;
 	}
 	
-	public String getDescription() {
-		return String.format("[TelevisionAgent: "+super.getName()+"-> ["+getOwner().getLocalName()+"] ,\n \t Starting Demand: "+getStartingDemand().getContent()+"]");
-	}
-	
-	@Override
-	public String toString() {
-		return getDescription();
-	}
-	
 	public Object[] toArray() {
 		Object[] toReturn = new Object[]{super.toArray()[0],super.toArray()[1],energyUsage};
 		return toReturn;

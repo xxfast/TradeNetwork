@@ -19,7 +19,7 @@ public class RefrigeratorAgentDescriptor extends ApplianceAgentDescriptor {
 	
 	@Override
 	public String toString() {
-		return getDescription();
+		return super.toString();
 	}
 	
 	public Object[] toArray() {
